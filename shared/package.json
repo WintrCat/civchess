@@ -1,0 +1,16 @@
+{
+    "name": "shared",
+    "type": "module",
+    "scripts": {
+        "build": "tsc && tsc-alias"
+    },
+    "exports": {
+        "./*": {
+            "types": "./dist/*.d.ts",
+            "import": "./dist/*.js"
+        }
+    },
+    "devDependencies": {
+        "tsc-alias": "^1.8.16"
+    }
+}

@@ -1,0 +1,9 @@
+{
+    "scripts": {
+        "start": "node server/dist/index.js",
+        "dev": "pnpm -F server run build && pnpm start"
+    },
+    "devDependencies": {
+        "typescript": "^5.9.2"
+    }
+}
