@@ -1,3 +1,24 @@
+@font-face {
+    font-family: "Noto Sans";
+    src: url("@assets/notosans.ttf");
+}
+
+:root {
+    --ui-shade-1: #101216;
+    --ui-shade-2: #17191e;
+    --ui-shade-3: #1f2125;
+    --ui-shade-4: #2c2f35;
+    --ui-shade-5: #3b3e43;
+    --ui-shade-6: #3e4349;
+    --ui-shade-7: #50575f;
+}
+
 body {
     margin: 0;
+
+    background-color: var(--ui-shade-1);
+}
+
+* {
+    font-family: "Noto Sans";
 }

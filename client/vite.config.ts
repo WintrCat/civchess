@@ -11,7 +11,8 @@ const config = defineConfig({
         }
     },
     build: {
-        outDir: "../dist"
+        outDir: "../dist",
+        emptyOutDir: true
     },
     publicDir: "public",
     server: {

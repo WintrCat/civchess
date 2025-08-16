@@ -1,7 +1,8 @@
 {
     "scripts": {
         "start": "node server/dist/index.js",
-        "dev": "pnpm -F server run build && pnpm start"
+        "dev": "pnpm -F server run build && pnpm start",
+        "build": "pnpm -F * run build"
     },
     "devDependencies": {
         "typescript": "^5.9.2"

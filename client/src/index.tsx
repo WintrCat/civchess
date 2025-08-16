@@ -7,10 +7,12 @@ import "@mantine/core/styles.css";
 import "./index.css";
 
 const Home = lazy(() => import("@/pages/home"));
+const SignIn = lazy(() => import("@/pages/signin"));
 const Play = lazy(() => import("@/pages/play"));
 
 const router = createBrowserRouter([
     { path: "/", element: <Home/> },
+    { path: "/signin", element: <SignIn/> },
     { path: "/play", element: <Play/> }
 ]);
 

@@ -1,6 +1,6 @@
-import { Square } from "./Square";
+import { Chunk } from "./Chunk";
 
 export interface World {
     name: string;
-    squares: Square[][];
+    chunks: Chunk[][];
 }
