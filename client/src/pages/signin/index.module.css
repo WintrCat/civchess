@@ -1,10 +1,18 @@
+body {
+    background-image: url("@assets/img/previewmap.png");
+    background-repeat: repeat;
+}
+
 .wrapper {
     display: flex;
+    flex-direction: column;
     justify-content: center;
+    align-items: center;
+    gap: 20px;
     box-sizing: border-box;
-    padding: 20px;
-    padding-top: 50px;
+    padding: 0 10px;
     width: 100%;
+    height: 80vh;
 }
 
 .dialog {
@@ -16,14 +24,12 @@
     padding: 10px;
     padding-bottom: 15px;
     width: min(400px, 100%);
-
-    border-radius: 10px;
-    background-color: var(--ui-shade-3);
-    color: white;
+    height: min-content;
 }
 
 .title {
-    font-size: 1.2rem;
+    font-family: "Redaction 10";
+    font-size: 1.5rem;
 }
 
 .signInButton {
@@ -37,4 +43,12 @@
 
     font-size: 0.7rem;
     color: #808080;
+}
+
+.credit {
+    text-align: center;
+    padding: 10px;
+    width: min(400px, 100%);
+
+    background-image: url("@assets/img/backgroundboard.png");
 }

@@ -1,6 +1,16 @@
 @font-face {
     font-family: "Noto Sans";
-    src: url("@assets/notosans.ttf");
+    src: url("@assets/fonts/notosans.ttf");
+}
+
+@font-face {
+    font-family: "Redaction 10";
+    src: url("@assets/fonts/redaction10.ttf");
+}
+
+@font-face {
+    font-family: "Texturina";
+    src: url("@assets/fonts/texturina.ttf");
 }
 
 :root {
@@ -21,4 +31,12 @@ body {
 
 * {
     font-family: "Noto Sans";
+}
+
+.light-up {
+    transition: filter 0.3s ease;
+}
+
+.light-up:hover {
+    filter: brightness(1.2);
 }
