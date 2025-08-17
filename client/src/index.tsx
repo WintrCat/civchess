@@ -20,6 +20,6 @@ const root = createRoot(
     document.querySelector("#root")!
 );
 
-root.render(<MantineProvider>
+root.render(<MantineProvider defaultColorScheme="dark">
     <RouterProvider router={router} />
 </MantineProvider>);

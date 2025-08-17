@@ -1,7 +1,6 @@
 import React from "react";
 import { Button, Anchor } from "@mantine/core";
 
-import Typography from "@/components/Typography";
 import Container from "@/components/Container";
 import authClient from "@/lib/auth";
 
@@ -17,7 +16,9 @@ function SignIn() {
     }
 
     return <div className={styles.wrapper}>
-        <Typography/>
+        <span className={styles.typography}>
+            CivChess
+        </span>
 
         <Container className={styles.dialog} gradient>
             <span className={styles.title}>
