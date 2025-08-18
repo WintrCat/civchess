@@ -8,11 +8,13 @@ import "./index.css";
 
 const Home = lazy(() => import("@/pages/home"));
 const SignIn = lazy(() => import("@/pages/signin"));
+const Lobby = lazy(() => import("@/pages/lobby"));
 const Play = lazy(() => import("@/pages/play"));
 
 const router = createBrowserRouter([
     { path: "/", element: <Home/> },
     { path: "/signin", element: <SignIn/> },
+    { path: "/lobby", element: <Lobby/> },
     { path: "/play", element: <Play/> }
 ]);
 

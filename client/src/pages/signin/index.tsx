@@ -10,8 +10,13 @@ import googleIcon from "@assets/img/google.png";
 
 function SignIn() {
     function signIn() {
+        const callbackOrigin = import.meta.env.DEV
+            ? import.meta.env.VITE_DEV_ORIGIN : "";
+
         authClient.signIn.social({
-            provider: "google"
+            provider: "google",
+            callbackURL: `${callbackOrigin}/lobby`,
+            errorCallbackURL: "/signin"
         });
     }
 

@@ -1,0 +1,84 @@
+body {
+    background-image: url("@assets/img/previewmap.png");
+    background-repeat: repeat;
+}
+
+.wrapper {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+    box-sizing: border-box;
+    padding: 30px 10px;
+    width: 100%;
+}
+
+.typography {
+    font-family: "Texturina";
+    font-size: 5rem;
+    color: white;
+
+    -webkit-text-stroke: 2px black;
+}
+
+.dialog {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    box-sizing: border-box;
+    padding: 10px 20px;
+    width: min(700px, 100%);
+}
+
+.topSection {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 0 15px;
+    width: 100%;
+}
+
+.topSection > span {
+    font-size: 1.4rem;
+    font-family: "Redaction 10";
+}
+
+.createWorldDialog {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+.createWorldDialogTitle {
+    font-size: 1.4rem;
+    font-family: "Texturina";
+}
+
+.createWorldDialog > div {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    width: 100%;
+}
+
+.createWorldDialogSwitch {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.joinCodeContainer {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+}
+
+@media (max-width: 400px) {
+    .joinCodeContainer {
+        flex-direction: column;
+    }
+}

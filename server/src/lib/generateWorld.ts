@@ -3,15 +3,7 @@ import { sample } from "es-toolkit";
 import { SquareType } from "shared/constants/SquareType";
 import { Chunk } from "shared/types/Chunk";
 import { Square } from "shared/types/Square";
-import { World } from "shared/types/World";
-
-interface WorldOptions {
-    name: string;
-    seed: number;
-    widthChunks: number;
-    heightChunks: number;
-    squareTypes?: SquareType[];
-}
+import { World, WorldOptions } from "shared/types/World";
 
 export function generateWorld(options: WorldOptions): World {
     const chunks: Chunk[][] = [];
@@ -26,7 +18,7 @@ export function generateWorld(options: WorldOptions): World {
         chunks.push(row);
     }
 
-    return { name: options.name, chunks };
+    return { name: options.name, id: options.id, chunks };
 }
 
 export function generateChunk(

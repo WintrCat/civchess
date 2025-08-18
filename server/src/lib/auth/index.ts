@@ -27,6 +27,8 @@ function createAuth(database: mongo.Db) {
 
     return betterAuth({
         baseURL: `${process.env.ORIGIN}/auth`,
+        trustedOrigins: process.env.VITE_DEV_ORIGIN
+            ? [process.env.VITE_DEV_ORIGIN] : [],
         secret: process.env.AUTH_SECRET,
         database: mongodbAdapter(database),
         socialProviders: {
