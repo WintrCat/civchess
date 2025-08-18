@@ -4,11 +4,6 @@
 }
 
 @font-face {
-    font-family: "Redaction 10";
-    src: url("@assets/fonts/redaction10.ttf");
-}
-
-@font-face {
     font-family: "Texturina";
     src: url("@assets/fonts/texturina.ttf");
 }
