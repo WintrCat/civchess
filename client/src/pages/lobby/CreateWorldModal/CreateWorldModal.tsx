@@ -1,7 +1,7 @@
 import React, { useState } from "react";
-import { Modal, TextInput, Switch, Button } from "@mantine/core";
+import { Modal, TextInput, Switch, Button, Alert } from "@mantine/core";
 
-import { WorldOptions } from "shared/types/World";
+import { WorldOptions, worldOptionsSchema } from "shared/types/World";
 import { SquareType } from "shared/constants/SquareType";
 import { biomeNames } from "@/constants/utils";
 
@@ -10,35 +10,54 @@ import styles from "../index.module.css";
 
 import createIcon from "@assets/img/create.svg";
 
-type BiomesOptions = Record<SquareType, boolean>;
+const defaultBiomesOptions = Object.fromEntries(
+    Object.values(SquareType).map(type => [type, true])
+) as Record<SquareType, boolean>;
 
 function CreateWorldModal({ open, onClose }: CreateWorldModalProps) {
     const [ worldName, setWorldName ] = useState("");
     const [ worldId, setWorldId ] = useState("");
 
-    const [
-        biomesOptions,
-        setBiomesOptions
-    ] = useState<BiomesOptions>(
-        Object.fromEntries(Object.values(SquareType)
-            .map(type => [type, true])
-        ) as BiomesOptions
-    );
+    const [ biomesOptions, setBiomesOptions ] = useState(defaultBiomesOptions);
 
-    function createWorld(options: WorldOptions) {
-        fetch("/api/create-world", {
+    const [ isPending, setIsPending ] = useState(false);
+    const [ error, setError ] = useState<string>();
+
+    function close() {
+        setWorldName("");
+        setWorldId("");
+        setBiomesOptions(defaultBiomesOptions);
+        setIsPending(false);
+        setError(undefined);
+
+        onClose();
+    }
+
+    async function createWorld(options: WorldOptions) {
+        const parse = worldOptionsSchema.safeParse(options);
+
+        if (!parse.success) return setError(
+            parse.error.issues.at(0)?.message
+        );
+
+        setIsPending(true);
+
+        const response = await fetch("/api/create-world", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(options)
         });
+
+        if (!response.ok) return setError("An unknown error occurred.");
+
+        setIsPending(false);
+        close();
     }
 
     return <Modal
-        classNames={{
-            body: styles.createWorldDialog
-        }}
+        classNames={{ body: styles.createWorldDialog }}
         opened={open}
-        onClose={onClose}
+        onClose={close}
         title={<span className={styles.createWorldDialogTitle}>
             Create a world
         </span>}
@@ -87,6 +106,10 @@ function CreateWorldModal({ open, onClose }: CreateWorldModalProps) {
             </div>)}
         </div>
 
+        {error && <Alert variant="light" color="red">
+            {error}
+        </Alert>}
+
         <Button
             size="md"
             leftSection={<img src={createIcon} height={26} />}
@@ -99,6 +122,7 @@ function CreateWorldModal({ open, onClose }: CreateWorldModalProps) {
                     key => biomesOptions[key as SquareType]
                 ) as SquareType[]
             })}
+            loading={isPending}
         >
             Create World
         </Button>
