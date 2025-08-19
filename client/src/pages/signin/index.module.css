@@ -53,9 +53,5 @@ body {
 }
 
 .credit {
-    text-align: center;
-    padding: 10px;
     width: min(400px, 100%);
-
-    background-image: url("@assets/img/backgroundboard.png");
 }

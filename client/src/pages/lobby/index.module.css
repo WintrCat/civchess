@@ -81,3 +81,7 @@ body {
         flex-direction: column;
     }
 }
+
+.credit {
+    width: min(700px, 100%);
+}

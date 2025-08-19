@@ -7,6 +7,7 @@ import styles from "./index.module.css";
 
 import createIcon from "@assets/img/create.svg";
 import CreateWorldModal from "./CreateWorldModal/CreateWorldModal";
+import CreditContainer from "@/components/CreditContainer";
 
 function Lobby() {
     const [ createWorldOpen, setCreateWorldOpen ] = useState(false);
@@ -54,6 +55,7 @@ function Lobby() {
                 <TextInput
                     size="md"
                     placeholder="World ID..."
+                    styles={{ wrapper: { width: "250px" } }}
                 />
 
                 <Button size="md" color="var(--ui-shade-5)">
@@ -66,6 +68,8 @@ function Lobby() {
             open={createWorldOpen}
             onClose={() => setCreateWorldOpen(false)}
         />
+
+        <CreditContainer className={styles.credit} />
     </div>;
 }
 

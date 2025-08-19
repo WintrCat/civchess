@@ -1,5 +1,5 @@
 import React from "react";
-import { Button, Anchor } from "@mantine/core";
+import { Button } from "@mantine/core";
 
 import Container from "@/components/Container";
 import authClient from "@/lib/auth";
@@ -7,6 +7,7 @@ import authClient from "@/lib/auth";
 import styles from "./index.module.css";
 
 import googleIcon from "@assets/img/google.png";
+import CreditContainer from "@/components/CreditContainer";
 
 function SignIn() {
     function signIn() {
@@ -48,13 +49,7 @@ function SignIn() {
             </span>
         </Container>
 
-        <Container className={styles.credit}>
-            ☕ Built by{" "}
-
-            <Anchor href="https://youtube.com/@wintrcat" className="light-up">
-                <u>the wintrcat community</u>
-            </Anchor>
-        </Container>
+        <CreditContainer className={styles.credit} />
     </div>;
 }
 

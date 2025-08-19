@@ -1,0 +1,6 @@
+.wrapper {
+    text-align: center;
+    padding: 10px;
+
+    background-image: url("@assets/img/backgroundboard.png");
+}
