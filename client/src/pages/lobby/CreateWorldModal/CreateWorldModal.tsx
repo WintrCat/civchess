@@ -58,6 +58,7 @@ function CreateWorldModal({ open, onClose }: CreateWorldModalProps) {
         classNames={{ body: styles.createWorldDialog }}
         opened={open}
         onClose={close}
+        centered
         title={<span className={styles.createWorldDialogTitle}>
             Create a world
         </span>}
