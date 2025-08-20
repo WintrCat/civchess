@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Modal, TextInput, Switch, Button, Alert } from "@mantine/core";
 
 import { WorldOptions, worldOptionsSchema } from "shared/types/World";
@@ -22,6 +22,10 @@ function CreateWorldModal({ open, onClose }: CreateWorldModalProps) {
 
     const [ isPending, setIsPending ] = useState(false);
     const [ error, setError ] = useState<string>();
+
+    useEffect(() => {
+        if (error) setIsPending(false);
+    }, [error])
 
     function close() {
         setWorldName("");
@@ -50,7 +54,6 @@ function CreateWorldModal({ open, onClose }: CreateWorldModalProps) {
 
         if (!response.ok) return setError("An unknown error occurred.");
 
-        setIsPending(false);
         close();
     }
 
@@ -92,6 +95,7 @@ function CreateWorldModal({ open, onClose }: CreateWorldModalProps) {
 
             {Object.keys(biomesOptions).map(key => <div
                 className={styles.createWorldDialogSwitch}
+                key={key}
             >
                 <Switch
                     size="md"

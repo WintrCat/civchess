@@ -1,5 +1,7 @@
 export enum Collection {
     USERS = "users",
     ACCOUNTS = "accounts",
-    SESSIONS = "sessions"
+    SESSIONS = "sessions",
+
+    WORLDS = "worlds"
 }
