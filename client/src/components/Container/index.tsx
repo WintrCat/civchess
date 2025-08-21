@@ -7,15 +7,19 @@ function Container({
     className,
     style,
     gradient,
+    noShadow,
+    onClick,
     children
 }: ContainerProps) {
     return <div
         className={[
             styles.wrapper,
             className,
+            !noShadow && styles.shadow,
             gradient && styles.gradient
         ].join(" ")}
         style={style}
+        onClick={onClick}
     >
         {children}
     </div>;

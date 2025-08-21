@@ -18,7 +18,13 @@ export function generateWorld(options: WorldOptions): World {
         chunks.push(row);
     }
 
-    return { name: options.name, id: options.id, chunks };
+    return {
+        name: options.name,
+        code: options.code,
+        pinned: options.pinned || false,
+        chunks: chunks,
+        createdAt: new Date().toISOString()
+    };
 }
 
 export function generateChunk(

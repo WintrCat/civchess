@@ -1,15 +1,27 @@
 import React, { useState } from "react";
-import { MenuDropdown, Divider, TextInput, Button } from "@mantine/core";
+import { IconPlus } from "@tabler/icons-react";
+import { useQuery } from "@tanstack/react-query";
+import { Divider, TextInput, Button } from "@mantine/core";
 
+import { WorldMetadata } from "shared/types/World";
 import Container from "@/components/Container";
+import CreditContainer from "@/components/CreditContainer";
+import CreateWorldModal from "./CreateWorldModal";
+import WorldListing from "@/components/WorldListing";
 
 import styles from "./index.module.css";
 
-import createIcon from "@assets/img/create.svg";
-import CreateWorldModal from "./CreateWorldModal/CreateWorldModal";
-import CreditContainer from "@/components/CreditContainer";
-
 function Lobby() {
+    const { data: worlds, status: worldsStatus } = useQuery({
+        queryKey: ["worlds"],
+        queryFn: async () => {
+            const response = await fetch("/api/worlds");
+            if (!response.ok) throw new Error();
+
+            return await response.json() as WorldMetadata[];
+        }
+    });
+
     const [ createWorldOpen, setCreateWorldOpen ] = useState(false);
 
     return <div className={styles.wrapper}>
@@ -34,12 +46,14 @@ function Lobby() {
                 style={{ width: "100%" }}
             />
 
-            <span>aaa</span>
+            {worldsStatus == "success" && worlds.map(world => (
+                <WorldListing world={world} showDates showToolbar key={world.code} />
+            ))}
 
             <Button
                 size="md"
                 color="var(--ui-shade-5)"
-                leftSection={<img src={createIcon} height={26} />}
+                leftSection={<IconPlus size={26} />}
                 onClick={() => setCreateWorldOpen(true)}
             >
                 Create World

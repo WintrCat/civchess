@@ -1,22 +1,43 @@
-import React, { useEffect, useState } from "react";
-import { Modal, TextInput, Switch, Button, Alert } from "@mantine/core";
+import React, { useEffect, useState, useMemo } from "react";
+import { IconHelp, IconPlus } from "@tabler/icons-react";
+import { useQueryClient } from "@tanstack/react-query";
+import {
+    Modal,
+    TextInput,
+    Switch,
+    Button,
+    Alert,
+    Checkbox,
+    Tooltip
+} from "@mantine/core";
 
+import { UserRole } from "shared/constants/UserRole";
 import { WorldOptions, worldOptionsSchema } from "shared/types/World";
 import { SquareType } from "shared/constants/SquareType";
 import { biomeNames } from "@/constants/utils";
+import authClient from "@/lib/auth";
 
 import { CreateWorldModalProps } from "./CreateWorldModalProps";
 import styles from "../index.module.css";
 
-import createIcon from "@assets/img/create.svg";
+const pinWorldTooltip = "Pins this world to the top of the list globally.";
 
 const defaultBiomesOptions = Object.fromEntries(
     Object.values(SquareType).map(type => [type, true])
 ) as Record<SquareType, boolean>;
 
 function CreateWorldModal({ open, onClose }: CreateWorldModalProps) {
+    const queryClient = useQueryClient();
+
+    const { data: session } = authClient.useSession();
+
+    const isUserAdmin = useMemo(() => (
+        session?.user.roles.includes(UserRole.ADMIN)
+    ), [session?.user.id]);
+
     const [ worldName, setWorldName ] = useState("");
-    const [ worldId, setWorldId ] = useState("");
+    const [ worldCode, setWorldCode ] = useState("");
+    const [ pinned, setPinned ] = useState(false);
 
     const [ biomesOptions, setBiomesOptions ] = useState(defaultBiomesOptions);
 
@@ -29,7 +50,8 @@ function CreateWorldModal({ open, onClose }: CreateWorldModalProps) {
 
     function close() {
         setWorldName("");
-        setWorldId("");
+        setWorldCode("");
+        setPinned(false);
         setBiomesOptions(defaultBiomesOptions);
         setIsPending(false);
         setError(undefined);
@@ -54,6 +76,8 @@ function CreateWorldModal({ open, onClose }: CreateWorldModalProps) {
 
         if (!response.ok) return setError("An unknown error occurred.");
 
+        await queryClient.refetchQueries({ queryKey: ["worlds"] });
+        
         close();
     }
 
@@ -77,7 +101,7 @@ function CreateWorldModal({ open, onClose }: CreateWorldModalProps) {
         </div>
 
         <div>
-            <span>World ID</span>
+            <span>World Code</span>
 
             <span style={{ fontSize: "0.7rem", color: "gray" }}>
                 This is the code that others will use to join your server.
@@ -85,10 +109,26 @@ function CreateWorldModal({ open, onClose }: CreateWorldModalProps) {
 
             <TextInput
                 size="md"
-                placeholder="World ID..."
-                onChange={event => setWorldId(event.currentTarget.value)}
+                placeholder="World Code..."
+                onChange={event => setWorldCode(event.currentTarget.value)}
             />
         </div>
+
+        {isUserAdmin && <div
+            className={styles.createWorldDialogSwitch}
+        >
+            <span style={{ color: "#c1c1c1" }}>
+                Pinned
+            </span>
+
+            <Checkbox checked={pinned} onChange={event => setPinned(
+                event.currentTarget.checked
+            )}/>
+
+            <Tooltip label={pinWorldTooltip} withArrow>
+                <IconHelp color="var(--ui-shade-6)" cursor="help" size="20"/>
+            </Tooltip>
+        </div>}
 
         <div>
             <span>Biomes</span>
@@ -117,10 +157,11 @@ function CreateWorldModal({ open, onClose }: CreateWorldModalProps) {
 
         <Button
             size="md"
-            leftSection={<img src={createIcon} height={26} />}
+            leftSection={<IconPlus size={26} />}
             onClick={() => createWorld({
                 name: worldName,
-                id: worldId,
+                code: worldCode,
+                pinned: pinned,
                 widthChunks: 1,
                 heightChunks: 1,
                 squareTypes: Object.keys(biomesOptions).filter(

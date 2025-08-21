@@ -2,6 +2,10 @@
     border-radius: 10px;
     background-color: var(--ui-shade-3);
     color: white;
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.1) inset;
+}
+
+.shadow {
     box-shadow:
         0 0 30px 0 rgba(0, 0, 0, 0.6),
         0 0 0 2px rgba(255, 255, 255, 0.1) inset;

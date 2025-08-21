@@ -56,7 +56,7 @@ body {
     font-family: "Texturina";
 }
 
-.createWorldDialog > div {
+.createWorldDialog > div:not(.createWorldDialogSwitch) {
     display: flex;
     flex-direction: column;
     gap: 5px;
@@ -67,6 +67,7 @@ body {
     display: flex;
     align-items: center;
     gap: 10px;
+    width: 100%;
 }
 
 .joinCodeContainer {

@@ -1,0 +1,48 @@
+.wrapper {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 10px;
+    box-sizing: border-box;
+    padding: 10px 15px;
+    width: 100%;
+    min-height: 100px;
+}
+
+.wrapper > div {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 10px;
+}
+
+.worldName {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    font-size: 1.2rem;
+}
+
+.onlineIndicator {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border-width: 2px;
+    border-style: solid;
+}
+
+.worldCode {
+    font-size: 0.9rem;
+    color: grey;
+}
+
+.worldDates {
+    font-size: 0.6rem;
+    color: gray;
+}
+
+.toolbar {
+    display: flex;
+    gap: 10px;
+}
