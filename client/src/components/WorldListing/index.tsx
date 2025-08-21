@@ -2,11 +2,18 @@ import React from "react";
 import { Button, ButtonProps, Tooltip } from "@mantine/core";
 import { IconTrash, IconEdit } from "@tabler/icons-react";
 
+import { WorldMetadata } from "shared/types/World";
 import Container from "../Container";
 import { formatDate } from "@/lib/utils";
 
-import { WorldListingProps } from "./WorldListingProps";
 import styles from "./WorldListing.module.css";
+
+interface WorldListingProps {
+    world: WorldMetadata;
+    showDates?: boolean;
+    showToolbar?: boolean;
+    online?: boolean;
+}
 
 const toolbarButtonOptions: ButtonProps = {
     color: "var(--ui-shade-4)",

@@ -1,10 +1,14 @@
-import React from "react";
+import React, { CSSProperties } from "react";
 import { Anchor } from "@mantine/core";
 
 import Container from "../Container";
 
-import { CreditContainerProps } from "./CreditContainerProps";
 import styles from "./CreditContainer.module.css";
+
+interface CreditContainerProps {
+    className?: string;
+    style?: CSSProperties;
+}
 
 function CreditContainer({ className, style }: CreditContainerProps) {
     return <Container

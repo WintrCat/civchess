@@ -1,7 +1,15 @@
-import React from "react";
+import React, { ReactNode, CSSProperties } from "react";
 
-import { ContainerProps } from "./ContainerProps";
 import styles from "./Container.module.css";
+
+interface ContainerProps {
+    className?: string;
+    style?: CSSProperties;
+    gradient?: boolean;
+    noShadow?: boolean;
+    onClick?: () => void;
+    children?: ReactNode;
+}
 
 function Container({
     className,
