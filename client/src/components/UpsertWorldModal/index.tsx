@@ -1,6 +1,8 @@
 import React, { useEffect, useState, useMemo } from "react";
-import { IconHelp, IconPlus } from "@tabler/icons-react";
+import { IconHelp, IconPlus, IconEdit } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
+import { remove } from "es-toolkit";
+import { produce } from "immer";
 import {
     Modal, TextInput, Switch,
     Button, Alert, Checkbox,
@@ -13,20 +15,27 @@ import { SquareType } from "shared/constants/SquareType";
 import { biomeNames } from "@/constants/utils";
 import authClient from "@/lib/auth";
 
-import styles from "../index.module.css";
+import styles from "./index.module.css";
 
-interface CreateWorldModalProps {
+interface UpsertWorldModalProps {
     open: boolean;
     onClose: () => void;
+    editWorld?: WorldOptions;
 }
 
 const pinWorldTooltip = "Pins this world to the top of the list globally.";
 
-const defaultBiomesOptions = Object.fromEntries(
-    Object.values(SquareType).map(type => [type, true])
-) as Record<SquareType, boolean>;
+const defaultWorldOptions: WorldOptions = {
+    name: "",
+    code: "",
+    squareTypes: Object.values(SquareType)
+};
 
-function CreateWorldModal({ open, onClose }: CreateWorldModalProps) {
+function UpsertWorldModal({
+    open,
+    onClose,
+    editWorld
+}: UpsertWorldModalProps) {
     const queryClient = useQueryClient();
 
     const { data: session } = authClient.useSession();
@@ -35,31 +44,32 @@ function CreateWorldModal({ open, onClose }: CreateWorldModalProps) {
         session?.user.roles.includes(UserRole.ADMIN)
     ), [session?.user.id]);
 
-    const [ worldName, setWorldName ] = useState("");
-    const [ worldCode, setWorldCode ] = useState("");
-    const [ pinned, setPinned ] = useState(false);
-
-    const [ biomesOptions, setBiomesOptions ] = useState(defaultBiomesOptions);
+    const [
+        worldOptions,
+        setWorldOptions
+    ] = useState<WorldOptions>(defaultWorldOptions);
 
     const [ pending, setPending ] = useState(false);
     const [ error, setError ] = useState<string>();
+
+    useEffect(() => {
+        if (editWorld) setWorldOptions(editWorld);
+    }, [editWorld]);
 
     useEffect(() => {
         if (error) setPending(false);
     }, [error])
 
     function close() {
-        setWorldName("");
-        setWorldCode("");
-        setPinned(false);
-        setBiomesOptions(defaultBiomesOptions);
+        if (!editWorld) setWorldOptions(defaultWorldOptions);
+
         setPending(false);
         setError(undefined);
 
         onClose();
     }
 
-    async function createWorld(options: WorldOptions) {
+    async function upsertWorld(options: WorldOptions) {
         const parse = worldOptionsSchema.safeParse(options);
 
         if (!parse.success) return setError(
@@ -68,7 +78,7 @@ function CreateWorldModal({ open, onClose }: CreateWorldModalProps) {
 
         setPending(true);
 
-        const response = await fetch("/api/worlds/create", {
+        const response = await fetch("/api/worlds/upsert", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(options)
@@ -82,12 +92,12 @@ function CreateWorldModal({ open, onClose }: CreateWorldModalProps) {
     }
 
     return <Modal
-        classNames={{ body: styles.createWorldDialog }}
+        classNames={{ body: styles.wrapper }}
         opened={open}
         onClose={close}
         centered
-        title={<span className={styles.createWorldDialogTitle}>
-            Create a world
+        title={<span className={styles.title}>
+            {editWorld ? "Update world" : "Create a world"}
         </span>}
     >
         <div>
@@ -96,7 +106,10 @@ function CreateWorldModal({ open, onClose }: CreateWorldModalProps) {
             <TextInput
                 size="md"
                 placeholder="World name..."
-                onChange={event => setWorldName(event.currentTarget.value)}
+                value={worldOptions.name}
+                onChange={event => setWorldOptions(prev => ({
+                    ...prev, name: event.target.value
+                }))}
             />
         </div>
 
@@ -110,46 +123,61 @@ function CreateWorldModal({ open, onClose }: CreateWorldModalProps) {
             <TextInput
                 size="md"
                 placeholder="World Code..."
-                onChange={event => setWorldCode(event.currentTarget.value)}
+                value={worldOptions.code}
+                onChange={event => setWorldOptions(prev => ({
+                    ...prev, code: event.target.value
+                }))}
             />
         </div>
 
         {isUserAdmin && <div
-            className={styles.createWorldDialogSwitch}
+            className={styles.switch}
         >
             <span style={{ color: "#c1c1c1" }}>
                 Pinned
             </span>
 
-            <Checkbox checked={pinned} onChange={event => setPinned(
-                event.currentTarget.checked
-            )}/>
+            <Checkbox
+                checked={worldOptions.pinned || false}
+                onChange={event => setWorldOptions(prev => ({
+                    ...prev, pinned: event.target.checked
+                }))}
+            />
 
             <Tooltip label={pinWorldTooltip} withArrow>
                 <IconHelp color="var(--ui-shade-6)" cursor="help" size="20"/>
             </Tooltip>
         </div>}
 
-        <div>
+        {!editWorld && <div>
             <span>Biomes</span>
 
-            {Object.keys(biomesOptions).map(key => <div
-                className={styles.createWorldDialogSwitch}
-                key={key}
+            {Object.values(SquareType).map(type => <div
+                className={styles.switch}
+                key={type}
             >
                 <Switch
                     size="md"
                     display="inline-block"
-                    defaultChecked
-                    onChange={event => setBiomesOptions({
-                        ...biomesOptions,
-                        [key as SquareType]: event.currentTarget.checked
-                    })}
+                    checked={worldOptions.squareTypes?.includes(type) || false}
+                    onChange={event => setWorldOptions(
+                        produce(worldOptions, draft => {
+                            draft.squareTypes ??= [];
+                            
+                            if (event.target.checked) {
+                                draft.squareTypes.push(type)
+                            } else {
+                                remove(draft.squareTypes, t => t == type);
+                            }
+
+                            return draft;
+                        })
+                    )}
                 />
 
-                {biomeNames[key as SquareType]}
+                {biomeNames[type]}
             </div>)}
-        </div>
+        </div>}
 
         {error && <Alert variant="light" color="red">
             {error}
@@ -157,22 +185,16 @@ function CreateWorldModal({ open, onClose }: CreateWorldModalProps) {
 
         <Button
             size="md"
-            leftSection={<IconPlus size={26} />}
-            onClick={() => createWorld({
-                name: worldName,
-                code: worldCode,
-                pinned: pinned,
-                widthChunks: 1,
-                heightChunks: 1,
-                squareTypes: Object.keys(biomesOptions).filter(
-                    key => biomesOptions[key as SquareType]
-                ) as SquareType[]
-            })}
+            leftSection={editWorld
+                ? <IconEdit size={26} />
+                : <IconPlus size={26} />
+            }
+            onClick={() => upsertWorld(worldOptions)}
             loading={pending}
         >
-            Create World
+            {editWorld ? "Update World" : "Create World"}
         </Button>
     </Modal>;
 }
 
-export default CreateWorldModal;
+export default UpsertWorldModal;

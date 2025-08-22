@@ -22,9 +22,17 @@ export const worldOptionsSchema = z.object({
         .min(3, "World Code must be at least 3 characters.")
         .max(24, "World Code must be 24 characters or less."),
     pinned: z.boolean().optional(),
-    widthChunks: z.number().min(1),
-    heightChunks: z.number().min(1),
     squareTypes: z.enum(SquareType).array().optional()
 });
 
 export type WorldOptions = z.infer<typeof worldOptionsSchema>;
+
+export function toWorldMetadata(world: World): WorldMetadata {
+    return {
+        code: world.code,
+        name: world.name,
+        pinned: world.pinned,
+        createdAt: world.createdAt,
+        lastOnlineAt: world.lastOnlineAt
+    };
+}

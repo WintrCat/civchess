@@ -6,6 +6,7 @@ import { IconTrash, IconEdit } from "@tabler/icons-react";
 import { WorldMetadata } from "shared/types/World";
 import Container from "../Container";
 import ConfirmModal from "../ConfirmModal";
+import UpsertWorldModal from "@/components/UpsertWorldModal";
 import { formatDate } from "@/lib/utils";
 
 import styles from "./index.module.css";
@@ -31,6 +32,7 @@ function WorldListing({
     const queryClient = useQueryClient();
 
     const [ deleteModalOpen, setDeleteModalOpen ] = useState(false);
+    const [ updateModalOpen, setUpdateModalOpen ] = useState(false);
 
     async function deleteWorld() {
         const response = await fetch(
@@ -89,15 +91,18 @@ function WorldListing({
                 </Tooltip>
                 
                 <Tooltip label="Edit World" withArrow>
-                    <Button {...toolbarButtonOptions}>
+                    <Button
+                        {...toolbarButtonOptions}
+                        onClick={() => setUpdateModalOpen(true)}
+                    >
                         <IconEdit/>
                     </Button>
                 </Tooltip>
             </div>}
 
-            <Button>
+            {showToolbar && <Button>
                 Host World
-            </Button>
+            </Button>}
         </div>
 
         <ConfirmModal
@@ -110,6 +115,12 @@ function WorldListing({
             <b>{world.name}</b>
             ?
         </ConfirmModal>
+
+        <UpsertWorldModal
+            open={updateModalOpen}
+            onClose={() => setUpdateModalOpen(false)}
+            editWorld={world}
+        />
     </Container>;
 }
 

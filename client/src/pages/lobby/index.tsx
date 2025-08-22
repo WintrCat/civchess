@@ -1,26 +1,26 @@
 import React, { useState } from "react";
 import { IconPlus } from "@tabler/icons-react";
-import { useQuery } from "@tanstack/react-query";
 import { Divider, TextInput, Button } from "@mantine/core";
 
 import { WorldMetadata } from "shared/types/World";
 import Container from "@/components/Container";
 import CreditContainer from "@/components/CreditContainer";
-import CreateWorldModal from "./CreateWorldModal";
+import UpsertWorldModal from "@/components/UpsertWorldModal";
 import WorldListing from "@/components/WorldListing";
+import { useServerState } from "@/hooks/useServerState";
 
 import styles from "./index.module.css";
 
 function Lobby() {
-    const { data: worlds, status: worldsStatus } = useQuery({
-        queryKey: ["worlds"],
-        queryFn: async () => {
-            const response = await fetch("/api/worlds/get");
-            if (!response.ok) throw new Error();
+    const {
+        data: pinnedWorlds, status: pinnedWorldsStatus
+    } = useServerState<WorldMetadata[]>(
+        "/api/worlds/get?pinned=1", ["worlds", "pinned"]
+    );
 
-            return await response.json() as WorldMetadata[];
-        }
-    });
+    const {
+        data: worlds, status: worldsStatus
+    } = useServerState<WorldMetadata[]>("/api/worlds/get", "worlds");
 
     const [ createWorldOpen, setCreateWorldOpen ] = useState(false);
 
@@ -36,18 +36,32 @@ function Lobby() {
                 <span>wintrcat_gaming45</span>
             </div>
 
-            <Divider style={{ width: "100%" }} />
+            <Divider
+                label="PINNED WORLDS"
+                style={{ width: "100%" }}
+            />
 
-            <span>SERVER SERVER SERVER</span>
+            {pinnedWorldsStatus == "success" && (pinnedWorlds.length > 0
+                ? pinnedWorlds.map(world => (
+                    <WorldListing world={world} key={world.code} />
+                ))
+                : <i style={{ color: "grey"}}>
+                    There aren't any pinned worlds right now.
+                </i>
+            )}
 
             <Divider
                 label="YOUR WORLDS"
-                labelPosition="center"
                 style={{ width: "100%" }}
             />
 
             {worldsStatus == "success" && worlds.map(world => (
-                <WorldListing world={world} showDates showToolbar key={world.code} />
+                <WorldListing
+                    world={world}
+                    showDates
+                    showToolbar
+                    key={world.code}
+                />
             ))}
 
             <Button
@@ -61,7 +75,6 @@ function Lobby() {
 
             <Divider
                 label="JOIN WORLD"
-                labelPosition="center"
                 style={{ width: "100%" }}
             />
 
@@ -78,7 +91,7 @@ function Lobby() {
             </div>
         </Container>
 
-        <CreateWorldModal
+        <UpsertWorldModal
             open={createWorldOpen}
             onClose={() => setCreateWorldOpen(false)}
         />
