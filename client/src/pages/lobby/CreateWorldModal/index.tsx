@@ -2,12 +2,8 @@ import React, { useEffect, useState, useMemo } from "react";
 import { IconHelp, IconPlus } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
 import {
-    Modal,
-    TextInput,
-    Switch,
-    Button,
-    Alert,
-    Checkbox,
+    Modal, TextInput, Switch,
+    Button, Alert, Checkbox,
     Tooltip
 } from "@mantine/core";
 
@@ -17,8 +13,12 @@ import { SquareType } from "shared/constants/SquareType";
 import { biomeNames } from "@/constants/utils";
 import authClient from "@/lib/auth";
 
-import { CreateWorldModalProps } from "./CreateWorldModalProps";
 import styles from "../index.module.css";
+
+interface CreateWorldModalProps {
+    open: boolean;
+    onClose: () => void;
+}
 
 const pinWorldTooltip = "Pins this world to the top of the list globally.";
 
@@ -41,11 +41,11 @@ function CreateWorldModal({ open, onClose }: CreateWorldModalProps) {
 
     const [ biomesOptions, setBiomesOptions ] = useState(defaultBiomesOptions);
 
-    const [ isPending, setIsPending ] = useState(false);
+    const [ pending, setPending ] = useState(false);
     const [ error, setError ] = useState<string>();
 
     useEffect(() => {
-        if (error) setIsPending(false);
+        if (error) setPending(false);
     }, [error])
 
     function close() {
@@ -53,7 +53,7 @@ function CreateWorldModal({ open, onClose }: CreateWorldModalProps) {
         setWorldCode("");
         setPinned(false);
         setBiomesOptions(defaultBiomesOptions);
-        setIsPending(false);
+        setPending(false);
         setError(undefined);
 
         onClose();
@@ -66,9 +66,9 @@ function CreateWorldModal({ open, onClose }: CreateWorldModalProps) {
             parse.error.issues.at(0)?.message
         );
 
-        setIsPending(true);
+        setPending(true);
 
-        const response = await fetch("/api/create-world", {
+        const response = await fetch("/api/worlds/create", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(options)
@@ -168,7 +168,7 @@ function CreateWorldModal({ open, onClose }: CreateWorldModalProps) {
                     key => biomesOptions[key as SquareType]
                 ) as SquareType[]
             })}
-            loading={isPending}
+            loading={pending}
         >
             Create World
         </Button>

@@ -1,12 +1,14 @@
-import React from "react";
+import React, { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Button, ButtonProps, Tooltip } from "@mantine/core";
 import { IconTrash, IconEdit } from "@tabler/icons-react";
 
 import { WorldMetadata } from "shared/types/World";
 import Container from "../Container";
+import ConfirmModal from "../ConfirmModal";
 import { formatDate } from "@/lib/utils";
 
-import styles from "./WorldListing.module.css";
+import styles from "./index.module.css";
 
 interface WorldListingProps {
     world: WorldMetadata;
@@ -26,6 +28,22 @@ function WorldListing({
     showToolbar,
     online
 }: WorldListingProps) {
+    const queryClient = useQueryClient();
+
+    const [ deleteModalOpen, setDeleteModalOpen ] = useState(false);
+
+    async function deleteWorld() {
+        const response = await fetch(
+            `/api/worlds/delete?code=${world.code}`
+        );
+        
+        if (!response.ok) throw new Error(
+            "An unknown error has occurred."
+        );
+
+        await queryClient.refetchQueries({ queryKey: ["worlds"] });
+    }
+
     return <Container className={styles.wrapper} noShadow>
         <div>
             <span className={styles.worldName}>
@@ -62,7 +80,10 @@ function WorldListing({
         }}>
             {showToolbar && <div className={styles.toolbar}>
                 <Tooltip label="Delete World" withArrow>
-                    <Button {...toolbarButtonOptions}>
+                    <Button
+                        {...toolbarButtonOptions}
+                        onClick={() => setDeleteModalOpen(true)}
+                    >
                         <IconTrash/>
                     </Button>
                 </Tooltip>
@@ -78,6 +99,17 @@ function WorldListing({
                 Host World
             </Button>
         </div>
+
+        <ConfirmModal
+            opened={deleteModalOpen}
+            onClose={() => setDeleteModalOpen(false)}
+            onConfirm={deleteWorld}
+            confirmColour="red"
+        >
+            Are you sure you want to delete{" "}
+            <b>{world.name}</b>
+            ?
+        </ConfirmModal>
     </Container>;
 }
 

@@ -3,7 +3,7 @@ import { Anchor } from "@mantine/core";
 
 import Container from "../Container";
 
-import styles from "./CreditContainer.module.css";
+import styles from "./index.module.css";
 
 interface CreditContainerProps {
     className?: string;

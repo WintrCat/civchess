@@ -15,7 +15,7 @@ function Lobby() {
     const { data: worlds, status: worldsStatus } = useQuery({
         queryKey: ["worlds"],
         queryFn: async () => {
-            const response = await fetch("/api/worlds");
+            const response = await fetch("/api/worlds/get");
             if (!response.ok) throw new Error();
 
             return await response.json() as WorldMetadata[];

@@ -6,7 +6,7 @@ import { sessionAuthenticator } from "@/lib/auth/middleware";
 import { UserWorld } from "@/database/models/UserWorld";
 import { WorldMetadata } from "shared/types/World";
 
-const path = "/worlds";
+const path = "/get";
 
 export const getWorldsRouter = Router();
 

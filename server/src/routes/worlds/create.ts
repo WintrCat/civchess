@@ -8,7 +8,7 @@ import { sessionAuthenticator } from "@/lib/auth/middleware";
 import { generateWorld } from "@/lib/generateWorld";
 import { UserRole } from "shared/constants/UserRole";
 
-const path = "/create-world";
+const path = "/create";
 
 export const createWorldRouter = Router();
 
