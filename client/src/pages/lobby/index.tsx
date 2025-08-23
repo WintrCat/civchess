@@ -1,25 +1,21 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router";
-import { IconPlus, IconUser, IconLogout } from "@tabler/icons-react";
-import { Divider, TextInput, Button, Menu, LoadingOverlay } from "@mantine/core";
+import { IconPlus } from "@tabler/icons-react";
+import { Divider, TextInput, Button } from "@mantine/core";
 
 import { WorldMetadata } from "shared/types/World";
 import Container from "@/components/Container";
 import CreditContainer from "@/components/CreditContainer";
 import UpsertWorldModal from "@/components/UpsertWorldModal";
 import WorldListing from "@/components/WorldListing";
+import ProfileMenu from "./ProfileMenu";
 import { useProtectedRoute } from "@/hooks/useProtectedRoute";
 import { useServerState } from "@/hooks/useServerState";
-import authClient from "@/lib/auth";
+import { authClient } from "@/lib/auth";
 
 import styles from "./index.module.css";
 
-import whiteKing from "@assets/img/pieces/wK.svg";
-
 function Lobby() {
     useProtectedRoute();
-
-    const navigate = useNavigate();
 
     const {
         data: pinnedWorlds, status: pinnedWorldsStatus
@@ -35,11 +31,6 @@ function Lobby() {
 
     const [ createWorldOpen, setCreateWorldOpen ] = useState(false);
 
-    async function signOut() {
-        await authClient.signOut();
-        navigate("/signin");
-    }
-
     return <div className={styles.wrapper}>
         <span className={styles.typography}>
             CivChess
@@ -49,37 +40,7 @@ function Lobby() {
             <div className={styles.topSection}>
                 <span>Join a server</span>
 
-                <Menu width={150} withArrow styles={{
-                    itemLabel: { fontSize: "1rem" }
-                }}>
-                    <Menu.Target>
-                        <span className={styles.profile}>
-                            <LoadingOverlay
-                                visible={!session?.user.name}
-                                loaderProps={{ size: "sm" }}
-                            />
-
-                            {session?.user.name || "Loading..."}
-
-                            <img src={whiteKing} height={40} />
-                        </span>
-
-                        
-                    </Menu.Target>
-
-                    <Menu.Dropdown>
-                        <Menu.Item leftSection={<IconUser size={20}/>}>
-                            Profile
-                        </Menu.Item>
-
-                        <Menu.Item
-                            leftSection={<IconLogout size={20}/>}
-                            onClick={signOut}
-                        >
-                            Sign out
-                        </Menu.Item>
-                    </Menu.Dropdown>
-                </Menu>
+                <ProfileMenu user={session?.user} />
             </div>
 
             <Divider

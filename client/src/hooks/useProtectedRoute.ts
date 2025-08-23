@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router";
 
-import authClient from "@/lib/auth";
+import { authClient } from "@/lib/auth";
 
 export function useProtectedRoute() {
     const navigate = useNavigate();

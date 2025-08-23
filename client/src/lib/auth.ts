@@ -1,7 +1,9 @@
 import { createAuthClient } from "better-auth/react";
 import { inferAdditionalFields } from "better-auth/client/plugins";
 
-const authClient = createAuthClient({
+export type AuthInfer = typeof authClient["$Infer"]["Session"];
+
+export const authClient = createAuthClient({
     basePath: "/auth",
     plugins: [inferAdditionalFields({
         user: {
@@ -9,5 +11,3 @@ const authClient = createAuthClient({
         }
     })]
 });
-
-export default authClient;

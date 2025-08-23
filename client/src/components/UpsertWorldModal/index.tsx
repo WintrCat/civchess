@@ -13,7 +13,7 @@ import { UserRole } from "shared/constants/UserRole";
 import { WorldOptions, worldOptionsSchema } from "shared/types/World";
 import { SquareType } from "shared/constants/SquareType";
 import { biomeNames } from "@/constants/utils";
-import authClient from "@/lib/auth";
+import { authClient } from "@/lib/auth";
 
 import styles from "./index.module.css";
 

@@ -4,6 +4,11 @@
 }
 
 @font-face {
+    font-family: "Nunito";
+    src: url("@assets/fonts/nunito.ttf");
+}
+
+@font-face {
     font-family: "Texturina";
     src: url("@assets/fonts/texturina.ttf");
 }

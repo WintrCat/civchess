@@ -2,7 +2,7 @@ import React from "react";
 import { Button } from "@mantine/core";
 
 import Container from "@/components/Container";
-import authClient from "@/lib/auth";
+import { authClient } from "@/lib/auth";
 
 import styles from "./index.module.css";
 
