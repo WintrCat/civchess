@@ -44,6 +44,23 @@ body {
     font-size: 1.4rem;
 }
 
+.profile {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    position: relative;
+    padding-left: 5px;
+
+    border-radius: 10px;
+
+    cursor: pointer;
+    transition-duration: 0.3s;
+}
+
+.profile:hover {
+    background-color: rgba(0, 0, 0, 0.15);
+}
+
 .joinCodeContainer {
     display: flex;
     justify-content: center;
