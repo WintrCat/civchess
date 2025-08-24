@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { StatusCodes } from "http-status-codes";
 
+import { StandardPieceType } from "shared/constants/StandardPieceType";
 import { UserRole } from "shared/constants/UserRole";
 import { PublicProfile } from "shared/types/PublicProfile";
 import { User } from "@/database/models/account";
@@ -17,6 +18,10 @@ publicProfileRouter.get("/public-profile", async (req, res) => {
     res.json({
         name: user.name,
         createdAt: user.createdAt.toISOString(),
-        roles: user.roles as UserRole[]
+        roles: user.roles as UserRole[],
+        avatar: {
+            colour: user.avatarColour,
+            piece: user.avatarPiece as StandardPieceType
+        }
     } satisfies PublicProfile);
 });

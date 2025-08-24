@@ -7,7 +7,9 @@ export const authClient = createAuthClient({
     basePath: "/auth",
     plugins: [inferAdditionalFields({
         user: {
-            roles: { type: "string[]" }
+            roles: { type: "string[]" },
+            avatarColour: { type: "string" },
+            avatarPiece: { type: "string" }
         }
     })]
 });

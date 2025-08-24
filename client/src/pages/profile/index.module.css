@@ -29,11 +29,6 @@ body {
     width: 100%;
 }
 
-.profile > img {
-    border-radius: 10px;
-    background-color: rgba(255, 255, 255, 0.05);
-}
-
 .profileData {
     display: flex;
     flex-direction: column;

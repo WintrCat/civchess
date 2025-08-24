@@ -40,7 +40,9 @@ function createAuth(database: mongo.Db) {
         user: {
             modelName: Collection.USERS,
             additionalFields: {
-                roles: { type: "string[]", input: false }
+                roles: { type: "string[]", input: false },
+                avatarColour: { type: "string", input: false },
+                avatarPiece: { type: "string", input: false }
             },
             deleteUser: { enabled: true }
         },

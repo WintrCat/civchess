@@ -1,0 +1,56 @@
+.wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.editorContent {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.title {
+    font-family: "Texturina";
+    font-size: 1.4rem;
+}
+
+.tabsRoot {
+    flex-grow: 1;
+    max-width: 300px;
+}
+
+.panel {
+    padding-top: 10px;
+}
+
+.colourPanel {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.piecePanel {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-evenly;
+    gap: 5px;
+}
+
+.piecePreview {
+    background-image: url("@assets/img/backgroundboard.png");
+    background-repeat: repeat round;
+    border-radius: 5px;
+
+    cursor: pointer;
+    transition-duration: 0.3s;
+}
+
+.piecePreview:hover {
+    filter: brightness(0.9);
+}
+
+.bottomSection {
+    display: flex;
+    justify-content: end;
+}

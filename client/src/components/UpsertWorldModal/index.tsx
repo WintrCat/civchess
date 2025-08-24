@@ -92,13 +92,11 @@ function UpsertWorldModal({
     }
 
     return <Modal
-        classNames={{ body: styles.wrapper }}
+        classNames={{ body: styles.wrapper, title: styles.title }}
         opened={open}
         onClose={close}
         centered
-        title={<span className={styles.title}>
-            {editWorld ? "Update world" : "Create a world"}
-        </span>}
+        title={editWorld ? "Update world" : "Create a world"}
     >
         <div>
             <span>Name</span>

@@ -1,5 +1,20 @@
 import { SquareType } from "shared/constants/SquareType";
 import { UserRole } from "shared/constants/UserRole";
+import { StandardPieceType } from "shared/constants/StandardPieceType";
+
+// Chess pieces
+import wP from "@assets/img/pieces/wP.svg";
+import wN from "@assets/img/pieces/wN.svg";
+import wB from "@assets/img/pieces/wB.svg";
+import wR from "@assets/img/pieces/wR.svg";
+import wQ from "@assets/img/pieces/wQ.svg";
+import wK from "@assets/img/pieces/wK.svg";
+import bP from "@assets/img/pieces/bP.svg";
+import bN from "@assets/img/pieces/bN.svg";
+import bB from "@assets/img/pieces/bB.svg";
+import bR from "@assets/img/pieces/bR.svg";
+import bQ from "@assets/img/pieces/bQ.svg";
+import bK from "@assets/img/pieces/bK.svg";
 
 export const userRoleDisplays = {
     [UserRole.ADMIN]: {
@@ -14,6 +29,11 @@ export const userRoleDisplays = {
         name: "CONTENT CREATOR",
         color: "#ff5f5f70"
     }
+};
+
+export const pieceImages: Record<StandardPieceType, any> = {
+    wP, wN, wB, wR, wQ, wK,
+    bP, bN, bB, bR, bQ, bK
 };
 
 export const biomeNames = {

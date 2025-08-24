@@ -4,14 +4,13 @@ import { Button, Divider } from "@mantine/core";
 
 import { PublicProfile } from "shared/types/PublicProfile";
 import Container from "@/components/Container";
+import ProfileAvatar from "@/components/ProfileAvatar";
 import { useServerState } from "@/hooks/useServerState";
 import { userRoleDisplays } from "@/constants/utils";
 import { formatDate } from "@/lib/utils";
 import { authClient } from "@/lib/auth";
 
 import styles from "./index.module.css";
-
-import whiteKing from "@assets/img/pieces/wK.svg";
 
 function Profile() {
     const navigate = useNavigate();
@@ -23,7 +22,7 @@ function Profile() {
         data: profile, status: profileStatus
     } = useServerState<PublicProfile>(
         `/api/public-profile?username=${username}`,
-        { queryKey: ["profile", username!], retry: false }
+        { queryKey: ["profile", username], retry: false }
     );
 
     useEffect(() => {
@@ -33,7 +32,10 @@ function Profile() {
     return <div className={styles.wrapper}>
         <Container className={styles.container} gradient>
             <div className={styles.profile}>
-                <img src={whiteKing} height={100} />
+                <ProfileAvatar
+                    size={100}
+                    editable={session?.user.name == username}
+                />
 
                 <div className={styles.profileData}>
                     <span className={styles.username}>

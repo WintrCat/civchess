@@ -22,7 +22,9 @@ export const userInitialiser = async (
     const initialisedUser: AuthInfer["user"] = {
         ...user,
         name: username,
-        roles: []
+        roles: [],
+        avatarColour: "#3b3e43",
+        avatarPiece: "wK"
     };
 
     return { data: initialisedUser };

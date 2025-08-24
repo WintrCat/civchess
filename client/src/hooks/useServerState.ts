@@ -1,19 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { StatusCodes } from "http-status-codes";
 
-type BakedResponse = Omit<Response, "status"> & { status: StatusCodes };
-
-interface StateOptions<StateType> {
-    queryKey?: string[];
-    focusRefetch?: boolean;
-    retry?: boolean;
-    responseTransform?: (data: string, response: BakedResponse) => StateType;
-}
-
-type OptionsOrQueryKey<StateType> = (
-    StateOptions<StateType> | string[] | string
-);
-
 class QueryError extends Error {
     response: BakedResponse;
 
@@ -23,19 +10,44 @@ class QueryError extends Error {
     }
 }
 
+type BakedResponse = Omit<Response, "status"> & { status: StatusCodes };
+
+interface StateOptions<StateType> {
+    queryKey?: (string | undefined)[];
+    focusRefetch?: boolean;
+    retry?: boolean;
+    responseTransform?: (data: string, response: BakedResponse) => StateType;
+    enabled?: boolean;
+}
+
+interface ExtractedOptions<StateType> {
+    queryKey: string[];
+    options: StateOptions<StateType>
+}
+
+type OptionsOrQueryKey<StateType> = (
+    StateOptions<StateType>
+    | StateOptions<StateType>["queryKey"]
+    | string
+);
+
 function extractOptions<StateType>(
     route: string,
     optionsOrQueryKey?: OptionsOrQueryKey<StateType>
-) {
+): ExtractedOptions<StateType> {
     if (typeof optionsOrQueryKey == "string")
         return { queryKey: [optionsOrQueryKey], options: {} };
 
     if (Array.isArray(optionsOrQueryKey))
-        return { queryKey: optionsOrQueryKey, options: {} };
+        return {
+            queryKey: optionsOrQueryKey.map(key => key || ""),
+            options: {}
+        };
 
     if (optionsOrQueryKey)
         return {
-            queryKey: optionsOrQueryKey.queryKey || [route],
+            queryKey: optionsOrQueryKey.queryKey?.map(key => key || "")
+                || [route],
             options: optionsOrQueryKey
         };
 
@@ -63,7 +75,8 @@ export function useServerState<StateType>(
             ) as StateType;
         },
         refetchOnWindowFocus: options?.focusRefetch || false,
-        retry: options?.retry
+        retry: options?.retry,
+        enabled: options?.enabled
     });
 
     if (query.status == "success") return query;
