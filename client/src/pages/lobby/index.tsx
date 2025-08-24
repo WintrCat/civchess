@@ -10,7 +10,6 @@ import WorldListing from "@/components/WorldListing";
 import ProfileMenu from "./ProfileMenu";
 import { useProtectedRoute } from "@/hooks/useProtectedRoute";
 import { useServerState } from "@/hooks/useServerState";
-import { authClient } from "@/lib/auth";
 
 import styles from "./index.module.css";
 
@@ -27,8 +26,6 @@ function Lobby() {
         data: worlds, status: worldsStatus
     } = useServerState<WorldMetadata[]>("/api/worlds/get", "worlds");
 
-    const { data: session } = authClient.useSession();
-
     const [ createWorldOpen, setCreateWorldOpen ] = useState(false);
 
     return <div className={styles.wrapper}>
@@ -40,7 +37,7 @@ function Lobby() {
             <div className={styles.topSection}>
                 <span>Join a server</span>
 
-                <ProfileMenu user={session?.user} />
+                <ProfileMenu/>
             </div>
 
             <Divider

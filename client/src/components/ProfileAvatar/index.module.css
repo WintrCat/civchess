@@ -2,6 +2,7 @@
     position: relative;
     width: min-content;
     height: min-content;
+    aspect-ratio: 1 / 1;
 
     border-radius: 10px;
     

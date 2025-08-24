@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { QueryStatus, useQueryClient } from "@tanstack/react-query";
 import { IconPalette, IconChessKing } from "@tabler/icons-react";
 import {
     Button,
@@ -9,34 +10,66 @@ import {
     TextInput
 } from "@mantine/core";
 
+import { ProfileAvatar } from "shared/types/PublicProfile";
 import { StandardPieceType } from "shared/constants/StandardPieceType";
-import ProfileAvatar from "@/components/ProfileAvatar";
+import ProfileAvatarUI from "@/components/ProfileAvatar";
 import { pieceImages } from "@/constants/utils";
 import { authClient } from "@/lib/auth";
 
 import styles from "./index.module.css";
 
+type Status = QueryStatus | "idle";
+
 function AvatarEditor(props: ModalProps) {
+    const queryClient = useQueryClient();
+
     const { data: session } = authClient.useSession();
 
     const [ colour, setColour ] = useState("#3b3e43");
     const [ piece, setPiece ] = useState<StandardPieceType>("wK");
 
+    const [ status, setStatus ] = useState<Status>("idle");
+
     useEffect(() => {
         if (!session) return;
 
-        // update state with profile data from session
-    }, [session])
+        setColour(session.user.avatarColour);
+        setPiece(session.user.avatarPiece as StandardPieceType);
+    }, [session]);
+
+    async function saveAvatar() {
+        setStatus("pending");
+
+        const response = await fetch("/api/account/edit-avatar", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                colour, piece
+            } satisfies ProfileAvatar)
+        });
+
+        if (!response.ok) return setStatus("error");
+
+        queryClient.refetchQueries({
+            queryKey: ["profile", session?.user.name]
+        });
+
+        setStatus("success");
+    }
 
     return <Modal
         {...props}
         classNames={{ body: styles.wrapper, title: styles.title }}
         size="500px"
         title="Edit Avatar"
+        onClose={() => {
+            setStatus("idle");
+            props.onClose();
+        }}
     >
         <div className={styles.editorContent}>
             {session?.user.name
-                ? <ProfileAvatar size={150} colour={colour} piece={piece} />
+                ? <ProfileAvatarUI size={150} avatar={{ colour, piece }} />
                 : <div className={styles.profileImageLoader} />
             }
 
@@ -89,7 +122,19 @@ function AvatarEditor(props: ModalProps) {
         </div>
 
         <div className={styles.bottomSection}>
-            <Button style={{ width: "100px" }}>
+            {status == "success" && <span style={{ color: "#52ff52" }}>
+                Saved successfully.    
+            </span>}
+
+            {status == "error" && <span style={{ color: "#ff4242" }}>
+                Failed to save avatar.
+            </span>}
+
+            <Button
+                style={{ width: "100px" }}
+                loading={status == "pending"}
+                onClick={saveAvatar}
+            >
                 Save
             </Button>
         </div>

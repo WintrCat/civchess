@@ -2,6 +2,7 @@ import React, { useEffect } from "react";
 import { useNavigate, useParams } from "react-router";
 import { Button, Divider } from "@mantine/core";
 
+import { StandardPieceType } from "shared/constants/StandardPieceType";
 import { PublicProfile } from "shared/types/PublicProfile";
 import Container from "@/components/Container";
 import ProfileAvatar from "@/components/ProfileAvatar";
@@ -33,6 +34,7 @@ function Profile() {
         <Container className={styles.container} gradient>
             <div className={styles.profile}>
                 <ProfileAvatar
+                    avatar={profile?.avatar}
                     size={100}
                     editable={session?.user.name == username}
                 />

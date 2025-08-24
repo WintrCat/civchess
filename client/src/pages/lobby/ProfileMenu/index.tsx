@@ -3,18 +3,15 @@ import { useNavigate } from "react-router";
 import { IconUser, IconLogout } from "@tabler/icons-react";
 import { Menu, LoadingOverlay } from "@mantine/core";
 
-import { AuthInfer, authClient } from "@/lib/auth";
+import ProfileAvatar from "@/components/ProfileAvatar";
+import { AuthInfer, authClient, getAvatar } from "@/lib/auth";
 
 import styles from "./index.module.css";
 
-import whiteKing from "@assets/img/pieces/wK.svg";
-
-interface ProfileMenuProps {
-    user?: AuthInfer["user"];
-}
-
-function ProfileMenu({ user }: ProfileMenuProps) {
+function ProfileMenu() {
     const navigate = useNavigate();
+
+    const { data: session } = authClient.useSession();
 
     async function signOut() {
         await authClient.signOut();
@@ -22,7 +19,7 @@ function ProfileMenu({ user }: ProfileMenuProps) {
     }
 
     function openProfile() {
-        navigate(`/profile/${user?.name}`);
+        navigate(`/profile/${session?.user.name}`);
     }
     
     return <Menu width={150} withArrow styles={{
@@ -31,13 +28,15 @@ function ProfileMenu({ user }: ProfileMenuProps) {
         <Menu.Target>
             <span className={styles.profile}>
                 <LoadingOverlay
-                    visible={!user?.name}
+                    visible={!session?.user.name}
                     loaderProps={{ size: "sm" }}
                 />
 
-                {user?.name || "Loading..."}
+                {session?.user.name || "Loading..."}
 
-                <img src={whiteKing} height={40} />
+                <ProfileAvatar size={35} avatar={session
+                    ? getAvatar(session.user) : undefined
+                }/>
             </span>
         </Menu.Target>
 

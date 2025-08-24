@@ -2,37 +2,38 @@ import React, { CSSProperties, useState } from "react";
 import { IconEdit } from "@tabler/icons-react";
 import { LoadingOverlay } from "@mantine/core";
 
-import { StandardPieceType } from "shared/constants/StandardPieceType";
+import { ProfileAvatar as ProfileAvatarType } from "shared/types/PublicProfile";
 import { pieceImages } from "@/constants/utils";
 import AvatarEditor from "./AvatarEditor";
 
 import styles from "./index.module.css";
 
 interface ProfileAvatarProps {
-    colour?: string;
-    piece?: StandardPieceType;
-    loading?: boolean;
+    avatar?: ProfileAvatarType;
     size?: CSSProperties["width"];
     editable?: boolean;
 }
 
+const defaultAvatar: ProfileAvatarType = {
+    colour: "var(--ui-shade-5)",
+    piece: "wK"
+};
+
 function ProfileAvatar({
-    colour = "var(--ui-shade-5)",
-    piece = "wK",
-    loading,
+    avatar = defaultAvatar,
     size,
     editable
 }: ProfileAvatarProps) {
     const [ avatarEditorOpen, setAvatarEditorOpen ] = useState(false);
 
     return <div className={styles.profileImage} style={{
-        backgroundColor: colour
+        backgroundColor: avatar.colour
     }}>
-        <LoadingOverlay visible={loading} />
+        <LoadingOverlay visible={!avatar} />
 
         <img
-            src={pieceImages[piece]}
-            height={size}
+            src={pieceImages[avatar.piece]}
+            height={size || 50}
             draggable={false}
         />
 
