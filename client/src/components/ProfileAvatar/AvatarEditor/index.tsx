@@ -50,7 +50,7 @@ function AvatarEditor(props: ModalProps) {
 
         if (!response.ok) return setStatus("error");
 
-        queryClient.refetchQueries({
+        await queryClient.refetchQueries({
             queryKey: ["profile", session?.user.name]
         });
 
