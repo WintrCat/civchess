@@ -38,23 +38,34 @@ body {
     justify-content: space-between;
     gap: 0 15px;
     width: 100%;
+
+    font-size: 1.4rem;
 }
 
-.topSection > span {
-    font-size: 1.4rem;
+.profileMenu {
+    padding-left: 7px;
+}
+
+@media (max-width: 550px) {    
+    .topSection {
+        justify-content: end;
+    }
+
+    .profileMenu {
+        padding-left: 0;
+    }
+
+    .joinServer {
+        display: none;
+    }
 }
 
 .joinCodeContainer {
     display: flex;
+    flex-wrap: wrap;
     justify-content: center;
     gap: 10px;
     width: 100%;
-}
-
-@media (max-width: 400px) {
-    .joinCodeContainer {
-        flex-direction: column;
-    }
 }
 
 .credit {

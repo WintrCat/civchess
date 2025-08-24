@@ -35,9 +35,11 @@ function Lobby() {
 
         <Container className={styles.dialog} gradient>
             <div className={styles.topSection}>
-                <span>Join a server</span>
+                <span className={styles.joinServer}>
+                    Join a server
+                </span>
 
-                <ProfileMenu/>
+                <ProfileMenu className={styles.profileMenu} />
             </div>
 
             <Divider

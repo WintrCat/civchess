@@ -4,11 +4,15 @@ import { IconUser, IconLogout } from "@tabler/icons-react";
 import { Menu, LoadingOverlay } from "@mantine/core";
 
 import ProfileAvatar from "@/components/ProfileAvatar";
-import { AuthInfer, authClient, getAvatar } from "@/lib/auth";
+import { authClient, getAvatar } from "@/lib/auth";
 
 import styles from "./index.module.css";
 
-function ProfileMenu() {
+interface ProfileMenuProps {
+    className?: string;
+}
+
+function ProfileMenu({ className }: ProfileMenuProps) {
     const navigate = useNavigate();
 
     const { data: session } = authClient.useSession();
@@ -26,7 +30,7 @@ function ProfileMenu() {
         itemLabel: { fontSize: "1rem" }
     }}>
         <Menu.Target>
-            <span className={styles.profile}>
+            <span className={`${styles.profile} ${className}`}>
                 <LoadingOverlay
                     visible={!session?.user.name}
                     loaderProps={{ size: "sm" }}
