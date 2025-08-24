@@ -4,20 +4,30 @@
     gap: 10px;
 }
 
+.title {
+    font-family: "Texturina";
+    font-size: 1.4rem;
+}
+
 .editorContent {
     display: flex;
     justify-content: space-between;
     gap: 10px;
 }
 
-.title {
-    font-family: "Texturina";
-    font-size: 1.4rem;
-}
-
 .tabsRoot {
     flex-grow: 1;
-    max-width: 300px;
+}
+
+@media (max-width: 500px) {
+    .editorContent {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .tabsRoot {
+        width: 100%;
+    }
 }
 
 .panel {
@@ -35,6 +45,12 @@
     flex-wrap: wrap;
     justify-content: space-evenly;
     gap: 5px;
+}
+
+@media (max-width: 500px) {
+    .piecePanel {
+        justify-content: start;
+    }
 }
 
 .piecePreview {

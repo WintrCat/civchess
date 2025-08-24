@@ -68,10 +68,12 @@ function AvatarEditor(props: ModalProps) {
         }}
     >
         <div className={styles.editorContent}>
-            {session?.user.name
-                ? <ProfileAvatarUI size={150} avatar={{ colour, piece }} />
-                : <div className={styles.profileImageLoader} />
-            }
+            <div style={{ flexShrink: 0 }}>
+                {session?.user.name
+                    ? <ProfileAvatarUI size={150} avatar={{ colour, piece }} />
+                    : <div className={styles.profileImageLoader} />
+                }
+            </div>
 
             <Tabs defaultValue="colour" classNames={{
                 root: styles.tabsRoot, panel: styles.panel
