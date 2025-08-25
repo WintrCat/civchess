@@ -58,7 +58,7 @@ function UpsertWorldModal({
 
     useEffect(() => {
         if (error) setPending(false);
-    }, [error])
+    }, [error]);
 
     function close() {
         if (!editWorld) setWorldOptions(defaultWorldOptions);

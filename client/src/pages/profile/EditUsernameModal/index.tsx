@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import { FetchStatus } from "@tanstack/react-query";
 import { Modal, ModalProps, TextInput, Button, Alert } from "@mantine/core";
 import { StatusCodes } from "http-status-codes";
 
@@ -15,13 +14,17 @@ function EditUsernameModal(props: ModalProps) {
 
     const [ username, setUsername ] = useState("");
 
-    const [ status, setStatus ] = useState<FetchStatus>("idle");
+    const [ pending, setPending ] = useState(false);
     const [ error, setError ] = useState<string>();
 
     useEffect(() => {
         if (!session) return;
         setUsername(session.user.name);
     }, [session]);
+
+    useEffect(() => {
+        if (error) setPending(false);
+    }, [error]);
 
     async function editUsername() {
         if (username.length > maxUsernameLength)
@@ -36,7 +39,7 @@ function EditUsernameModal(props: ModalProps) {
             );
 
         setError("");
-        setStatus("fetching");
+        setPending(true);
 
         const response = await fetch("/api/account/edit-username", {
             method: "POST", body: username
@@ -54,7 +57,7 @@ function EditUsernameModal(props: ModalProps) {
     }
 
     function close() {
-        setStatus("idle");
+        setPending(false);
         setError(undefined);
 
         props.onClose();
@@ -79,7 +82,7 @@ function EditUsernameModal(props: ModalProps) {
         <div className={styles.bottomSection}>
             <Button
                 onClick={editUsername}
-                loading={status == "fetching" && !error}
+                loading={pending}
             >
                 Save
             </Button>
