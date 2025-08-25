@@ -61,7 +61,7 @@ function UpsertWorldModal({
     }, [error]);
 
     function close() {
-        if (!editWorld) setWorldOptions(defaultWorldOptions);
+        setWorldOptions(editWorld || defaultWorldOptions);
 
         setPending(false);
         setError(undefined);

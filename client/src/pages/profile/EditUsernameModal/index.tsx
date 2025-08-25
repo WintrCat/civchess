@@ -38,7 +38,6 @@ function EditUsernameModal(props: ModalProps) {
                 "Username must be alphanumeric including underscores."
             );
 
-        setError("");
         setPending(true);
 
         const response = await fetch("/api/account/edit-username", {
@@ -80,10 +79,7 @@ function EditUsernameModal(props: ModalProps) {
         </Alert>}
 
         <div className={styles.bottomSection}>
-            <Button
-                onClick={editUsername}
-                loading={pending}
-            >
+            <Button onClick={editUsername} loading={pending}>
                 Save
             </Button>
         </div>
