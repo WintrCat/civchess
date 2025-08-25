@@ -1,0 +1,16 @@
+.wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.bottomSection {
+    display: flex;
+    justify-content: end;
+    align-items: center;
+    gap: 10px;
+}
+
+.successMessage {
+    color: #52ff52;
+}

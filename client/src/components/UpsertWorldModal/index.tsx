@@ -92,7 +92,7 @@ function UpsertWorldModal({
     }
 
     return <Modal
-        classNames={{ body: styles.wrapper, title: styles.title }}
+        classNames={{ body: styles.wrapper }}
         opened={open}
         onClose={close}
         centered
@@ -128,9 +128,7 @@ function UpsertWorldModal({
             />
         </div>
 
-        {isUserAdmin && <div
-            className={styles.switch}
-        >
+        {isUserAdmin && <div className={styles.switch}>
             <span style={{ color: "#c1c1c1" }}>
                 Pinned
             </span>

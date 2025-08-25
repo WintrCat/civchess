@@ -108,6 +108,9 @@ importers:
       unique-username-generator:
         specifier: ^1.5.1
         version: 1.5.1
+      zod:
+        specifier: ^4.0.17
+        version: 4.0.17
     devDependencies:
       '@types/cors':
         specifier: ^2.8.19

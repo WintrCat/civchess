@@ -1,11 +1,12 @@
 import { User as AuthBaseUser } from "better-auth";
 import { generateUsername } from "unique-username-generator";
 
+import { StandardPieceType } from "shared/constants/StandardPieceType";
 import { AuthInfer } from "@/lib/auth";
 import { User } from "@/database/models/account";
 
-const minUsernameLength = 3;
-const maxUsernameLength = 20;
+export const minUsernameLength = 3;
+export const maxUsernameLength = 20;
 
 export const userInitialiser = async (
     user: AuthBaseUser
@@ -24,7 +25,7 @@ export const userInitialiser = async (
         name: username,
         roles: [],
         avatarColour: "#3b3e43",
-        avatarPiece: "wK"
+        avatarPiece: "wK" satisfies StandardPieceType
     };
 
     return { data: initialisedUser };
