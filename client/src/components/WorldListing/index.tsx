@@ -44,6 +44,8 @@ function WorldListing({
         );
 
         await queryClient.refetchQueries({ queryKey: ["worlds"] });
+
+        setDeleteModalOpen(false);
     }
 
     return <Container className={styles.wrapper} noShadow>

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router";
-import { Button, Divider } from "@mantine/core";
+import { Button, Code, Divider } from "@mantine/core";
 
 import { PublicProfile } from "shared/types/PublicProfile";
 import Container from "@/components/Container";
@@ -13,6 +13,7 @@ import { authClient } from "@/lib/auth";
 
 import styles from "./index.module.css";
 import { IconEdit } from "@tabler/icons-react";
+import ConfirmModal from "@/components/ConfirmModal";
 
 function Profile() {
     const navigate = useNavigate();
@@ -28,10 +29,19 @@ function Profile() {
     );
 
     const [ editUsernameOpen, setEditUsernameOpen ] = useState(false);
+    const [ deleteAccountOpen, setDeleteAccountOpen ] = useState(false);
 
     useEffect(() => {
         if (profileStatus == "error") navigate("/404");
     }, [profileStatus]);
+
+    async function deleteAccount() {
+        const result = await authClient.deleteUser();
+
+        if (result.error) throw new Error("Unknown error occurred.");
+
+        navigate("/signin");
+    }
 
     const editable = session?.user.name == username;
 
@@ -81,6 +91,7 @@ function Profile() {
                 <Button
                     color="red"
                     style={{ width: "min-content" }}
+                    onClick={() => setDeleteAccountOpen(true)}
                 >
                     Delete Account
                 </Button>
@@ -91,6 +102,26 @@ function Profile() {
             opened={editUsernameOpen}
             onClose={() => setEditUsernameOpen(false)}
         />
+
+        <ConfirmModal
+            opened={deleteAccountOpen}
+            onClose={() => setDeleteAccountOpen(false)}
+            onConfirm={deleteAccount}
+            title="Delete Account"
+            confirmationCode={session?.user.name}
+            confirmLabel="Delete"
+            confirmColour="red"
+            cancelLabel="Cancel"
+        >
+            Please confirm the deletion of your account by
+            typing your username,{" "}
+
+            <Code style={{ fontSize: "1rem" }}>
+                <b>{session?.user.name}</b>
+            </Code>
+
+            , into the field below:
+        </ConfirmModal>
     </div>;
 }
 
