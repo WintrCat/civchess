@@ -39,9 +39,8 @@ function WorldListing({
             `/api/worlds/delete?code=${world.code}`
         );
         
-        if (!response.ok) throw new Error(
-            "An unknown error has occurred."
-        );
+        if (!response.ok)
+            throw new Error("An unknown error has occurred.");
 
         await queryClient.refetchQueries({ queryKey: ["worlds"] });
 
