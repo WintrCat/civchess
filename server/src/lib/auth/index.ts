@@ -12,18 +12,19 @@ export type AuthInfer = AuthType["$Infer"]["Session"];
 let instance: AuthType | null = null;
 
 function createAuth(database: mongo.Db) {
-    if (!process.env.ORIGIN) {
+    if (!process.env.ORIGIN)
         throw new Error("origin not specified.");
-    }
 
-    if (!process.env.AUTH_SECRET) {
+    if (!process.env.AUTH_SECRET)
         throw new Error("auth secret not specified.");
-    }
 
     if (
         !process.env.GOOGLE_OAUTH_CLIENT_ID
         || !process.env.GOOGLE_OAUTH_CLIENT_SECRET
     ) throw new Error("google oauth credentials not fully specified.");
+
+    if (!process.env.DISCORD_OAUTH_CLIENT_ID)
+        throw new Error("discord oauth credentials not specified.");
 
     return betterAuth({
         baseURL: `${process.env.ORIGIN}/auth`,
@@ -35,6 +36,10 @@ function createAuth(database: mongo.Db) {
             google: {
                 clientId: process.env.GOOGLE_OAUTH_CLIENT_ID,
                 clientSecret: process.env.GOOGLE_OAUTH_CLIENT_SECRET
+            },
+            discord: {
+                clientId: process.env.DISCORD_OAUTH_CLIENT_ID,
+                clientSecret: process.env.DISCORD_OAUTH_CLIENT_SECRET
             }
         },
         user: {

@@ -2,20 +2,21 @@ import React from "react";
 import { Button } from "@mantine/core";
 
 import Container from "@/components/Container";
+import CreditContainer from "@/components/CreditContainer";
 import { authClient } from "@/lib/auth";
 
 import styles from "./index.module.css";
 
 import googleIcon from "@assets/img/google.png";
-import CreditContainer from "@/components/CreditContainer";
+import discordIcon from "@assets/img/discord.png";
 
 function SignIn() {
-    function signIn() {
+    function signIn(provider: "google" | "discord") {
         const callbackOrigin = import.meta.env.DEV
             ? import.meta.env.VITE_DEV_ORIGIN : "";
 
         authClient.signIn.social({
-            provider: "google",
+            provider: provider,
             callbackURL: `${callbackOrigin}/lobby`,
             errorCallbackURL: "/signin"
         });
@@ -37,10 +38,22 @@ function SignIn() {
                 size="md"
                 leftSection={<img src={googleIcon} height={25} />}
                 fullWidth
-                onClick={signIn}
+                onClick={() => signIn("google")}
                 style={{ transitionDuration: "0.3s" }}
             >
                 Sign in with Google
+            </Button>
+
+            <Button
+                className={styles.signInButton}
+                color="var(--ui-shade-5)"
+                size="md"
+                leftSection={<img src={discordIcon} height={20} />}
+                fullWidth
+                onClick={() => signIn("discord")}
+                style={{ transitionDuration: "0.3s" }}
+            >
+                Sign in with Discord
             </Button>
 
             <span className={styles.legalMessage}>
