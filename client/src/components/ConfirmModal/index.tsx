@@ -3,26 +3,30 @@ import { Alert, Button, Modal, ModalProps, TextInput } from "@mantine/core";
 
 import styles from "./index.module.css";
 
-interface ConfirmModalProps extends ModalProps {
+interface ConfirmModalProps {
     opened: boolean;
     onClose: () => void;
+    title?: string;
     children: ReactNode;
     confirmationCode?: string;
     confirmLabel?: ReactNode;
     confirmColour?: CSSProperties["color"];
     cancelLabel?: ReactNode;
     onConfirm?: () => void | Promise<void>;
+    modalProps?: ModalProps;
 }
 
 function ConfirmModal({
     opened,
     onClose,
+    title,
     children,
     confirmationCode,
     confirmLabel,
     confirmColour,
     cancelLabel,
-    onConfirm
+    onConfirm,
+    modalProps
 }: ConfirmModalProps) {
     const [ confirmation, setConfirmation ] = useState("");
 
@@ -54,9 +58,11 @@ function ConfirmModal({
     }
 
     return <Modal
-        opened={opened}
+        {...modalProps}
         classNames={{ body: styles.wrapper }}
+        opened={opened}
         onClose={close}
+        title={title}
     >
         <span>{children}</span>
 
@@ -75,7 +81,7 @@ function ConfirmModal({
                 {confirmLabel || "Yes"}
             </Button>
 
-            <Button color="var(--ui-shade-4)" onClick={onClose}>
+            <Button color="var(--ui-shade-4)" onClick={close}>
                 {cancelLabel || "No"}
             </Button>
         </div>
