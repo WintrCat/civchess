@@ -110,6 +110,7 @@ function WorldListing({
             opened={deleteModalOpen}
             onClose={() => setDeleteModalOpen(false)}
             onConfirm={deleteWorld}
+            title="Delete World"
             confirmColour="red"
         >
             Are you sure you want to delete{" "}
