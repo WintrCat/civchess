@@ -1,5 +1,4 @@
 import express from "express";
-import cors from "cors";
 import cluster from "cluster";
 import os from "os";
 import { toNodeHandler } from "better-auth/node";

@@ -3,16 +3,40 @@ import z from "zod";
 import { Chunk } from "./Chunk";
 import { SquareType } from "@/constants/SquareType";
 
+// change server related options (bans, ops etc.) while in game
+interface WorldServer {
+    lastOnlineAt?: string;
+    maxPlayers?: number;
+    bannedPlayers: string[];
+    whitelistedPlayers?: string[];
+    operatorPlayers: string[];
+}
+
+interface OnlineWorldServer extends WorldServer {
+    connectedPlayers: string[]; // to be a Player object
+}
+
 export interface World {
     name: string;
     code: string;
     pinned: boolean;
     chunks: Chunk[][];
     createdAt: string;
-    lastOnlineAt?: string;
+    server: WorldServer;
 }
 
-export type WorldMetadata = Omit<World, "chunks">;
+export type OnlineWorld = (
+    Omit<World, "server">
+    & { server: OnlineWorldServer }
+);
+
+export type WorldMetadata = Omit<World, "chunks" | "server"> & {
+    server: {
+        lastOnlineAt?: string;
+        maxPlayers?: number;
+        online: boolean;
+    }
+};
 
 export const worldOptionsSchema = z.object({
     name: z.string()
@@ -26,13 +50,3 @@ export const worldOptionsSchema = z.object({
 });
 
 export type WorldOptions = z.infer<typeof worldOptionsSchema>;
-
-export function toWorldMetadata(world: World): WorldMetadata {
-    return {
-        code: world.code,
-        name: world.name,
-        pinned: world.pinned,
-        createdAt: world.createdAt,
-        lastOnlineAt: world.lastOnlineAt
-    };
-}

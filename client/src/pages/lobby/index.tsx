@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { IconPlus } from "@tabler/icons-react";
 import { Divider, TextInput, Button } from "@mantine/core";
 
-import { WorldMetadata } from "shared/types/World";
+import { WorldMetadata } from "shared/types/game/World";
 import Container from "@/components/Container";
 import CreditContainer from "@/components/CreditContainer";
 import UpsertWorldModal from "@/components/UpsertWorldModal";
@@ -49,7 +49,7 @@ function Lobby() {
 
             {pinnedWorldsStatus == "success" && (pinnedWorlds.length > 0
                 ? pinnedWorlds.map(world => (
-                    <WorldListing world={world} key={world.code} />
+                    <WorldListing worldMetadata={world} key={world.code} />
                 ))
                 : <i style={{ color: "grey"}}>
                     There aren't any pinned worlds right now.
@@ -63,7 +63,7 @@ function Lobby() {
 
             {worldsStatus == "success" && worlds.map(world => (
                 <WorldListing
-                    world={world}
+                    worldMetadata={world}
                     showDates
                     showToolbar
                     key={world.code}
@@ -87,7 +87,7 @@ function Lobby() {
             <div className={styles.joinCodeContainer}>
                 <TextInput
                     size="md"
-                    placeholder="World ID..."
+                    placeholder="World Code..."
                     styles={{ wrapper: { width: "250px" } }}
                 />
 

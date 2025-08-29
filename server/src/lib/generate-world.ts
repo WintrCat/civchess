@@ -1,9 +1,9 @@
 import { sample } from "es-toolkit";
 
 import { SquareType } from "shared/constants/SquareType";
-import { Chunk } from "shared/types/Chunk";
-import { Square } from "shared/types/Square";
-import { World, WorldOptions } from "shared/types/World";
+import { Chunk } from "shared/types/game/Chunk";
+import { Square } from "shared/types/game/Square";
+import { World, WorldOptions } from "shared/types/game/World";
 
 export function generateWorld(options: WorldOptions): World {
     const chunks: Chunk[][] = [];
@@ -23,7 +23,11 @@ export function generateWorld(options: WorldOptions): World {
         code: options.code,
         pinned: options.pinned || false,
         chunks: chunks,
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
+        server: {
+            bannedPlayers: [],
+            operatorPlayers: []
+        }
     };
 }
 

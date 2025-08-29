@@ -3,11 +3,11 @@ import { StatusCodes } from "http-status-codes";
 import { Types } from "mongoose";
 import { omit } from "es-toolkit";
 
-import { WorldOptions, worldOptionsSchema } from "shared/types/World";
+import { UserRole } from "shared/constants/UserRole";
+import { worldOptionsSchema } from "shared/types/game/World";
 import { UserWorld } from "@/database/models/UserWorld";
 import { sessionAuthenticator } from "@/lib/auth/middleware";
 import { generateWorld } from "@/lib/generate-world";
-import { UserRole } from "shared/constants/UserRole";
 
 const path = "/upsert";
 
@@ -21,35 +21,43 @@ upsertWorldRouter.use(path,
 upsertWorldRouter.post(path, async (req, res) => {
     if (!req.user) return res.status(StatusCodes.UNAUTHORIZED).end();
 
-    const options: WorldOptions = req.body;
+    const { data: options, success } = worldOptionsSchema
+        .safeParse(req.body);
 
-    if (!worldOptionsSchema.safeParse(options).success)
-        return res.status(StatusCodes.BAD_REQUEST).end();
+    if (!success) return res.status(StatusCodes.BAD_REQUEST).end();
 
     if (!req.user.roles.includes(UserRole.ADMIN))
         options.pinned = false;
 
-    const existingWorld = await UserWorld.findOne({ code: options.code });
+    const worldCode = req.query.code?.toString();
 
-    if (!existingWorld) {
-        const world = generateWorld(options);
+    if (worldCode) {
+        const updatingWorld = await UserWorld.findOne({ code: worldCode });
 
-        console.log(world);
+        if (!updatingWorld)
+            return res.status(StatusCodes.NOT_FOUND).end();
 
-        await UserWorld.create({
-            ...world,
-            userId: new Types.ObjectId(req.user.id)
-        });
+        if (updatingWorld.userId.toString() != req.user.id)
+            return res.status(StatusCodes.UNAUTHORIZED).end();
+
+        await updatingWorld.updateOne(
+            omit(options, ["squareTypes"])
+        );
 
         return res.end();
     }
 
-    if (existingWorld.userId.toString() != req.user.id)
-        return res.status(StatusCodes.UNAUTHORIZED).end();
+    if (await UserWorld.findOne({ code: options.code }))
+        return res.status(StatusCodes.CONFLICT).end();
 
-    await existingWorld.updateOne(
-        omit(options, ["squareTypes"])
-    );
+    const world = generateWorld(options);
+
+    console.log(world);
+
+    await UserWorld.create({
+        ...world,
+        userId: new Types.ObjectId(req.user.id)
+    });
 
     res.end();
 });

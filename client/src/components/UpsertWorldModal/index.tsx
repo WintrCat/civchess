@@ -10,7 +10,7 @@ import {
 } from "@mantine/core";
 
 import { UserRole } from "shared/constants/UserRole";
-import { WorldOptions, worldOptionsSchema } from "shared/types/World";
+import { WorldOptions, worldOptionsSchema } from "shared/types/game/World";
 import { SquareType } from "shared/constants/SquareType";
 import { biomeNames } from "@/constants/utils";
 import { authClient } from "@/lib/auth";
@@ -78,7 +78,11 @@ function UpsertWorldModal({
 
         setPending(true);
 
-        const response = await fetch("/api/worlds/upsert", {
+        const upsertURL = editWorld
+            ? `/api/worlds/upsert?code=${editWorld.code}`
+            : "/api/worlds/upsert";
+
+        const response = await fetch(upsertURL, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(options)
