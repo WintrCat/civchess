@@ -26,11 +26,13 @@ upsertWorldRouter.post(path, async (req, res) => {
 
     if (!success) return res.status(StatusCodes.BAD_REQUEST).end();
 
+    // World pinning only available to Admin
     if (!req.user.roles.includes(UserRole.ADMIN))
         options.pinned = false;
 
     const worldCode = req.query.code?.toString();
 
+    // Update an existing world with provided world code
     if (worldCode) {
         const updatingWorld = await UserWorld.findOne({ code: worldCode });
 
@@ -47,6 +49,7 @@ upsertWorldRouter.post(path, async (req, res) => {
         return res.end();
     }
 
+    // Create a new world if valid to do so
     if (await UserWorld.findOne({ code: options.code }))
         return res.status(StatusCodes.CONFLICT).end();
 

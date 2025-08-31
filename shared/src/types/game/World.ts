@@ -1,43 +1,40 @@
 import z from "zod";
 
-import { Chunk } from "./Chunk";
+import { chunkSchema } from "./Chunk";
 import { SquareType } from "@/constants/SquareType";
 
 // change server related options (bans, ops etc.) while in game
-interface WorldServer {
-    lastOnlineAt?: string;
-    maxPlayers?: number;
-    bannedPlayers: string[];
-    whitelistedPlayers?: string[];
-    operatorPlayers: string[];
-}
+export const worldSchema = z.object({
+    name: z.string(),
+    code: z.string(),
+    pinned: z.boolean(),
+    createdAt: z.iso.datetime(),
 
-interface OnlineWorldServer extends WorldServer {
-    connectedPlayers: string[]; // to be a Player object
-}
+    lastOnlineAt: z.string().optional(),
+    maxPlayers: z.number().optional(),
+    bannedPlayers: z.string().array(),
+    whitelistedPlayers: z.string().array().optional(),
+    operatorPlayers: z.string().array(),
 
-export interface World {
-    name: string;
-    code: string;
-    pinned: boolean;
-    chunks: Chunk[][];
-    createdAt: string;
-    server: WorldServer;
-}
+    chunks: chunkSchema.array().array(),
+    players: z.string().array(), // To be Player object array
+});
 
-export type OnlineWorld = (
-    Omit<World, "server">
-    & { server: OnlineWorldServer }
-);
+export type World = z.infer<typeof worldSchema>;
 
-export type WorldMetadata = Omit<World, "chunks" | "server"> & {
-    server: {
-        lastOnlineAt?: string;
-        maxPlayers?: number;
-        online: boolean;
-    }
-};
+// World metadata for world listings
+export const worldMetadataSchema = worldSchema.pick({
+    name: true,
+    code: true,
+    pinned: true,
+    createdAt: true,
+    lastOnlineAt: true,
+    maxPlayers: true
+}).extend({ online: z.boolean() });
 
+export type WorldMetadata = z.infer<typeof worldMetadataSchema>;
+
+// World options for world generation
 export const worldOptionsSchema = z.object({
     name: z.string()
         .min(1, "World name cannot be empty.")

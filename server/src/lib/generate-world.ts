@@ -23,11 +23,10 @@ export function generateWorld(options: WorldOptions): World {
         code: options.code,
         pinned: options.pinned || false,
         chunks: chunks,
+        players: [],
         createdAt: new Date().toISOString(),
-        server: {
-            bannedPlayers: [],
-            operatorPlayers: []
-        }
+        bannedPlayers: [],
+        operatorPlayers: []
     };
 }
 

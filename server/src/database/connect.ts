@@ -8,8 +8,6 @@ export async function connectDatabase() {
         await mongoose.connect(
             process.env.DATABASE_URI || "mongodb://database/civchess"
         );
-        
-        if (first) console.log("database connected successfully.");
     } catch (err) {
         if (!first) return;
 

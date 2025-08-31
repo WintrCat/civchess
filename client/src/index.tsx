@@ -1,8 +1,8 @@
 import React, { lazy } from "react";
 import { createRoot } from "react-dom/client";
 import { createBrowserRouter, RouterProvider } from "react-router";
-import { MantineProvider, MantineTheme } from "@mantine/core";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { MantineProvider, MantineTheme } from "@mantine/core";
 
 import "@mantine/core/styles.css";
 import "./index.css";
@@ -27,6 +27,13 @@ const router = createBrowserRouter([
 ]);
 
 const mantineTheme: MantineTheme["components"] = {
+    Button: {
+        styles: {
+            root: {
+                transition: "background-color 0.3s"
+            }
+        }
+    },
     Modal: {
         styles: {
             title: {

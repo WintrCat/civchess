@@ -1,10 +1,9 @@
-import { Square } from "./Square";
+import z from "zod";
 
-export interface Chunk {
-    squares: Square[][];
-}
+import { squareSchema } from "./Square";
 
-export function validateChunk(chunk: Chunk) {
-    return chunk.squares.length == 8
-        && chunk.squares.every(row => row.length == 8);
-}
+export const chunkSchema = z.object({
+    squares: squareSchema.array().array()
+});
+
+export type Chunk = z.infer<typeof chunkSchema>;

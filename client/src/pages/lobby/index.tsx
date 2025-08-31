@@ -65,7 +65,7 @@ function Lobby() {
                 <WorldListing
                     worldMetadata={world}
                     showDates
-                    showToolbar
+                    manageable
                     key={world.code}
                 />
             ))}

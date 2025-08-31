@@ -1,7 +1,8 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button, ButtonProps, Tooltip } from "@mantine/core";
-import { IconTrash, IconEdit } from "@tabler/icons-react";
+import { IconTrash, IconEdit, IconLogin2 } from "@tabler/icons-react";
 
 import { WorldMetadata } from "shared/types/game/World";
 import Container from "../Container";
@@ -14,7 +15,7 @@ import styles from "./index.module.css";
 interface WorldListingProps {
     worldMetadata: WorldMetadata;
     showDates?: boolean;
-    showToolbar?: boolean;
+    manageable?: boolean;
 }
 
 const toolbarButtonOptions: ButtonProps = {
@@ -25,8 +26,10 @@ const toolbarButtonOptions: ButtonProps = {
 function WorldListing({
     worldMetadata,
     showDates,
-    showToolbar
+    manageable
 }: WorldListingProps) {
+    const navigate = useNavigate();
+
     const queryClient = useQueryClient();
 
     const [ deleteModalOpen, setDeleteModalOpen ] = useState(false);
@@ -63,19 +66,22 @@ function WorldListing({
         setHostPending(false);
     }
 
+    const offlineToolbar = manageable && !worldMetadata.online;
+    const onlineToolbar = manageable && worldMetadata.online;
+
     return <Container className={styles.wrapper} noShadow>
         <div>
             <span className={styles.worldName}>
                 {worldMetadata.name}
 
                 <Tooltip
-                    label={worldMetadata.server.online ? "Online" : "Offline"}
+                    label={worldMetadata.online ? "Online" : "Offline"}
                     withArrow
                 >
                     <div className={styles.onlineIndicator} style={{
-                        backgroundColor: worldMetadata.server.online
+                        backgroundColor: worldMetadata.online
                             ? "#3ee57e" : "#626262",
-                        borderColor: worldMetadata.server.online
+                        borderColor: worldMetadata.online
                             ? "#33be68" : "#454545"
                     }}/>
                 </Tooltip>
@@ -90,16 +96,31 @@ function WorldListing({
                 {formatDate(worldMetadata.createdAt)}
             </span>}
 
-            {showDates && worldMetadata.server.lastOnlineAt
+            {showDates && worldMetadata.lastOnlineAt
                 && <span className={styles.worldDates}>
                     Last Online:{" "}
-                    {formatDate(worldMetadata.server.lastOnlineAt)}
+                    {formatDate(worldMetadata.lastOnlineAt)}
                 </span>
             }
         </div>
 
         <div style={{ alignItems: "end" }}>
-            {showToolbar && <div className={styles.toolbar}>
+            {worldMetadata.online && <Button
+                color="green"
+                leftSection={<IconLogin2/>}
+                onClick={() => navigate(`/play/${worldMetadata.code}`)}
+            >
+                Join World
+            </Button>}
+
+            {onlineToolbar && <Button
+                color="var(--ui-shade-5)"
+                onClick={() => null}
+            >
+                Shut Down
+            </Button>}
+
+            {offlineToolbar && <div className={styles.toolbar}>
                 <Tooltip label="Delete World" withArrow>
                     <Button
                         {...toolbarButtonOptions}
@@ -119,7 +140,7 @@ function WorldListing({
                 </Tooltip>
             </div>}
 
-            {showToolbar && <Button
+            {offlineToolbar && <Button
                 loading={hostPending}
                 onClick={hostWorld}
                 color={hostError ? "red" : "blue"}

@@ -1,9 +1,9 @@
-import { Collection } from "@/constants/Collection";
 import { Schema, Types, model } from "mongoose";
 
 import { World } from "shared/types/game/World";
+import { Collection } from "@/constants/Collection";
 
-interface UserWorld extends World {
+export interface UserWorld extends World {
     userId: Types.ObjectId;
 }
 

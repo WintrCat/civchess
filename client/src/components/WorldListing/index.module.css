@@ -30,6 +30,8 @@
     border-radius: 50%;
     border-width: 2px;
     border-style: solid;
+
+    transition-duration: 0.3s;
 }
 
 .worldCode {
