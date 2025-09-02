@@ -1,13 +1,14 @@
 import React, { useEffect, useState, useMemo } from "react";
-import { IconHelp, IconPlus, IconEdit } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { remove } from "es-toolkit";
-import { produce } from "immer";
+import { IconHelp, IconPlus, IconEdit } from "@tabler/icons-react";
 import {
     Modal, TextInput, Switch,
     Button, Alert, Checkbox,
     Tooltip
 } from "@mantine/core";
+import { StatusCodes } from "http-status-codes";
+import { remove } from "es-toolkit";
+import { produce } from "immer";
 
 import { UserRole } from "shared/constants/UserRole";
 import { WorldOptions, worldOptionsSchema } from "shared/types/game/World";
@@ -88,7 +89,19 @@ function UpsertWorldModal({
             body: JSON.stringify(options)
         });
 
-        if (!response.ok) return setError("An unknown error occurred.");
+        if (response.status == StatusCodes.CONFLICT)
+            return setError("A world with this world code already exists.");
+
+        if (response.status == StatusCodes.INSUFFICIENT_STORAGE) {
+            const maxWorlds: number = await response.json();
+
+            return setError(
+                `You cannot create more than ${maxWorlds} worlds.`
+            );
+        }
+
+        if (!response.ok)
+            return setError("An unknown error occurred.");
 
         await queryClient.refetchQueries({ queryKey: ["worlds"] });
         

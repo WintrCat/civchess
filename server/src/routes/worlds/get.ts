@@ -2,10 +2,8 @@ import { Router } from "express";
 import { Types } from "mongoose";
 import { StatusCodes } from "http-status-codes";
 
-import { worldMetadataSchema } from "shared/types/game/World";
 import { sessionAuthenticator } from "@/lib/auth/middleware";
-import { UserWorld } from "@/database/models/UserWorld";
-import { redisClient } from "@/database/redis";
+import { fetchWorldMetadatas } from "@/lib/worlds/fetch";
 
 const path = "/get";
 
@@ -26,18 +24,7 @@ getWorldsRouter.get(path, async (req, res) => {
             ...(code ? { code } : {})
         };
 
-    const worlds = await UserWorld.find(filter)
-        .select("-chunks").lean();
-
-    const worldMetadatas = (await Promise.all(
-        worlds.map(async world => {
-            const server = await redisClient.json.get(`world:${world.code}`);
-
-            return worldMetadataSchema.safeParse({
-                ...world, online: server != null
-            }).data;
-        })
-    )).filter(metadata => !!metadata);
+    const worldMetadatas = await fetchWorldMetadatas(filter);
 
     res.json(worldMetadatas);
 });

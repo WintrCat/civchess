@@ -23,13 +23,12 @@ export const worldSchema = z.object({
 export type World = z.infer<typeof worldSchema>;
 
 // World metadata for world listings
-export const worldMetadataSchema = worldSchema.pick({
-    name: true,
-    code: true,
-    pinned: true,
-    createdAt: true,
-    lastOnlineAt: true,
-    maxPlayers: true
+export const worldMetadataSchema = worldSchema.omit({
+    bannedPlayers: true,
+    whitelistedPlayers: true,
+    operatorPlayers: true,
+    chunks: true,
+    players: true
 }).extend({ online: z.boolean() });
 
 export type WorldMetadata = z.infer<typeof worldMetadataSchema>;

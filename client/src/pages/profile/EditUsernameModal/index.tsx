@@ -44,13 +44,14 @@ function EditUsernameModal(props: ModalProps) {
             method: "POST", body: username
         });
 
-        if (response.status == StatusCodes.NOT_MODIFIED) {
+        if (response.status == StatusCodes.NOT_MODIFIED)
             return setError("This is already your username.");
-        } else if (response.status == StatusCodes.CONFLICT) {
+        
+        if (response.status == StatusCodes.CONFLICT)
             return setError("This username is already taken.");
-        } else if (!response.ok) {
+        
+        if (!response.ok)
             return setError("Unknown error occurred.");
-        }
 
         location.href = `/profile/${username}`;
     }

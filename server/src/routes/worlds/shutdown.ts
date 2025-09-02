@@ -3,32 +3,29 @@ import { Types } from "mongoose";
 import { StatusCodes } from "http-status-codes";
 
 import { sessionAuthenticator } from "@/lib/auth/middleware";
-import { isWorldOnline } from "@/lib/worlds/server";
 import { fetchWorld } from "@/lib/worlds/fetch";
+import { shutdownWorld } from "@/lib/worlds/server";
 
-const path = "/delete";
+const path = "/shutdown";
 
-export const deleteWorldRouter = Router();
+export const shutdownWorldRouter = Router();
 
-deleteWorldRouter.use(path, sessionAuthenticator());
+shutdownWorldRouter.use(path, sessionAuthenticator());
 
-deleteWorldRouter.get(path, async (req, res) => {
+shutdownWorldRouter.get(path, async (req, res) => {
     if (!req.user) return res.status(StatusCodes.UNAUTHORIZED).end();
-    
+
     const worldCode = req.query.code?.toString();
     if (!worldCode) return res.status(StatusCodes.BAD_REQUEST).end();
 
     const world = await fetchWorld({
         code: worldCode,
         userId: new Types.ObjectId(req.user.id)
-    }, { code: true }, true);
+    }, { code: true });
 
     if (!world) return res.status(StatusCodes.NOT_FOUND).end();
 
-    if (await isWorldOnline(world.code))
-        return res.status(StatusCodes.UNAUTHORIZED).end();
-
-    await world.deleteOne();
+    await shutdownWorld(world.code);
 
     res.end();
 });

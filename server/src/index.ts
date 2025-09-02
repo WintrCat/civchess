@@ -12,7 +12,7 @@ import { apiRouter } from "./routes";
 
 dotenv.config({ quiet: true });
 
-const coreCount = os.cpus().length;
+const coreCount = Number(process.env.THREAD_COUNT) || os.cpus().length;
 
 async function main() {
     if (!process.env.ORIGIN)
