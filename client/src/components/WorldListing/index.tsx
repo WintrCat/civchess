@@ -94,7 +94,9 @@ function WorldListing({
                         backgroundColor: worldMetadata.online
                             ? "#3ee57e" : "#626262",
                         borderColor: worldMetadata.online
-                            ? "#33be68" : "#454545"
+                            ? "#33be68" : "#454545",
+                        animationName: worldMetadata.online
+                            ? styles.onlinePulse : undefined
                     }}/>
                 </Tooltip>
             </span>

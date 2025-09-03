@@ -1,3 +1,17 @@
+@keyframes onlinePulse {
+    0% {
+        filter: brightness(1);
+    }
+
+    50% {
+        filter: brightness(1.15);
+    }
+
+    100% {
+        filter: brightness(1);
+    }
+}
+
 .wrapper {
     display: flex;
     flex-wrap: wrap;
@@ -32,6 +46,8 @@
     border-style: solid;
 
     transition-duration: 0.3s;
+    animation-duration: 3s;
+    animation-iteration-count: infinite;
 }
 
 .worldCode {
