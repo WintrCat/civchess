@@ -38,6 +38,8 @@ function WorldListing({
     const [ hostPending, setHostPending ] = useState(false);
     const [ hostError, setHostError ] = useState<string>();
 
+    const [ shutdownPending, setShutdownPending ] = useState(false);
+
     async function deleteWorld() {
         const response = await fetch(
             `/api/worlds/delete?code=${worldMetadata.code}`
@@ -64,6 +66,16 @@ function WorldListing({
         await queryClient.refetchQueries({ queryKey: ["worlds"] });
 
         setHostPending(false);
+    }
+
+    async function shutdownWorld() {
+        setShutdownPending(true);
+
+        await fetch(`/api/worlds/shutdown?code=${worldMetadata.code}`);
+
+        await queryClient.refetchQueries({ queryKey: ["worlds"] });
+
+        setShutdownPending(false);
     }
 
     const offlineToolbar = manageable && !worldMetadata.online;
@@ -105,17 +117,16 @@ function WorldListing({
         </div>
 
         <div style={{ alignItems: "end" }}>
-            {worldMetadata.online && <Button
-                color="green"
-                leftSection={<IconLogin2/>}
-                onClick={() => navigate(`/play/${worldMetadata.code}`)}
-            >
-                Join World
-            </Button>}
+            {worldMetadata.online && <a href={`/play/${worldMetadata.code}`}>
+                <Button color="green" leftSection={<IconLogin2/>}>
+                    Join World
+                </Button>
+            </a>}
 
             {onlineToolbar && <Button
                 color="var(--ui-shade-5)"
-                onClick={() => null}
+                loading={shutdownPending}
+                onClick={shutdownWorld}
             >
                 Shut Down
             </Button>}
