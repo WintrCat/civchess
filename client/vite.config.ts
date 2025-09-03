@@ -17,11 +17,11 @@ const config = defineConfig({
         }
     },
     build: {
-        outDir: "../dist",
+        outDir: resolve("dist"),
         emptyOutDir: true
     },
-    publicDir: "public",
-    envDir: "../..",
+    publicDir: resolve("public"),
+    envDir: resolve(".."),
     server: {
         port: Number(new URL(process.env.VITE_DEV_ORIGIN).port) || 3000,
         proxy: process.env.ORIGIN ? {

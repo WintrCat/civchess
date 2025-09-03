@@ -1,8 +1,9 @@
 import React from "react";
 import { Button } from "@mantine/core";
 
+import Typography from "@/components/Typography";
 import Container from "@/components/Container";
-import CreditContainer from "@/components/CreditContainer";
+import Footer from "@/components/Footer";
 import { authClient } from "@/lib/auth";
 
 import styles from "./index.module.css";
@@ -23,9 +24,7 @@ function SignIn() {
     }
 
     return <div className={styles.wrapper}>
-        <span className={styles.typography}>
-            CivChess
-        </span>
+        <Typography/>
 
         <Container className={styles.dialog} gradient>
             <span className={styles.title}>
@@ -62,7 +61,7 @@ function SignIn() {
             </span>
         </Container>
 
-        <CreditContainer className={styles.credit} />
+        <Footer className={styles.credit} />
     </div>;
 }
 

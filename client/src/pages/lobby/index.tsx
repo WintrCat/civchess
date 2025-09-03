@@ -3,8 +3,9 @@ import { IconPlus } from "@tabler/icons-react";
 import { Divider, TextInput, Button } from "@mantine/core";
 
 import { WorldMetadata } from "shared/types/game/World";
+import Typography from "@/components/Typography";
 import Container from "@/components/Container";
-import CreditContainer from "@/components/CreditContainer";
+import Footer from "@/components/Footer";
 import UpsertWorldModal from "@/components/UpsertWorldModal";
 import WorldListing from "@/components/WorldListing";
 import ProfileMenu from "./ProfileMenu";
@@ -29,9 +30,7 @@ function Lobby() {
     const [ createWorldOpen, setCreateWorldOpen ] = useState(false);
 
     return <div className={styles.wrapper}>
-        <span className={styles.typography}>
-            CivChess
-        </span>
+        <Typography/>
 
         <Container className={styles.dialog} gradient>
             <div className={styles.topSection}>
@@ -102,7 +101,7 @@ function Lobby() {
             onClose={() => setCreateWorldOpen(false)}
         />
 
-        <CreditContainer className={styles.credit} />
+        <Footer className={styles.credit} />
     </div>;
 }
 

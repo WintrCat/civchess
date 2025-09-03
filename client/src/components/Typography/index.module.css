@@ -1,0 +1,19 @@
+.wrapper {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.text {
+    transform: translateY(-10px);
+
+    font-family: "Texturina";
+    font-size: 5rem;
+    color: white;
+
+    -webkit-text-stroke: 2px black;
+}
+
+.image {
+    height: 90px;
+}

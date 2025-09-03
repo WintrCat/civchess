@@ -15,14 +15,6 @@ body {
     height: 80vh;
 }
 
-.typography {
-    font-family: "Texturina";
-    font-size: 5rem;
-    color: white;
-
-    -webkit-text-stroke: 2px black;
-}
-
 .dialog {
     display: flex;
     flex-direction: column;

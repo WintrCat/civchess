@@ -20,7 +20,7 @@ const router = createBrowserRouter([
     { path: "/signin", element: <SignIn/> },
     { path: "/lobby", element: <Lobby/> },
     { path: "/profile/:username", element: <Profile/> },
-    { path: "/play", element: <Play/> },
+    { path: "/play/:worldCode", element: <Play/> },
 
     // create 404 page later
     { path: "/*", element: <Home/> }
