@@ -1,5 +1,6 @@
 import React from "react";
-import { Button } from "@mantine/core";
+import { IconLogin2 } from "@tabler/icons-react";
+import { Button, ButtonProps } from "@mantine/core";
 
 import Typography from "@/components/Typography";
 import Container from "@/components/Container";
@@ -23,6 +24,33 @@ function SignIn() {
         });
     }
 
+    async function debugSignIn() {
+        const details = {
+            avatarColour: "#ffffff",
+            avatarPiece: "wK",
+            callbackURL: "/lobby",
+            email: "testing@wintrchess.com",
+            name: "testing",
+            password: "testingtesting",
+            roles: []
+        } as const satisfies Parameters<typeof authClient.signUp.email>[0];
+
+        const registration = await authClient.signUp.email(details);
+
+        if (!registration.error) return location.href = details.callbackURL;
+
+        const signIn = await authClient.signIn.email(details);
+        if (signIn.error) console.error(signIn.error);
+    }
+    
+    const sharedButtonProps: ButtonProps = {
+        className: styles.signInButton,
+        color: "var(--ui-shade-5)",
+        size: "md",
+        fullWidth: true,
+        style: { transitionDuration: "0.3s" }
+    };
+
     return <div className={styles.wrapper}>
         <Typography/>
 
@@ -32,28 +60,28 @@ function SignIn() {
             </span>
 
             <Button
-                className={styles.signInButton}
-                color="var(--ui-shade-5)"
-                size="md"
+                {...sharedButtonProps}
                 leftSection={<img src={googleIcon} height={25} />}
-                fullWidth
                 onClick={() => signIn("google")}
-                style={{ transitionDuration: "0.3s" }}
             >
                 Sign in with Google
             </Button>
 
             <Button
-                className={styles.signInButton}
-                color="var(--ui-shade-5)"
-                size="md"
+                {...sharedButtonProps}
                 leftSection={<img src={discordIcon} height={20} />}
-                fullWidth
                 onClick={() => signIn("discord")}
-                style={{ transitionDuration: "0.3s" }}
             >
                 Sign in with Discord
             </Button>
+
+            {import.meta.env.DEV && <Button
+                {...sharedButtonProps}
+                leftSection={<IconLogin2 size={26} />}
+                onClick={debugSignIn}
+            >
+                Debug Sign In
+            </Button>}
 
             <span className={styles.legalMessage}>
                 By signing in, you agree to our Privacy Policy

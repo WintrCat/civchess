@@ -1,9 +1,19 @@
-import { createClient } from "redis";
+import { Redis } from "ioredis";
 
-export const redisClient = await createClient({
-    url: process.env.REDIS_DATABASE_URI
-})
-    .on("error", () => console.log(
-        "failed to connect to redis database."
-    ))
-    .connect();
+let instance: Redis;
+
+export function createRedisClient(uri: string) {
+    const parsedURI = new URL(uri);
+
+    return instance = new Redis({
+        host: parsedURI.hostname,
+        port: Number(parsedURI.port)
+    }).on("error", err => {
+        console.log("failed to connect to redis database:");
+        console.log(err);
+    });
+}
+
+export function getRedisClient() {
+    return instance;
+}

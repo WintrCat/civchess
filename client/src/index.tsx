@@ -2,7 +2,7 @@ import React, { lazy } from "react";
 import { createRoot } from "react-dom/client";
 import { createBrowserRouter, RouterProvider } from "react-router";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { MantineProvider, MantineTheme } from "@mantine/core";
+import { MantineProvider, MantineThemeComponents } from "@mantine/core";
 
 import "@mantine/core/styles.css";
 import "./index.css";
@@ -26,7 +26,7 @@ const router = createBrowserRouter([
     { path: "/*", element: <Home/> }
 ]);
 
-const mantineTheme: MantineTheme["components"] = {
+const mantineTheme: MantineThemeComponents = {
     Button: {
         styles: {
             root: {

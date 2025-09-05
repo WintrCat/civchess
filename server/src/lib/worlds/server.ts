@@ -1,19 +1,19 @@
 import { World } from "shared/types/game/World";
-import { redisClient } from "@/database/redis";
+import { getRedisClient } from "@/database/redis";
 import { UserWorld } from "@/database/models/UserWorld";
 import { OnlineWorld } from "@/types/OnlineWorld";
 import { fetchWorld, toBaseWorld } from "./fetch";
 
 export async function isWorldOnline(worldCode: string) {
-    const matchCount = await redisClient.exists(`world:${worldCode}`);
+    const matchCount = await getRedisClient().exists(`world:${worldCode}`);
 
     return matchCount > 0;
 }
 
 export async function getOnlineWorld(worldCode: string) {
-    const world = await redisClient.json.get(`world:${worldCode}`);
+    const worldString = await getRedisClient().get(`world:${worldCode}`);
 
-    return world as OnlineWorld | null;
+    return worldString && JSON.parse(worldString) as OnlineWorld;
 }
 
 /**
@@ -30,9 +30,9 @@ export async function hostWorld(world: World | string) {
 
     if (await isWorldOnline(world.code)) throw new Error();
 
-    await redisClient.json.set(`world:${world.code}`, "$", {
+    await getRedisClient().set(`world:${world.code}`, JSON.stringify({
         ...world, connectedPlayers: []
-    } satisfies OnlineWorld);
+    } satisfies OnlineWorld));
 }
 
 /**
@@ -48,7 +48,7 @@ export async function shutdownWorld(worldCode: string) {
         toBaseWorld(onlineWorld)
     );
 
-    await redisClient.json.del(`world:${worldCode}`);
+    await getRedisClient().del(`world:${worldCode}`);
 
     return true;
 }

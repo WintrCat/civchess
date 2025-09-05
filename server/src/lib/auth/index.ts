@@ -32,6 +32,7 @@ function createAuth(database: mongo.Db) {
             ? [process.env.VITE_DEV_ORIGIN] : [],
         secret: process.env.AUTH_SECRET,
         database: mongodbAdapter(database),
+        emailAndPassword: { enabled: process.env.NODE_ENV == "development" },
         socialProviders: {
             google: {
                 clientId: process.env.GOOGLE_OAUTH_CLIENT_ID,

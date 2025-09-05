@@ -1,3 +1,4 @@
+import { Server } from "http";
 import express from "express";
 import cluster from "cluster";
 import os from "os";
@@ -9,6 +10,8 @@ import chalk from "chalk";
 import { connectDatabase } from "@/database/connect";
 import { getAuth } from "@/lib/auth";
 import { apiRouter } from "./routes";
+import { createSocketServer } from "./lib/socket";
+import { createRedisClient } from "./database/redis";
 
 dotenv.config({ quiet: true });
 
@@ -18,6 +21,11 @@ async function main() {
     if (!process.env.ORIGIN)
         return console.log("origin not specified.");
 
+    if (!process.env.REDIS_DATABASE_URI)
+        return console.log("redis database uri not specified.");
+
+    const port = new URL(process.env.ORIGIN).port || 8080;
+
     if (cluster.isPrimary) {
         console.log("starting server...");
         for (let i = 0; i < coreCount; i++) cluster.fork();
@@ -25,9 +33,10 @@ async function main() {
         return;
     }
 
-    const app = express();
-
     await connectDatabase();
+    createRedisClient(process.env.REDIS_DATABASE_URI);
+
+    const app = express();
 
     app.use("/", express.static("client/dist"));
 
@@ -38,9 +47,11 @@ async function main() {
         res.sendFile(resolve("client/dist/index.html"));
     });
 
-    const port = new URL(process.env.ORIGIN).port || 8080;
+    const server = new Server(app);
 
-    app.listen(port, () => {
+    createSocketServer(server);
+
+    server.listen(port, () => {
         if (cluster.worker?.id != 1) return;
 
         console.log(
