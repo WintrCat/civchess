@@ -112,7 +112,6 @@ function UpsertWorldModal({
         classNames={{ body: styles.wrapper }}
         opened={open}
         onClose={close}
-        centered
         title={editWorld ? "Update world" : "Create a world"}
     >
         <div>

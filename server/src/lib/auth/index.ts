@@ -12,7 +12,7 @@ export type AuthInfer = AuthType["$Infer"]["Session"];
 let instance: AuthType | null = null;
 
 function createAuth(database: mongo.Db) {
-    if (!process.env.ORIGIN)
+    if (!process.env.PUBLIC_ORIGIN)
         throw new Error("origin not specified.");
 
     if (!process.env.AUTH_SECRET)
@@ -27,9 +27,9 @@ function createAuth(database: mongo.Db) {
         throw new Error("discord oauth credentials not specified.");
 
     return betterAuth({
-        baseURL: `${process.env.ORIGIN}/auth`,
-        trustedOrigins: process.env.VITE_DEV_ORIGIN
-            ? [process.env.VITE_DEV_ORIGIN] : [],
+        baseURL: `${process.env.PUBLIC_ORIGIN}/auth`,
+        trustedOrigins: process.env.PUBLIC_DEV_ORIGIN
+            ? [process.env.PUBLIC_DEV_ORIGIN] : [],
         secret: process.env.AUTH_SECRET,
         database: mongodbAdapter(database),
         emailAndPassword: { enabled: process.env.NODE_ENV == "development" },

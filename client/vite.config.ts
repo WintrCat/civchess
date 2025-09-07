@@ -5,7 +5,7 @@ import dotenv from "dotenv";
 
 dotenv.config({ path: "../.env", quiet: true });
 
-if (!process.env.VITE_DEV_ORIGIN)
+if (!process.env.PUBLIC_DEV_ORIGIN)
     throw new Error("vite dev server origin not specified.");
 
 const config = defineConfig({
@@ -22,11 +22,12 @@ const config = defineConfig({
     },
     publicDir: resolve("public"),
     envDir: resolve(".."),
+    envPrefix: "PUBLIC_",
     server: {
-        port: Number(new URL(process.env.VITE_DEV_ORIGIN).port) || 3000,
-        proxy: process.env.ORIGIN ? {
-            "/api": { target: process.env.ORIGIN },
-            "/auth": { target: process.env.ORIGIN }
+        port: Number(new URL(process.env.PUBLIC_DEV_ORIGIN).port) || 3000,
+        proxy: process.env.PUBLIC_ORIGIN ? {
+            "/api": { target: process.env.PUBLIC_ORIGIN },
+            "/auth": { target: process.env.PUBLIC_ORIGIN }
         } : undefined
     },
     plugins: [react()]

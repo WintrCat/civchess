@@ -29,13 +29,15 @@ editUsernameRouter.post(path, async (req, res) => {
     if (!usernameSchema.safeParse(username).success)
         return res.status(StatusCodes.BAD_REQUEST).end();
 
-    const existingUser = await User.findOne({ name: username });
+    const existingNameHolder = await User.findOne({ name: username });
 
-    if (existingUser?.id == req.user.id)
+    if (existingNameHolder?.id == req.user.id)
         return res.status(StatusCodes.NOT_MODIFIED).end();
 
-    if (existingUser)
+    if (existingNameHolder)
         return res.status(StatusCodes.CONFLICT).end();
+
+    // TO-DO: Kick this user from all world servers
 
     await User.findByIdAndUpdate(
         new Types.ObjectId(req.user.id),

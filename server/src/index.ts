@@ -18,13 +18,11 @@ dotenv.config({ quiet: true });
 const coreCount = Number(process.env.THREAD_COUNT) || os.cpus().length;
 
 async function main() {
-    if (!process.env.ORIGIN)
+    if (!process.env.PUBLIC_ORIGIN)
         return console.log("origin not specified.");
 
     if (!process.env.REDIS_DATABASE_URI)
         return console.log("redis database uri not specified.");
-
-    const port = new URL(process.env.ORIGIN).port || 8080;
 
     if (cluster.isPrimary) {
         console.log("starting server...");
@@ -34,6 +32,7 @@ async function main() {
     }
 
     await connectDatabase();
+    
     createRedisClient(process.env.REDIS_DATABASE_URI);
 
     const app = express();
@@ -51,6 +50,8 @@ async function main() {
 
     createSocketServer(server);
 
+    const port = new URL(process.env.PUBLIC_ORIGIN).port || 8080;
+
     server.listen(port, () => {
         if (cluster.worker?.id != 1) return;
 
@@ -62,7 +63,7 @@ async function main() {
         console.log(
             chalk.greenBright("➜")
             + chalk.reset(" deployed at ")
-            + chalk.bold(process.env.ORIGIN)
+            + chalk.bold(process.env.PUBLIC_ORIGIN)
         );
 
         console.log(
