@@ -11,7 +11,7 @@ import { remove } from "es-toolkit";
 import { produce } from "immer";
 
 import { UserRole } from "shared/constants/UserRole";
-import { WorldOptions, worldOptionsSchema } from "shared/types/game/World";
+import { WorldOptions, worldOptionsSchema } from "shared/types/world/World";
 import { SquareType } from "shared/constants/SquareType";
 import { biomeNames } from "@/constants/utils";
 import { authClient } from "@/lib/auth";

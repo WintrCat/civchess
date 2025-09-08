@@ -4,6 +4,7 @@ import { createAdapter } from "@socket.io/redis-adapter";
 
 import { getRedisClient } from "@/database/redis";
 import { attachPacketHandlers } from "./packets";
+import { packetMiddleware } from "./middleware";
 import handlers from "./handlers";
 
 let instance: SocketServer;
@@ -22,9 +23,13 @@ export function createSocketServer(httpServer: HTTPServer) {
         }
     });
 
-    server.on("connection", socket => (
-        attachPacketHandlers(socket, handlers)
-    ));
+    server.on("connect", socket => {
+        attachPacketHandlers(socket, handlers, packetMiddleware);
+
+        socket.on("disconnect", reason => {
+            
+        });
+    });
 
     return instance = server;
 }

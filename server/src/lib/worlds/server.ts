@@ -1,19 +1,30 @@
-import { World } from "shared/types/game/World";
+import { World } from "shared/types/world/World";
 import { getRedisClient } from "@/database/redis";
 import { UserWorld } from "@/database/models/UserWorld";
-import { OnlineWorld } from "@/types/OnlineWorld";
 import { fetchWorld, toBaseWorld } from "./fetch";
 
+type ObjectValue = string | number | object;
+
 export async function isWorldOnline(worldCode: string) {
-    const matchCount = await getRedisClient().exists(`world:${worldCode}`);
+    const matchCount = await getRedisClient().exists(worldCode);
 
     return matchCount > 0;
 }
 
-export async function getOnlineWorld(worldCode: string) {
-    const worldString = await getRedisClient().get(`world:${worldCode}`);
+export async function getOnlineWorld<T extends ObjectValue = World>(
+    worldCode: string,
+    path = "$"
+): Promise<T | null> {
+    try {
+        const world = JSON.parse(String(
+            await getRedisClient().call("json.get", worldCode, path)
+        ));
+        if (!Array.isArray(world)) return null;
 
-    return worldString && JSON.parse(worldString) as OnlineWorld;
+        return world.at(0) || null;
+    } catch {
+        return null;
+    }
 }
 
 /**
@@ -30,9 +41,9 @@ export async function hostWorld(world: World | string) {
 
     if (await isWorldOnline(world.code)) throw new Error();
 
-    await getRedisClient().set(`world:${world.code}`, JSON.stringify({
-        ...world, connectedPlayers: []
-    } satisfies OnlineWorld));
+    await getRedisClient().call("json.set", world.code, "$",
+        JSON.stringify(world)
+    );
 }
 
 /**
@@ -43,12 +54,30 @@ export async function shutdownWorld(worldCode: string) {
     const onlineWorld = await getOnlineWorld(worldCode);
     if (!onlineWorld) return false;
 
-    await UserWorld.updateOne(
-        { code: onlineWorld.code },
-        toBaseWorld(onlineWorld)
-    );
+    await UserWorld.updateOne({ code: onlineWorld.code }, onlineWorld);
 
-    await getRedisClient().del(`world:${worldCode}`);
+    await getRedisClient().del(worldCode);
 
     return true;
+}
+
+/**
+ * @description If a world is not found, this will silently fail unless
+ * `onNotFound` is specified.
+ */
+export async function editOnlineWorld(
+    worldCode: string,
+    path: string,
+    value: ObjectValue,
+    onNotFound?: () => void
+) {
+    const worldOnline = await isWorldOnline(worldCode);
+    if (!worldOnline) return onNotFound?.();
+
+    await getRedisClient().call(
+        "json.set",
+        worldCode,
+        path,
+        JSON.stringify(value)
+    );
 }

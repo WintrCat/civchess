@@ -1,6 +1,7 @@
 import { BasePacket } from "./serverbound/BasePacket";
 import { PlayerMovePacket } from "./serverbound/PlayerMovePacket";
 
+import { PlayerJoinRejectionPacket } from "./clientbound/PlayerJoinRejectionPacket";
 import { ServerInformationPacket } from "./clientbound/ServerInformationPacket";
 
 export interface ServerboundPacketTypeMap {
@@ -9,6 +10,7 @@ export interface ServerboundPacketTypeMap {
 }
 
 export interface ClientboundPacketTypeMap {
+    playerJoinRejection: PlayerJoinRejectionPacket;
     serverInformation: ServerInformationPacket;
 }
 

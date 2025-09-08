@@ -1,7 +1,8 @@
 import z from "zod";
 
-import { chunkSchema } from "./Chunk";
 import { SquareType } from "@/constants/SquareType";
+import { chunkSchema } from "./Chunk";
+import { playerSchema } from "./Player";
 
 // change server related options (bans, ops etc.) while in game
 export const worldSchema = z.object({
@@ -17,7 +18,7 @@ export const worldSchema = z.object({
     operatorPlayers: z.string().array(),
 
     chunks: chunkSchema.array().array(),
-    players: z.string().array(), // To be Player object array
+    players: z.record(z.string(), playerSchema).optional() // User ID to player
 });
 
 export type World = z.infer<typeof worldSchema>;

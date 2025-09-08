@@ -4,7 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Button, ButtonProps, Tooltip } from "@mantine/core";
 import { IconTrash, IconEdit, IconLogin2 } from "@tabler/icons-react";
 
-import { WorldMetadata } from "shared/types/game/World";
+import { WorldMetadata } from "shared/types/world/World";
 import Container from "../Container";
 import ConfirmModal from "../ConfirmModal";
 import UpsertWorldModal from "@/components/UpsertWorldModal";

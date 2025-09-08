@@ -4,7 +4,7 @@ import { Types } from "mongoose";
 import { omit } from "es-toolkit";
 
 import { UserRole } from "shared/constants/UserRole";
-import { worldOptionsSchema } from "shared/types/game/World";
+import { worldOptionsSchema } from "shared/types/world/World";
 import { UserWorld } from "@/database/models/UserWorld";
 import { sessionAuthenticator } from "@/lib/auth/middleware";
 import { generateWorld } from "@/lib/worlds/generate";
@@ -69,8 +69,6 @@ upsertWorldRouter.post(path, async (req, res) => {
         .json(maxWorldCount);
 
     const world = generateWorld(options);
-
-    console.log(world);
 
     await UserWorld.create({
         ...world,

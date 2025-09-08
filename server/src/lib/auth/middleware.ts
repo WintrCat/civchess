@@ -1,14 +1,8 @@
-import { RequestHandler, CookieOptions } from "express";
+import { RequestHandler } from "express";
 import { fromNodeHeaders } from "better-auth/node";
 import { StatusCodes } from "http-status-codes";
 
 import { getAuth } from "@/lib/auth";
-
-export const secureCookieOptions: CookieOptions = {
-    httpOnly: true,
-    sameSite: true,
-    secure: true
-};
 
 /**
  * @description Enforces that the user has a valid session. Adds

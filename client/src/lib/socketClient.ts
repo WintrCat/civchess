@@ -20,8 +20,8 @@ type AdditivePacketTypes = keyof {
     )]: true
 };
 
-type NonAdditivePacketTypes = (
-    keyof Omit<ServerboundPacketTypeMap, AdditivePacketTypes>
+type NonAdditivePacketTypes = keyof (
+    Omit<ServerboundPacketTypeMap, AdditivePacketTypes>
 );
 
 export class SocketClient {
@@ -61,12 +61,9 @@ export class SocketClient {
         type: Type,
         listener: (packet: ClientboundPacketTypeMap[Type]) => void
     ) {
-        this.rawSocket.onAny((
-            eventType: string,
+        this.rawSocket.on(type as string, (
             packet: ClientboundPacketTypeMap[Type]
-        ) => {
-            if (eventType == type) listener(packet);
-        })
+        ) => listener(packet));
     }
 
     disconnect() {

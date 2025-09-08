@@ -1,6 +1,6 @@
 import { Schema, Types, model } from "mongoose";
 
-import { World, WorldMetadata } from "shared/types/game/World";
+import { World, WorldMetadata } from "shared/types/world/World";
 import { Collection } from "@/constants/Collection";
 
 export interface UserWorld extends World {

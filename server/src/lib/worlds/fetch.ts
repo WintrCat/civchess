@@ -2,7 +2,12 @@ import { HydratedDocument, RootFilterQuery } from "mongoose";
 import { mapValues, omit } from "es-toolkit";
 import z from "zod";
 
-import { World, WorldMetadata, worldMetadataSchema, worldSchema } from "shared/types/game/World";
+import {
+    World,
+    WorldMetadata,
+    worldMetadataSchema,
+    worldSchema
+} from "shared/types/world/World";
 import { UserWorld } from "@/database/models/UserWorld";
 import { isWorldOnline } from "./server";
 
@@ -128,7 +133,7 @@ export async function fetchWorldMetadatas(
     );
 }
 
-// Convert UserWorld, OnlineWorld etc. to base World
+// Convert UserWorld etc. to base World
 export function toBaseWorld<T extends World>(world: T): World {
     return worldSchema.safeParse(world).data!;
 }
