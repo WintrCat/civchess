@@ -24,19 +24,18 @@ export const playerJoinHandler = createPacketHandler(
     async ({ sessionToken, worldCode }, socket) => {
         console.log("player join packet received!");
 
-        // Check the validity of the session token. if invalid, reject the packet
+        // Validate session token and get corresponding user
         const session = await Session.findOne({ token: sessionToken }).lean();
 
         if (!session) return rejectJoin(socket, "Invalid Session.");
 
-        // ACCESS TO: User object - Fetch the user from the userId in the session
         const user = await User.findById(
             new Types.ObjectId(session.userId)
         ).lean();
 
         if (!user) return rejectJoin(socket, "Invalid Session.");
 
-        // If world code doesn't exist or isn't online, reject join
+        // Ensure world exists and is online
         if (!await isWorldOnline(worldCode)) {
             const offlineWorldExists = await worldExists({ code: worldCode });
 
@@ -46,8 +45,7 @@ export const playerJoinHandler = createPacketHandler(
             );
         }
 
-        // ACCESS TO: banlist and whitelist of online world. Fetch those.
-        // If the player is banned or the whitelist exists and player is not in it, reject
+        // Enforce banned and whitelisted players lists
         const banlist = await getOnlineWorld<string[]>(
             worldCode, "$.bannedPlayers"
         ) || [];
@@ -62,7 +60,7 @@ export const playerJoinHandler = createPacketHandler(
         if (whitelist && !whitelist.includes(user.id))
             return rejectJoin(socket, "You are not on this world's whitelist.");
 
-        // If the world is full, reject join
+        // Ensure the world is not full (reached its max player count)
         const connectedSockets = await socket.in(worldCode).fetchSockets();
 
         const maxPlayers = await getOnlineWorld<number>(
@@ -72,11 +70,9 @@ export const playerJoinHandler = createPacketHandler(
         if (connectedSockets.length >= maxPlayers)
             return rejectJoin(socket, "This world is currently full.");
 
-        // Add the socket to a room with the same name as world code
+        // Add the socket to the world code room & create its identity
         socket.join(worldCode);
 
-        // Add the socket identity (session token, user ID, world code, expiration timestamp)
-        // to the socket client
         const socketIdentity: SocketIdentity = {
             userId: user.id,
             sessionToken: sessionToken,
@@ -87,7 +83,7 @@ export const playerJoinHandler = createPacketHandler(
 
         socket.data = socketIdentity;
 
-        // Is this user ID already connected to server? If so, kick existing socket
+        // Terminate any open socket with the same user ID as the joiner
         remove(connectedSockets, connSocket => {
             const identity = connSocket.data as SocketIdentity;
 
@@ -99,8 +95,7 @@ export const playerJoinHandler = createPacketHandler(
             return false;
         });
 
-        // If the player has never played before, find a random spawn location
-        // and create a player object for them in world.players
+        // Create player data or fetch existing from the world server
         let playerData = await getOnlineWorld<Player>(
             worldCode, `$.players.${user.id}`
         );
