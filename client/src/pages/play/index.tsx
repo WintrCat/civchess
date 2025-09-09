@@ -39,6 +39,10 @@ function Play() {
             console.log(packet)
         });
 
+        socketClient.onDisconnect(() => {
+            console.log("you just got disconnected.");
+        });
+
         return () => socketClient.disconnect();
     }, [socketClient])
 

@@ -1,5 +1,6 @@
 import { Socket } from "socket.io";
 import { Types } from "mongoose";
+import { remove } from "es-toolkit";
 
 import { Player } from "shared/types/world/Player";
 import {
@@ -87,10 +88,16 @@ export const playerJoinHandler = createPacketHandler(
         socket.data = socketIdentity;
 
         // Is this user ID already connected to server? If so, kick existing socket
-        connectedSockets.find(socket => {
-            const identity = socket.data as SocketIdentity;
-            return identity.userId == user.id;
-        })?.disconnect();
+        remove(connectedSockets, connSocket => {
+            const identity = connSocket.data as SocketIdentity;
+
+            if (identity.userId == user.id) {
+                connSocket.disconnect();
+                return true;
+            }
+
+            return false;
+        });
 
         // If the player has never played before, find a random spawn location
         // and create a player object for them in world.players

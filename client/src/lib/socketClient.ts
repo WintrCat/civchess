@@ -66,6 +66,12 @@ export class SocketClient {
         ) => listener(packet));
     }
 
+    onDisconnect(
+        listener: (reason: Socket.DisconnectReason) => void
+    ) {
+        this.rawSocket.on("disconnect", reason => listener(reason));
+    }
+
     disconnect() {
         this.rawSocket.disconnect();
     }
