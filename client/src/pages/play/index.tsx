@@ -39,6 +39,10 @@ function Play() {
             console.log(packet)
         });
 
+        socketClient.on("playerKick", packet => {
+            console.log(`Kicked - ${packet.title} - ${packet.reason}`);
+        });
+
         socketClient.onDisconnect(() => {
             console.log("you just got disconnected.");
         });

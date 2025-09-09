@@ -8,6 +8,8 @@ import {
 } from "shared/socket/PacketType";
 import { BasePacket } from "shared/socket/serverbound/BasePacket";
 
+export type EmittableSocket = Pick<Socket, "emit">;
+
 // Clientbound packets types that do or do not require any properties
 type AdditivePacketTypes = keyof {
     [K in keyof ClientboundPacketTypeMap as (
@@ -50,25 +52,34 @@ export function attachPacketHandlers(
     }
 }
 
-export function sendPacket<Type extends AdditivePacketTypes> (
-    socket: Socket,
+export function sendPacket<
+    Type extends AdditivePacketTypes,
+    Receiver extends EmittableSocket
+> (
+    socket: Receiver,
     type: Type,
     packet: ClientboundPacketTypeMap[Type],
-    configureSender?: (socket: Socket) => Pick<Socket, "emit">
+    configureSender?: (socket: Receiver) => EmittableSocket
 ): void;
 
-export function sendPacket<Type extends NonAdditivePacketTypes> (
-    socket: Socket,
+export function sendPacket<
+    Type extends NonAdditivePacketTypes,
+    Receiver extends EmittableSocket
+>(
+    socket: Receiver,
     type: Type,
     packet?: ClientboundPacketTypeMap[Type],
-    configureSender?: (socket: Socket) => Pick<Socket, "emit">
+    configureSender?: (socket: Receiver) => EmittableSocket
 ): void;
 
-export function sendPacket<Type extends ClientboundPacketType> (
-    socket: Socket,
+export function sendPacket<
+    Type extends ClientboundPacketType,
+    Receiver extends EmittableSocket
+> (
+    socket: Receiver,
     type: Type,
     packet?: ClientboundPacketTypeMap[Type],
-    configureSender?: (socket: Socket) => Pick<Socket, "emit">
+    configureSender?: (socket: Receiver) => EmittableSocket
 ) {
     const configuredSocket = configureSender
         ? configureSender(socket)

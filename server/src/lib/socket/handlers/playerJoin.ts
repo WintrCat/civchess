@@ -15,7 +15,10 @@ import { SocketIdentity } from "@/types/SocketIdentity";
 import { createPacketHandler, sendPacket } from "../packets";
 
 function rejectJoin(socket: Socket, reason: string) {
-    sendPacket(socket, "playerJoinRejection", { reason });
+    sendPacket(socket, "playerKick", {
+        reason, title: "Failed to join the world"
+    });
+
     socket.disconnect();
 }
 
@@ -88,7 +91,12 @@ export const playerJoinHandler = createPacketHandler(
             const identity = connSocket.data as SocketIdentity;
 
             if (identity.userId == user.id) {
+                sendPacket(connSocket, "playerKick", {
+                    title: "Kicked from the world",
+                    reason: "You logged in from another location."
+                });
                 connSocket.disconnect();
+
                 return true;
             }
 
