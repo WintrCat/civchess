@@ -11,6 +11,9 @@ export interface UserWorldMetadata extends WorldMetadata {
     userId: Types.ObjectId;
 }
 
-const worldSchema = new Schema<UserWorld>({}, { strict: false });
+const worldSchema = new Schema<UserWorld>({}, {
+    strict: false,
+    minimize: false
+});
 
 export const UserWorld = model("world", worldSchema, Collection.WORLDS);

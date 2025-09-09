@@ -18,7 +18,7 @@ export const worldSchema = z.object({
     operatorPlayers: z.string().array(),
 
     chunks: chunkSchema.array().array(),
-    players: z.record(z.string(), playerSchema).optional() // User ID to player
+    players: z.record(z.string(), playerSchema) // User ID to player
 });
 
 export type World = z.infer<typeof worldSchema>;
