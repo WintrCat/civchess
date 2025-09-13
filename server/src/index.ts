@@ -8,10 +8,10 @@ import dotenv from "dotenv";
 import chalk from "chalk";
 
 import { connectDatabase } from "@/database/connect";
+import { connectRedisClient } from "./database/redis";
 import { getAuth } from "@/lib/auth";
 import { apiRouter } from "./routes";
-import { createSocketServer } from "./lib/socket";
-import { createRedisClient } from "./database/redis";
+import { createSocketServer } from "./socket";
 
 dotenv.config({ quiet: true });
 
@@ -21,9 +21,6 @@ async function main() {
     if (!process.env.PUBLIC_ORIGIN)
         return console.log("origin not specified.");
 
-    if (!process.env.REDIS_DATABASE_URI)
-        return console.log("redis database uri not specified.");
-
     if (cluster.isPrimary) {
         console.log("starting server...");
         for (let i = 0; i < coreCount; i++) cluster.fork();
@@ -31,10 +28,11 @@ async function main() {
         return;
     }
 
+    // Connect databases
     await connectDatabase();
-    
-    createRedisClient(process.env.REDIS_DATABASE_URI);
+    connectRedisClient();
 
+    // Create servers
     const app = express();
 
     app.use("/", express.static("client/dist"));

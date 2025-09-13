@@ -73,7 +73,7 @@ export async function fetchWorlds<
 
     return (
         await worldsQuery
-    ) as unknown as HydratedDocument<PartialWorld<Selection>>[];
+    ) as any as HydratedDocument<PartialWorld<Selection>>[];
 }
 
 // Fetch singular world

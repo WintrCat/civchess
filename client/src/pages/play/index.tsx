@@ -14,16 +14,12 @@ function Play() {
 
     const wrapperRef = useRef<HTMLDivElement>(null);
 
-    const socketClient = useMemo(() => {
-        if (!ticket?.session || !worldCode) return null;
-
-        return new SocketClient(import.meta.env.PUBLIC_ORIGIN, {
-            sessionToken: ticket.session.token,
-            worldCode: worldCode,
+    const socketClient = useMemo(() => (
+        new SocketClient(import.meta.env.PUBLIC_ORIGIN, {
             path: "/api/socket",
             transports: ["websocket"]
-        });
-    }, [ticket, worldCode]);
+        })
+    ), []);
 
     useEffect(() => {
         if (!wrapperRef.current) return;
@@ -31,16 +27,15 @@ function Play() {
     }, []);
 
     useEffect(() => {
-        if (!socketClient) return;
+        if (!ticket || !worldCode) return;
 
-        socketClient.sendPacket("playerJoin");
-
-        socketClient.on("serverInformation", packet => {
-            console.log(packet)
+        socketClient.sendPacket("playerJoin", {
+            sessionToken: ticket.session.token,
+            worldCode: worldCode
         });
 
-        socketClient.on("playerKick", packet => {
-            console.log(`Kicked - ${packet.title} - ${packet.reason}`);
+        socketClient.onAny((eventName, packet) => {
+            console.log(packet);
         });
 
         socketClient.onDisconnect(() => {
@@ -48,7 +43,7 @@ function Play() {
         });
 
         return () => socketClient.disconnect();
-    }, [socketClient])
+    }, [ticket, worldCode])
 
     return <div className={styles.wrapper} ref={wrapperRef} />;
 }

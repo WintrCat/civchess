@@ -3,40 +3,35 @@ import { Types } from "mongoose";
 import { remove } from "es-toolkit";
 
 import { Player } from "shared/types/world/Player";
-import {
-    editOnlineWorld,
-    getOnlineWorld,
-    isWorldOnline
-} from "@/lib/worlds/server";
+import { SocketIdentity } from "@/types/SocketIdentity";
+import { getRedisClient } from "@/database/redis";
+import { Session, User } from "@/database/models/account";
+import { isWorldOnline } from "@/lib/worlds/server";
 import { worldExists } from "@/lib/worlds/fetch";
 import { toPublicProfile } from "@/lib/public-profile";
-import { Session, User } from "@/database/models/account";
-import { SocketIdentity } from "@/types/SocketIdentity";
+import { kickPlayer } from "../lib/manage-players";
+import { getSurroundingChunks } from "../lib/world-chunks";
 import { createPacketHandler, sendPacket } from "../packets";
 
 function rejectJoin(socket: Socket, reason: string) {
-    sendPacket(socket, "playerKick", {
-        reason, title: "Failed to join the world"
-    });
-
-    socket.disconnect();
+    kickPlayer(socket, reason, "Failed to join world");
 }
 
-export const playerJoinHandler = createPacketHandler(
-    "playerJoin",
-    async ({ sessionToken, worldCode }, socket) => {
+export const playerJoinHandler = createPacketHandler({
+    type: "playerJoin",
+    handle: async ({ sessionToken, worldCode }, socket) => {
         console.log("player join packet received!");
 
         // Validate session token and get corresponding user
         const session = await Session.findOne({ token: sessionToken }).lean();
-
         if (!session) return rejectJoin(socket, "Invalid Session.");
 
         const user = await User.findById(
             new Types.ObjectId(session.userId)
         ).lean();
-
         if (!user) return rejectJoin(socket, "Invalid Session.");
+
+        const userId = user._id.toString();
 
         // Ensure world exists and is online
         if (!await isWorldOnline(worldCode)) {
@@ -49,24 +44,24 @@ export const playerJoinHandler = createPacketHandler(
         }
 
         // Enforce banned and whitelisted players lists
-        const banlist = await getOnlineWorld<string[]>(
+        const banlist = await getRedisClient().json.get<string[]>(
             worldCode, "$.bannedPlayers"
         ) || [];
 
-        if (banlist.includes(user.id))
+        if (banlist.includes(userId))
             return rejectJoin(socket, "You are banned from this world.");
 
-        const whitelist = await getOnlineWorld<string[]>(
+        const whitelist = await getRedisClient().json.get<string[]>(
             worldCode, "$.whitelistedPlayers"
         );
 
-        if (whitelist && !whitelist.includes(user.id))
+        if (whitelist && !whitelist.includes(userId))
             return rejectJoin(socket, "You are not on this world's whitelist.");
 
         // Ensure the world is not full (reached its max player count)
         const connectedSockets = await socket.in(worldCode).fetchSockets();
 
-        const maxPlayers = await getOnlineWorld<number>(
+        const maxPlayers = await getRedisClient().json.get<number>(
             worldCode, "$.maxPlayers"
         ) || Infinity;
 
@@ -77,9 +72,9 @@ export const playerJoinHandler = createPacketHandler(
         socket.join(worldCode);
 
         const socketIdentity: SocketIdentity = {
-            userId: user.id,
+            userId: userId,
             sessionToken: sessionToken,
-            sessionExpiresAt: Date.now() + (1000 * 60 * 10), // 10 mins,
+            sessionExpiresAt: Date.now() + (1000 * 60 * 10), // 10 mins
             worldCode: worldCode,
             profile: toPublicProfile(user)
         };
@@ -90,13 +85,8 @@ export const playerJoinHandler = createPacketHandler(
         remove(connectedSockets, connSocket => {
             const identity = connSocket.data as SocketIdentity;
 
-            if (identity.userId == user.id) {
-                sendPacket(connSocket, "playerKick", {
-                    title: "Kicked from the world",
-                    reason: "You logged in from another location."
-                });
-                connSocket.disconnect();
-
+            if (identity.userId == userId) {
+                kickPlayer(socket, "You logged in from another location.");
                 return true;
             }
 
@@ -104,8 +94,8 @@ export const playerJoinHandler = createPacketHandler(
         });
 
         // Create player data or fetch existing from the world server
-        let playerData = await getOnlineWorld<Player>(
-            worldCode, `$.players.${user.id}`
+        let playerData = await getRedisClient().json.get<Player>(
+            worldCode, `$.players.${userId}`
         );
 
         if (!playerData) {
@@ -114,11 +104,9 @@ export const playerJoinHandler = createPacketHandler(
             const createdPlayerData: Player = {
                 x: 0, y: 0, inventory: []
             };
-
-            await editOnlineWorld(
-                worldCode,
-                `$.players.${user.id}`,
-                createdPlayerData
+            
+            await getRedisClient().json.set(
+                worldCode, `$.players.${userId}`, createdPlayerData
             );
 
             playerData = createdPlayerData;
@@ -132,5 +120,12 @@ export const playerJoinHandler = createPacketHandler(
         });
 
         // Return chunk packets that surround the player's location
+        const surroundingChunks = getSurroundingChunks(
+            worldCode, playerData.x, playerData.y
+        );
+
+        for await (const chunkData of surroundingChunks) {
+            sendPacket(socket, "worldChunk", chunkData);
+        }
     }
-);
+});

@@ -3,11 +3,11 @@ import { Server as SocketServer } from "socket.io";
 import { createAdapter } from "@socket.io/redis-adapter";
 
 import { getRedisClient } from "@/database/redis";
+import { attachPacketMiddleware } from "./middleware";
 import { attachPacketHandlers } from "./packets";
-import { packetMiddleware } from "./middleware";
 import handlers from "./handlers";
 
-let instance: SocketServer;
+let instance: SocketServer | null = null;
 
 export function createSocketServer(httpServer: HTTPServer) {
     const server = new SocketServer(httpServer, {
@@ -24,16 +24,16 @@ export function createSocketServer(httpServer: HTTPServer) {
     });
 
     server.on("connect", socket => {
-        attachPacketHandlers(socket, handlers, packetMiddleware);
-
-        socket.on("disconnect", reason => {
-            
-        });
+        attachPacketMiddleware(socket);
+        attachPacketHandlers(socket, handlers);
     });
 
     return instance = server;
 }
 
 export function getSocketServer() {
+    if (!instance)
+        throw new Error("socket server referenced before creation.");
+
     return instance;
 }
