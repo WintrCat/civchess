@@ -1,4 +1,3 @@
-import { SquareType } from "shared/constants/SquareType";
 import { UserRole } from "shared/constants/UserRole";
 import { StandardPieceType } from "shared/constants/StandardPieceType";
 
@@ -34,10 +33,4 @@ export const userRoleDisplays = {
 export const pieceImages: Record<StandardPieceType, any> = {
     wP, wN, wB, wR, wQ, wK,
     bP, bN, bB, bR, bQ, bK
-};
-
-export const biomeNames = {
-    [SquareType.GRASSLAND]: "Grassland",
-    [SquareType.DESERT]: "Desert",
-    [SquareType.OCEAN]: "Ocean"
 };

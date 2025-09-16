@@ -13,7 +13,7 @@ import { produce } from "immer";
 import { UserRole } from "shared/constants/UserRole";
 import { WorldOptions, worldOptionsSchema } from "shared/types/world/World";
 import { SquareType } from "shared/constants/SquareType";
-import { biomeNames } from "@/constants/utils";
+import { biomeNames } from "@/constants/squares";
 import { authClient } from "@/lib/auth";
 
 import styles from "./index.module.css";

@@ -1,6 +1,6 @@
 import { Socket } from "socket.io";
 import { Types } from "mongoose";
-import { remove } from "es-toolkit";
+import { remove, random } from "es-toolkit";
 
 import { Player } from "shared/types/world/Player";
 import { SocketIdentity } from "@/types/SocketIdentity";
@@ -102,7 +102,10 @@ export const playerJoinHandler = createPacketHandler({
             // If the spawn location has been obstructed (block etc.), BFS to find
             // nearest legal spawn location
             const createdPlayerData: Player = {
-                x: 0, y: 0, inventory: []
+                x: 0,
+                y: 0,
+                colour: "#" + random(0, 0xffffff).toString(16),
+                inventory: []
             };
             
             await getRedisClient().json.set(
@@ -114,9 +117,12 @@ export const playerJoinHandler = createPacketHandler({
 
         // Return a server information packet with playerlist
         sendPacket(socket, "serverInformation", {
+            localPlayer: playerData,
             players: connectedSockets
                 .map(socket => (socket.data as SocketIdentity).profile)
-                .concat(socketIdentity.profile)
+                .concat(socketIdentity.profile),
+            worldChunkSize: await getRedisClient().json
+                .length(worldCode, "$.chunks")
         });
 
         // Return chunk packets that surround the player's location
@@ -127,5 +133,10 @@ export const playerJoinHandler = createPacketHandler({
         for await (const chunkData of surroundingChunks) {
             sendPacket(socket, "worldChunk", chunkData);
         }
+
+        // Broadcast join to others
+        sendPacket(socket, "playerJoin", socketIdentity.profile,
+            sender => sender.broadcast.to(worldCode)
+        );
     }
 });

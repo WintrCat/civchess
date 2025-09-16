@@ -1,12 +1,13 @@
-import { Application } from "pixi.js";
+import { Application, Assets } from "pixi.js";
 import { Viewport } from "pixi-viewport";
 
 import {
     ClientboundPacketType,
     ClientboundPacketTypeMap
 } from "shared/types/packets/PacketType";
+import { pieceImages } from "@/constants/utils";
 import { SocketClient } from "./SocketClient";
-import { createMap } from "./Map";
+import { Player } from "./Player";
 
 interface PacketHandler<Type extends ClientboundPacketType> {
     type: Type,
@@ -27,6 +28,7 @@ export class GameClient {
     viewport?: Viewport;
 
     socket: SocketClient;
+    localPlayer?: Player;
 
     config = {
         viewportPadding: 160
@@ -54,27 +56,24 @@ export class GameClient {
         });
 
         const viewport = new Viewport({
-            screenWidth: innerWidth,
-            screenHeight: innerHeight,
-            worldWidth: 10000,
-            worldHeight: 10000,
+            screenWidth: this.app.renderer.width,
+            screenHeight: this.app.renderer.height,
             events: this.app.renderer.events
         })
             .drag()
             .decelerate({ friction: 0.85 })
             .pinch()
             .wheel()
-            .clampZoom({ maxScale: 3, minScale: 1 })
-            .clamp({
-                left: -this.config.viewportPadding,
-                right: 10000 + this.config.viewportPadding,
-                top: -this.config.viewportPadding,
-                bottom: 10000 + this.config.viewportPadding
-            });
+            .clampZoom({ maxScale: 3, minScale: 1 });
 
         viewport.eventMode = "static";
         viewport.scale = 2;
+
         this.viewport = viewport;
+
+        for (const pieceImage of Object.values(pieceImages)) {
+            await Assets.load(pieceImage);
+        }
 
         this.app.stage.addChild(viewport);
         this.container.appendChild(this.app.canvas);

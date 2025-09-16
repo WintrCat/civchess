@@ -1,6 +1,7 @@
 import { PlayerJoinPacket } from "./serverbound/PlayerJoinPacket";
 import { PlayerMovePacket } from "./serverbound/PlayerMovePacket";
 
+import { PublicProfile } from "../PublicProfile";
 import { PlayerKickPacket } from "./clientbound/PlayerKickPacket";
 import { ServerInformationPacket } from "./clientbound/ServerInformationPacket";
 import { WorldChunkPacket } from "./clientbound/WorldChunkPacket";
@@ -11,6 +12,7 @@ export interface ServerboundPacketTypeMap {
 }
 
 export interface ClientboundPacketTypeMap {
+    playerJoin: PublicProfile;
     playerKick: PlayerKickPacket;
     serverInformation: ServerInformationPacket;
     worldChunk: WorldChunkPacket;

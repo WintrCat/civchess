@@ -1,9 +1,18 @@
 import { SquareType } from "shared/constants/SquareType";
 
+export const squareSize = 80;
+export const chunkSize = 8;
+
+export const biomeNames = {
+    [SquareType.GRASSLAND]: "Grassland",
+    [SquareType.DESERT]: "Desert",
+    [SquareType.OCEAN]: "Ocean"
+};
+
 export const squareColours = {
     [SquareType.GRASSLAND]: {
-        light: "#b5d694",
-        dark: "#739552"
+        light: "#aadaa0ff",
+        dark: "#7eac54"
     },
     [SquareType.DESERT]: {
         light: "#e3d46f",
