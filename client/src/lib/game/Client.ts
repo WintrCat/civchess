@@ -1,36 +1,26 @@
-import { Application, Assets } from "pixi.js";
+import { Application, Assets, ColorSource } from "pixi.js";
 import { Viewport } from "pixi-viewport";
 
-import {
-    ClientboundPacketType,
-    ClientboundPacketTypeMap
-} from "shared/types/packets/PacketType";
 import { pieceImages } from "@/constants/utils";
 import { SocketClient } from "./SocketClient";
-import { Player } from "./Player";
+import { Player } from "./entity/Player";
 
-interface PacketHandler<Type extends ClientboundPacketType> {
-    type: Type,
-    handle: (
-        packet: ClientboundPacketTypeMap[Type],
-        viewport: Viewport,
-        client: GameClient
-    ) => void | Promise<void>
-};
-
-type AnyPacketHandler = {
-    [K in ClientboundPacketType]: PacketHandler<K>
-}[ClientboundPacketType];
+interface GameClientConfig {
+    backgroundColour: ColorSource;
+    viewportPadding: number;
+}
 
 export class GameClient {
     container: HTMLDivElement;
     app: Application;
     viewport?: Viewport;
-
     socket: SocketClient;
+
+    worldChunkSize?: number;
     localPlayer?: Player;
 
-    config = {
+    config: GameClientConfig = {
+        backgroundColour: "#ffffff",
         viewportPadding: 160
     };
 
@@ -42,15 +32,15 @@ export class GameClient {
 
         this.app = new Application();
 
-        this.socket = new SocketClient(import.meta.env.PUBLIC_ORIGIN, {
-            path: "/api/socket",
-            transports: ["websocket"]
-        });
+        this.socket = new SocketClient(this,
+            import.meta.env.PUBLIC_ORIGIN,
+            { path: "/api/socket", transports: ["websocket"] }
+        );
     }
 
     async init() {
         await this.app.init({
-            background: "#a1a1a1",
+            background: this.config.backgroundColour,
             resizeTo: this.container,
             preference: "webgpu"
         });
@@ -71,32 +61,11 @@ export class GameClient {
 
         this.viewport = viewport;
 
-        for (const pieceImage of Object.values(pieceImages)) {
+        for (const pieceImage of Object.values(pieceImages))
             await Assets.load(pieceImage);
-        }
 
         this.app.stage.addChild(viewport);
         this.container.appendChild(this.app.canvas);
-    }
-
-    attachPacketHandlers(handlers: AnyPacketHandler[]) {
-        for (const handler of handlers) {
-            this.socket.rawSocket.on(handler.type, async packet => {
-                if (!this.viewport) throw new Error(
-                    "cannot attach packet handler before initialisation."
-                );
-
-                try {
-                    await handler.handle(packet, this.viewport, this);
-                } catch (err) {
-                    console.error(
-                        `failed to handle packet(${handler.type}): `
-                        + JSON.stringify(packet)
-                        + `\n\n${(err as Error).message}`
-                    );
-                }
-            });
-        }
     }
 
     joinWorld(worldCode: string, sessionToken: string) {
@@ -104,8 +73,7 @@ export class GameClient {
     }
 }
 
-export function createPacketHandler<Type extends ClientboundPacketType>(
-    handler: PacketHandler<Type>
-) {
-    return handler;
-}
+export type InitialisedGameClient = (
+    Omit<GameClient, "viewport">
+    & { viewport: Viewport }
+);

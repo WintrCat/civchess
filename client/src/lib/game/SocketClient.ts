@@ -6,11 +6,30 @@ import {
     ClientboundPacketType,
     ClientboundPacketTypeMap
 } from "shared/types/packets/PacketType";
+import { GameClient, InitialisedGameClient } from "./Client";
+
+interface PacketHandler<Type extends ClientboundPacketType> {
+    type: Type,
+    handle: (
+        packet: ClientboundPacketTypeMap[Type],
+        client: InitialisedGameClient
+    ) => void | Promise<void>
+};
+
+type AnyPacketHandler = {
+    [K in ClientboundPacketType]: PacketHandler<K>
+}[ClientboundPacketType];
 
 export class SocketClient {
+    gameClient: GameClient;
     rawSocket: Socket;
 
-    constructor(uri: string, options: Partial<ManagerOptions>) {
+    constructor(
+        gameClient: GameClient,
+        uri: string,
+        options: Partial<ManagerOptions>
+    ) {
+        this.gameClient = gameClient;
         this.rawSocket = io(uri, options);
     }
 
@@ -45,4 +64,35 @@ export class SocketClient {
     disconnect() {
         this.rawSocket.disconnect();
     }
+
+    attachPacketHandler(handler: AnyPacketHandler) {
+        if (!this.gameClient.viewport) throw new Error(
+            "cannot handle packets before client is initialised."
+        );
+
+        this.rawSocket.on(handler.type, async packet => {
+            try {
+                await handler.handle(
+                    packet, this.gameClient as InitialisedGameClient
+                );
+            } catch (err) {
+                console.error(
+                    `failed to handle packet(${handler.type}): `
+                    + JSON.stringify(packet)
+                    + `\n\n${(err as Error).message}`
+                );
+            }
+        });
+    }
+
+    attachPacketHandlers(handlers: AnyPacketHandler[]) {
+        for (const handler of handlers)
+            this.attachPacketHandler(handler);
+    }
+}
+
+export function createPacketHandler<Type extends ClientboundPacketType>(
+    handler: PacketHandler<Type>
+) {
+    return handler;
 }

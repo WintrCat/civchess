@@ -3,7 +3,7 @@ import { Viewport } from "pixi-viewport";
 
 import { SquareType } from "shared/constants/SquareType";
 import { squareColours, squareSize, chunkSize } from "@/constants/squares";
-import { createPacketHandler } from "../Client";
+import { createPacketHandler } from "../SocketClient";
 
 function drawSquare(
     viewport: Viewport,
@@ -27,10 +27,10 @@ function drawSquare(
 
 export const worldChunkHandler = createPacketHandler({
     type: "worldChunk",
-    handle: (packet, viewport) => {
+    handle: (packet, client) => {
         packet.chunk.squares.forEach((row, relativeY) => {
             row.forEach((square, relativeX) => drawSquare(
-                viewport,
+                client.viewport,
                 (packet.x * chunkSize) + relativeX,
                 (packet.y * chunkSize) + relativeY,
                 square.type

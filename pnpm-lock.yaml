@@ -29,6 +29,9 @@ importers:
       es-toolkit:
         specifier: ^1.39.9
         version: 1.39.9
+      eventemitter3:
+        specifier: ^5.0.1
+        version: 5.0.1
       http-status-codes:
         specifier: ^2.3.0
         version: 2.3.0

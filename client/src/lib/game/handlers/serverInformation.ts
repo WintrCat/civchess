@@ -1,38 +1,41 @@
 import { chunkSize, squareSize } from "@/constants/squares";
-import { Player } from "../Player";
-import { createPacketHandler } from "../Client";
+import { Player } from "../entity/Player";
+import { createPacketHandler } from "../SocketClient";
 
 export const serverInformationHandler = createPacketHandler({
     type: "serverInformation",
-    handle: (packet, viewport, client) => {
-        viewport.moveCenter({
+    handle: (packet, client) => {
+        client.worldChunkSize = packet.worldChunkSize;
+
+        // Move camera to local player's location
+        client.viewport.moveCenter({
             x: packet.localPlayer.x * squareSize + (squareSize / 2),
             y: packet.localPlayer.y * squareSize + (squareSize / 2)
         });
 
+        // Clamp viewport to the size of the world plus padding
         const minCoordinate = -client.config.viewportPadding;
         const maxCoordinate = (packet.worldChunkSize * chunkSize * squareSize)
             + client.config.viewportPadding;
 
-        viewport.worldWidth = viewport.worldHeight = Math.abs(
+        client.viewport.worldWidth = client.viewport.worldHeight = Math.abs(
             maxCoordinate - minCoordinate
         );
 
-        viewport.clamp({
+        client.viewport.clamp({
             left: minCoordinate,
             right: maxCoordinate,
             top: minCoordinate,
             bottom: maxCoordinate
         });
 
-        const colour = parseInt(packet.localPlayer.colour.slice(1), 16);
-
+        // Spawn local player entity
         client.localPlayer = new Player({
-            viewport: viewport,
-            colour: colour,
-            controllable: true,
+            client: client,
             x: packet.localPlayer.x,
-            y: packet.localPlayer.y
+            y: packet.localPlayer.y,
+            colour: parseInt(packet.localPlayer.colour.slice(1), 16),
+            controllable: true
         });
 
         client.localPlayer.spawn();

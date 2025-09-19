@@ -20,7 +20,8 @@ function Play() {
         const gameClient = new GameClient(wrapperRef.current);
         await gameClient.init();
 
-        gameClient.attachPacketHandlers(handlers);
+        gameClient.socket.attachPacketHandlers(handlers);
+
         gameClient.joinWorld(worldCode, ticket.session.token);
     }
 
