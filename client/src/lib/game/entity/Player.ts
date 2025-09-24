@@ -7,35 +7,33 @@ import { MoveHints } from "../utils/move-hints";
 
 interface PlayerOptions {
     client: InitialisedGameClient;
-    x: number;
-    y: number;
+    position: Point;
     colour?: ColorSource;
     controllable?: boolean;
 }
 
 export class Player extends Entity {
-    private moveHints?: MoveHints;
+    private moveHints: MoveHints;
 
     constructor(opts: PlayerOptions) {
         super({ ...opts, sprite: Sprite.from(pieceImages.wK) });
+
+        this.moveHints = new MoveHints(
+            this.client,
+            this,
+            this.getLegalMoves.bind(this)
+        );
 
         this.on("hold", this.onHold);
         this.on("drop", this.onDrop);
     }
 
     private onHold() {
-        if (this.moveHints?.visible)
-            return this.moveHints.hide();
-
-        this.moveHints = new MoveHints(
-            this.client, this, this.getLegalMoves()
-        );
-
-        this.moveHints.show();
+        this.moveHints.render();
     }
 
-    private onDrop(newX: number, newY: number) {
-        
+    private onDrop(from: Point, to: Point) {
+        this.client.socket;
     }
 
     getLegalMoves() {
@@ -45,15 +43,15 @@ export class Player extends Entity {
             ? this.client.worldChunkSize * 8 : Infinity;
 
         const coords = {
-            startX: Math.max(0, this.x - 1),
-            startY: Math.max(0, this.y - 1),
-            endX: Math.min(worldSquareSize - 1, this.x + 1),
-            endY: Math.min(worldSquareSize - 1, this.y + 1)
+            startX: Math.max(0, this.position.x - 1),
+            startY: Math.max(0, this.position.y - 1),
+            endX: Math.min(worldSquareSize - 1, this.position.x + 1),
+            endY: Math.min(worldSquareSize - 1, this.position.y + 1)
         };
 
         for (let y = coords.startY; y <= coords.endY; y++) {
             for (let x = coords.startX; x <= coords.endX; x++) {
-                if (x == this.x && y == this.y) continue;
+                if (x == this.position.x && y == this.position.y) continue;
 
                 legalMoves.push(new Point(x, y));
             }

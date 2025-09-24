@@ -17,11 +17,9 @@ function Play() {
         if (!wrapperRef.current) return;
         if (!ticket || !worldCode) return;
 
-        const gameClient = new GameClient(wrapperRef.current);
-        await gameClient.init();
+        const gameClient = await new GameClient(wrapperRef.current).init();
 
         gameClient.socket.attachPacketHandlers(handlers);
-
         gameClient.joinWorld(worldCode, ticket.session.token);
     }
 

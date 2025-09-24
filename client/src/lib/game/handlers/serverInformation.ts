@@ -1,3 +1,5 @@
+import { Point } from "pixi.js";
+
 import { chunkSize, squareSize } from "@/constants/squares";
 import { Player } from "../entity/Player";
 import { createPacketHandler } from "../SocketClient";
@@ -32,8 +34,7 @@ export const serverInformationHandler = createPacketHandler({
         // Spawn local player entity
         client.localPlayer = new Player({
             client: client,
-            x: packet.localPlayer.x,
-            y: packet.localPlayer.y,
+            position: new Point(packet.localPlayer.x, packet.localPlayer.y),
             colour: parseInt(packet.localPlayer.colour.slice(1), 16),
             controllable: true
         });

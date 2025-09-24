@@ -8,14 +8,13 @@ import { toWorldPosition } from "../utils/square-position";
 export type EntityEvents = {
     hold: () => void;
     drag: (point: Point) => void;
-    drop: (newX: number, newY: number) => void;
+    drop: (from: Point, to: Point, cancel?: () => void) => void;
 };
 
 interface EntityOptions {
     client: InitialisedGameClient;
     sprite: Sprite;
-    x: number;
-    y: number;
+    position: Point;
     size?: number;
     colour?: ColorSource;
     controllable?: boolean;
@@ -25,8 +24,7 @@ export class Entity extends TypedEmitter<EntityEvents> {
     client: InitialisedGameClient;
     sprite: Sprite;
 
-    x: number;
-    y: number;
+    position: Point;
     colour?: ColorSource;
 
     private originalSize: number;
@@ -44,9 +42,8 @@ export class Entity extends TypedEmitter<EntityEvents> {
         this.sprite.anchor = 0.5;
         this.sprite.zIndex = 1;
 
-        this.x = opts.x;
-        this.y = opts.y;
-        this.setPosition(opts.x, opts.y);
+        this.position = opts.position;
+        this.setPosition(opts.position.x, opts.position.y);
 
         this.originalSize = opts.size || squareSize;
         this.setSize(this.originalSize);
@@ -70,8 +67,7 @@ export class Entity extends TypedEmitter<EntityEvents> {
     }
 
     setPosition(x: number, y: number) {
-        this.x = x;
-        this.y = y;
+        this.position = new Point(x, y);
         
         this.sprite.position.copyFrom(
             toWorldPosition(x, y)
@@ -114,10 +110,21 @@ export class Entity extends TypedEmitter<EntityEvents> {
             const newX = Math.floor(this.sprite.position.x / squareSize);
             const newY = Math.floor(this.sprite.position.y / squareSize);
 
-            if (this.x != newX || this.y != newY)
-                this.emit("drop", newX, newY);
+            let cancelled = false;
 
-            this.setPosition(newX, newY);
+            if (this.position.x != newX || this.position.y != newY) {
+                this.emit("drop",
+                    new Point(this.position.x, this.position.y),
+                    new Point(newX, newY),
+                    () => cancelled = true
+                );
+            }
+
+            if (cancelled) {
+                this.setPosition(this.position.x, this.position.y);
+            } else {
+                this.setPosition(newX, newY);
+            }
 
             viewport.plugins.resume("drag");
         };

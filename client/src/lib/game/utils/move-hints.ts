@@ -8,7 +8,7 @@ import { toWorldPosition } from "./square-position";
 export class MoveHints {
     client: InitialisedGameClient;
     entity: Entity;
-    squares: Point[];
+    squareGenerator: () => Point[];
 
     visible = false;
 
@@ -20,14 +20,14 @@ export class MoveHints {
     constructor(
         client: InitialisedGameClient,
         entity: Entity,
-        squares: Point[]
+        squareGenerator: () => Point[]
     ) {
         this.client = client;
         this.entity = entity;
-        this.squares = squares;
+        this.squareGenerator = squareGenerator;
     }
 
-    hide() {
+    clear() {
         for (const container of this.hintContainers)
             container.destroy();
 
@@ -47,8 +47,23 @@ export class MoveHints {
         this.visible = false;
     }
 
-    show() {
-        for (const square of this.squares) {
+    render() {
+        this.clear();
+
+        const squares = this.squareGenerator();
+
+        // Remove hints when piece is dropped
+        const dropListener: EntityEvents["drop"] = (from, to, cancel) => {
+            this.clear();
+
+            if (!squares.some(square => square.equals(to))) cancel?.();
+        };
+
+        this.entityDropListeners.add(dropListener);
+        this.entity.on("drop", dropListener);
+
+        // Generate move hint objects
+        for (const square of squares) {
             const moveHintContainer = new Container();
 
             const squareCorner = new Point(
@@ -93,23 +108,16 @@ export class MoveHints {
             };
 
             this.entityDragListeners.add(dragListener);
-            this.entity.on("drag", dragListener);
-
-            // Remove hints when piece is dropped
-            const dropListener: EntityEvents["drop"] = (newX, newY) => {
-                if (newX != square.x || newY != square.y) return;
-                this.hide();
-            };
-
-            this.entityDropListeners.add(dropListener);
-            this.entity.on("drop", dropListener);            
+            this.entity.on("drag", dragListener);          
 
             // Move when a hint is clicked
             moveHintSquare.on("pointerdown", () => {
                 this.entity.setPosition(square.x, square.y);
-                this.entity.emit("drop", square.x, square.y);
-                
-                this.hide();
+
+                this.entity.emit("drop",
+                    this.entity.position,
+                    new Point(square.x, square.y)
+                );
             });
             
             this.client.viewport.addChild(moveHintContainer);

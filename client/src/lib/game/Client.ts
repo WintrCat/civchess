@@ -66,6 +66,8 @@ export class GameClient {
 
         this.app.stage.addChild(viewport);
         this.container.appendChild(this.app.canvas);
+
+        return this as InitialisedGameClient;
     }
 
     joinWorld(worldCode: string, sessionToken: string) {
