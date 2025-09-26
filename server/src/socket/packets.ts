@@ -8,7 +8,7 @@ import {
 } from "shared/types/packets/PacketType";
 import { kickPlayer } from "./lib/manage-players";
 
-export type EmittableSocket = Pick<Socket, "emit">;
+type EmittableSocket = Pick<Socket, "emit">;
 
 // Packet handlers
 interface PacketHandler<Type extends ServerboundPacketType> {
@@ -51,11 +51,7 @@ export function sendPacket<
     socket: Receiver,
     type: Type,
     packet: ClientboundPacketTypeMap[Type],
-    configureSender?: (socket: Receiver) => EmittableSocket
+    configureSender = (socket: Receiver): EmittableSocket => socket
 ) {
-    const configuredSocket = configureSender
-        ? configureSender(socket)
-        : socket;
-
-    configuredSocket.emit(type, packet);
+    configureSender(socket).emit(type, packet);
 }

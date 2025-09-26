@@ -3,7 +3,7 @@ import { Socket } from "socket.io";
 import { ServerboundPacketType } from "shared/types/packets/PacketType";
 import { SocketIdentity } from "@/types/SocketIdentity";
 import { Session } from "@/database/models/account";
-import { sendPacket } from "./packets";
+import { kickPlayer } from "./lib/manage-players";
 
 export function attachPacketMiddleware(socket: Socket) {
     socket.onAny(async (eventName: ServerboundPacketType) => {
@@ -18,10 +18,7 @@ export function attachPacketMiddleware(socket: Socket) {
         });
         if (session) return;
 
-        sendPacket(socket, "playerKick", {
-            title: "Kicked from the world",
-            reason: "Invalid Session."
-        });
+        kickPlayer(socket, "Invalid Session.");
 
         socket.disconnect();
     });

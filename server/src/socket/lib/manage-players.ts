@@ -42,11 +42,13 @@ export const whitelist = {
             worldCode, "$.whitelistedPlayers", getUserId(socketOrUserId), []
         );
     },
+
     remove: async (worldCode: string, socketOrUserId: Socket | string) => {
         await getRedisClient().json.remove(
             worldCode, "$.whitelistedPlayers", getUserId(socketOrUserId)
         );
     },
+    
     fetch: async (worldCode: string) => {
         return await getRedisClient().json.get<string[]>(
             worldCode, "$.whitelistedPlayers"

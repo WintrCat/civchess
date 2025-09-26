@@ -105,9 +105,6 @@ importers:
       http-status-codes:
         specifier: ^2.3.0
         version: 2.3.0
-      immer:
-        specifier: ^10.1.1
-        version: 10.1.1
       ioredis:
         specifier: ^5.7.0
         version: 5.7.0

@@ -2,11 +2,9 @@ import { Container, Graphics, Point } from "pixi.js";
 
 import { squareSize } from "@/constants/squares";
 import { Entity, EntityEvents } from "../entity/Entity";
-import { InitialisedGameClient } from "../Client";
 import { toWorldPosition } from "./square-position";
 
 export class MoveHints {
-    client: InitialisedGameClient;
     entity: Entity;
     squareGenerator: () => Point[];
 
@@ -18,11 +16,9 @@ export class MoveHints {
     private entityDropListeners = new Set<EntityEvents["drop"]>();
 
     constructor(
-        client: InitialisedGameClient,
         entity: Entity,
         squareGenerator: () => Point[]
     ) {
-        this.client = client;
         this.entity = entity;
         this.squareGenerator = squareGenerator;
     }
@@ -120,10 +116,12 @@ export class MoveHints {
                 );
             });
             
-            this.client.viewport.addChild(moveHintContainer);
+            this.entity.client.viewport.addChild(moveHintContainer);
             this.hintContainers.add(moveHintContainer);
         }
 
         this.visible = true;
+
+        this.entity.client.activeMoveHints = this;
     }
 }

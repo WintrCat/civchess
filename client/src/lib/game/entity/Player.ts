@@ -13,15 +13,13 @@ interface PlayerOptions {
 }
 
 export class Player extends Entity {
-    private moveHints: MoveHints;
+    readonly moveHints: MoveHints;
 
     constructor(opts: PlayerOptions) {
         super({ ...opts, sprite: Sprite.from(pieceImages.wK) });
 
         this.moveHints = new MoveHints(
-            this.client,
-            this,
-            this.getLegalMoves.bind(this)
+            this, this.getLegalMoves.bind(this)
         );
 
         this.on("hold", this.onHold);

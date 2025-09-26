@@ -28,6 +28,8 @@ function drawSquare(
 export const worldChunkHandler = createPacketHandler({
     type: "worldChunk",
     handle: (packet, client) => {
+        client.setChunkCache(packet.x, packet.y, packet.chunk);
+
         packet.chunk.squares.forEach((row, relativeY) => {
             row.forEach((square, relativeX) => drawSquare(
                 client.viewport,

@@ -1,9 +1,11 @@
 import { Application, Assets, ColorSource } from "pixi.js";
 import { Viewport } from "pixi-viewport";
 
+import { Chunk } from "shared/types/world/Chunk";
 import { pieceImages } from "@/constants/utils";
 import { SocketClient } from "./SocketClient";
 import { Player } from "./entity/Player";
+import { MoveHints } from "./utils/move-hints";
 
 interface GameClientConfig {
     backgroundColour: ColorSource;
@@ -17,6 +19,9 @@ export class GameClient {
     socket: SocketClient;
 
     worldChunkSize?: number;
+    loadedChunks: Chunk[][] = [];
+
+    activeMoveHints?: MoveHints;
     localPlayer?: Player;
 
     config: GameClientConfig = {
@@ -72,6 +77,15 @@ export class GameClient {
 
     joinWorld(worldCode: string, sessionToken: string) {
         this.socket.sendPacket("playerJoin", { worldCode, sessionToken });
+    }
+
+    setChunkCache(x: number, y: number, chunk: Chunk) {
+        this.loadedChunks[y] ??= [];
+        this.loadedChunks[y][x] = chunk;
+    }
+
+    getChunkCache(x: number, y: number) {
+        return this.loadedChunks.at(y)?.at(x);
     }
 }
 
