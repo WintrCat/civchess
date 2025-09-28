@@ -1,4 +1,4 @@
-import { ColorSource, Point, Sprite } from "pixi.js";
+import { FederatedPointerEvent, ColorSource, Point, Sprite } from "pixi.js";
 
 import { squareSize } from "@/constants/squares";
 import { InitialisedGameClient } from "../Client";
@@ -29,6 +29,8 @@ export class Entity extends TypedEmitter<EntityEvents> {
 
     private originalSize: number;
     private held = false;
+
+    private dragListener?: (event: FederatedPointerEvent) => void;
 
     constructor(opts: EntityOptions) {
         super();
@@ -77,6 +79,11 @@ export class Entity extends TypedEmitter<EntityEvents> {
     setControllable(controllable: boolean) {
         if (!controllable) {
             this.sprite.removeAllListeners();
+
+            if (this.dragListener) this.client.viewport.off(
+                "pointermove", this.dragListener
+            );
+
             return;
         }
 
@@ -93,14 +100,16 @@ export class Entity extends TypedEmitter<EntityEvents> {
             this.emit("hold");
         });
 
-        this.sprite.on("pointermove", event => {
+        this.dragListener = event => {
             if (!this.held) return;
 
             const worldPosition = viewport.toWorld(event.global);
 
             this.sprite.position = worldPosition;
             this.emit("drag", worldPosition);
-        });
+        };
+
+        this.client.viewport.on("pointermove", this.dragListener);
 
         const dropEntity = () => {
             this.held = false;
