@@ -132,8 +132,11 @@ export const playerJoinHandler = createPacketHandler({
 
         for await (const chunkData of surroundingChunks) {
             await setChunkSubscription(
-                worldCode, chunkData.x, chunkData.y,
-                userId, true
+                worldCode,
+                chunkData.x,
+                chunkData.y,
+                userId,
+                true
             );
 
             sendPacket(socket, "worldChunk", {
