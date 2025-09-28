@@ -158,6 +158,7 @@ export const playerJoinHandler = createPacketHandler({
         const spawnChunk = getChunkCoordinates(playerData.x, playerData.y);
 
         sendPacket(socket, "playerSpawn", {
+            username: socketIdentity.profile.name,
             x: playerData.x,
             y: playerData.y,
             colour: playerData.colour
