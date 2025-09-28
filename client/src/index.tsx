@@ -8,7 +8,7 @@ import "@mantine/core/styles.css";
 import "./index.css";
 
 const Home = lazy(() => import("@/pages/home"));
-const SignIn = lazy(() => import("@/pages/signin"));
+const SignIn = lazy(() => import("@/pages/sign-in"));
 const Lobby = lazy(() => import("@/pages/lobby"));
 const Profile = lazy(() => import("@/pages/profile"));
 const Play = lazy(() => import("@/pages/play"));
@@ -17,7 +17,7 @@ const queryClient = new QueryClient();
 
 const router = createBrowserRouter([
     { path: "/", element: <Home/> },
-    { path: "/signin", element: <SignIn/> },
+    { path: "/sign-in", element: <SignIn/> },
     { path: "/lobby", element: <Lobby/> },
     { path: "/profile/:username", element: <Profile/> },
     { path: "/play/:worldCode", element: <Play/> },

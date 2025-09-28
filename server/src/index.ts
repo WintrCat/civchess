@@ -53,10 +53,7 @@ async function main() {
     server.listen(port, () => {
         if (cluster.worker?.id != 1) return;
 
-        console.log(
-            chalk.bold.blueBright("\nCIVCHESS")
-            + chalk.white(" - by the wintrcat community")
-        );
+        console.log(chalk.bold.blueBright("\nCIVCHESS"));
 
         console.log(
             chalk.greenBright("➜")

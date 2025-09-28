@@ -15,34 +15,21 @@ function Footer({ className, style }: FooterProps) {
         className={`${styles.wrapper} ${className}`}
         style={style}
     >
-        <span className={styles.links}>
-            <Anchor href="/terms" className="light-up">
-                <u>Terms of Service</u>
-            </Anchor>
+        <Anchor href="/terms" className="light-up">
+            <u>Terms of Service</u>
+        </Anchor>
 
-            <b>|</b>
+        <b>|</b>
 
-            <Anchor href="/privacy" className="light-up">
-                <u>Privacy Policy</u>
-            </Anchor>
+        <Anchor href="/privacy" className="light-up">
+            <u>Privacy Policy</u>
+        </Anchor>
 
-            <b>|</b>
+        <b>|</b>
 
-            <Anchor href="/credits" className="light-up">
-                <u>Credits</u>
-            </Anchor>
-        </span>
-
-        <span className={styles.promotion}>
-            ☕ Built by{" "}
-
-            <Anchor
-                className={`${styles.promotion} light-up`}
-                href="https://youtube.com/@wintrcat"
-            >
-                <u>the wintrcat community</u>
-            </Anchor>
-        </span>
+        <Anchor href="/credits" className="light-up">
+            <u>Credits</u>
+        </Anchor>
     </Container>;
 }
 

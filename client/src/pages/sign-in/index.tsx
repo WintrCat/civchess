@@ -21,7 +21,7 @@ function SignIn() {
         authClient.signIn.social({
             provider: provider,
             callbackURL: `${callbackOrigin}/lobby`,
-            errorCallbackURL: "/signin"
+            errorCallbackURL: "/sign-in"
         });
     }
 

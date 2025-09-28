@@ -36,7 +36,10 @@ export function attachPacketHandlers(
     for (const handler of handlers) {
         socket.on(handler.type, async packet => {
             try {
-                await handler.handle(packet, socket)
+                if (handler.type != "playerJoin" && !socket.data?.userId)
+                    throw new Error();
+
+                await handler.handle(packet, socket);
             } catch {
                 kickPlayer(socket, "Illegal packet.");
             }
