@@ -15,7 +15,7 @@ export function sessionAuthenticator(redirect = false): RequestHandler {
         });
 
         if (!ticket) return redirect
-            ? res.redirect("/signin")
+            ? res.redirect("/sign-in")
             : res.status(StatusCodes.UNAUTHORIZED).end();
 
         req.session = ticket.session;

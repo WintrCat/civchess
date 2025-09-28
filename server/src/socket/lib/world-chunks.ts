@@ -1,3 +1,5 @@
+import { Socket } from "socket.io";
+
 import { getRedisClient } from "@/database/redis";
 import { OnlineChunk } from "@/types/OnlineWorld";
 
@@ -53,31 +55,27 @@ export async function* getSurroundingChunks(
     }
 }
 
-export async function setChunkSubscription(
+export function setChunkSubscription(
+    socket: Socket,
     worldCode: string,
     x: number,
     y: number,
-    userId: string,
     subscribed: boolean
 ) {
-    const path = `$.chunks[${y}][${x}].subscribers.${userId}`;
+    const subRoom = `${worldCode}:chunk-${x}-${y}`;
 
     if (subscribed) {
-        await getRedisClient().json.set(worldCode, path, true);
+        socket.join(subRoom);
     } else {
-        await getRedisClient().json.delete(worldCode, path);
+        socket.leave(subRoom);
     }
 }
 
-export async function getChunkSubscription(
+export function getChunkBroadcaster(
+    socket: Socket,
     worldCode: string,
     x: number,
-    y: number,
-    userId: string
+    y: number 
 ) {
-    const value = await getRedisClient().json.get(worldCode,
-        `$.chunks[${y}][${x}].subscribers.${userId}`
-    );
-
-    return !!value;
+    return socket.broadcast.to(`${worldCode}:chunk-${x}-${y}`);
 }

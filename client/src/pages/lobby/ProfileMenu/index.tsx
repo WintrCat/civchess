@@ -19,7 +19,7 @@ function ProfileMenu({ className }: ProfileMenuProps) {
 
     async function signOut() {
         await authClient.signOut();
-        navigate("/signin");
+        navigate("/sign-in");
     }
 
     function openProfile() {

@@ -40,7 +40,7 @@ function Profile() {
 
         if (result.error) throw new Error("Unknown error occurred.");
 
-        navigate("/signin");
+        navigate("/sign-in");
     }
 
     const editable = session?.user.name == username;

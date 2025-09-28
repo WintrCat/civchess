@@ -10,6 +10,6 @@ export function useProtectedRoute() {
 
     useEffect(() => {
         if (isPending || session) return;
-        navigate("/signin");
+        navigate("/sign-in");
     }, [session, isPending]);
 }

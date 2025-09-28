@@ -10,7 +10,12 @@ import { isWorldOnline } from "@/lib/worlds/server";
 import { worldExists } from "@/lib/worlds/fetch";
 import { toPublicProfile } from "@/lib/public-profile";
 import { kickPlayer } from "../lib/manage-players";
-import { getSurroundingChunks, setChunkSubscription } from "../lib/world-chunks";
+import {
+    getChunkBroadcaster,
+    getChunkCoordinates,
+    getSurroundingChunks,
+    setChunkSubscription
+} from "../lib/world-chunks";
 import { createPacketHandler, sendPacket } from "../packets";
 
 function rejectJoin(socket: Socket, reason: string) {
@@ -86,7 +91,10 @@ export const playerJoinHandler = createPacketHandler({
             const identity = connSocket.data as SocketIdentity;
 
             if (identity.userId == userId) {
-                kickPlayer(socket, "You logged in from another location.");
+                kickPlayer(connSocket,
+                    "You logged in from another location."
+                );
+                
                 return true;
             }
 
@@ -131,12 +139,8 @@ export const playerJoinHandler = createPacketHandler({
         );
 
         for await (const chunkData of surroundingChunks) {
-            await setChunkSubscription(
-                worldCode,
-                chunkData.x,
-                chunkData.y,
-                userId,
-                true
+            setChunkSubscription(socket,
+                worldCode, chunkData.x, chunkData.y, true
             );
 
             sendPacket(socket, "worldChunk", {
@@ -149,5 +153,16 @@ export const playerJoinHandler = createPacketHandler({
         sendPacket(socket, "playerJoin", socketIdentity.profile,
             sender => sender.broadcast.to(worldCode)
         );
+
+        // Broadcast spawn to those subscribed to spawn chunk
+        const spawnChunk = getChunkCoordinates(playerData.x, playerData.y);
+
+        sendPacket(socket, "playerSpawn", {
+            x: playerData.x,
+            y: playerData.y,
+            colour: playerData.colour
+        }, sender => getChunkBroadcaster(
+            sender, worldCode, spawnChunk.x, spawnChunk.y
+        ));
     }
 });

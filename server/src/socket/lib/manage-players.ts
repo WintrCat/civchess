@@ -4,14 +4,18 @@ import { SocketIdentity } from "@/types/SocketIdentity";
 import { getRedisClient } from "@/database/redis";
 import { sendPacket } from "../packets";
 
-function getUserId(socketOrUserId: Socket | string) {
+type ManageableSocket = Pick<Socket, "emit" | "data"> & {
+    disconnect: () => void;
+};
+
+function getUserId(socketOrUserId: ManageableSocket | string) {
     return typeof socketOrUserId == "string"
         ? socketOrUserId
         : (socketOrUserId.data as SocketIdentity).userId;
 }
 
 export function kickPlayer(
-    socket: Socket,
+    socket: ManageableSocket,
     reason: string,
     title?: string
 ) {
@@ -23,7 +27,7 @@ export function kickPlayer(
 }
 
 export async function banPlayer(
-    socket: Socket,
+    socket: ManageableSocket,
     reason: string,
     title?: string
 ) {
@@ -37,13 +41,19 @@ export async function banPlayer(
 }
 
 export const whitelist = {
-    add: async (worldCode: string, socketOrUserId: Socket | string) => {
+    add: async (
+        worldCode: string,
+        socketOrUserId: ManageableSocket | string
+    ) => {
         await getRedisClient().json.push(
             worldCode, "$.whitelistedPlayers", getUserId(socketOrUserId), []
         );
     },
 
-    remove: async (worldCode: string, socketOrUserId: Socket | string) => {
+    remove: async (
+        worldCode: string,
+        socketOrUserId: ManageableSocket | string
+    ) => {
         await getRedisClient().json.remove(
             worldCode, "$.whitelistedPlayers", getUserId(socketOrUserId)
         );
