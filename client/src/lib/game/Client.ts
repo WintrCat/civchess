@@ -53,6 +53,11 @@ export class GameClient {
         viewport.eventMode = "static";
         viewport.scale = 2;
 
+        this.app.renderer.on("resize", (width, height) => {
+            viewport.screenWidth = width;
+            viewport.screenHeight = height;
+        });
+
         this.viewport = viewport;
 
         for (const pieceImage of Object.values(pieceImages))

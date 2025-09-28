@@ -65,6 +65,10 @@ export class Entity extends TypedEmitter<EntityEvents> {
     }
 
     despawn() {
+        if (this.dragListener) this.client.viewport.off(
+            "pointermove", this.dragListener
+        );
+
         this.client.viewport.removeChild(this.sprite);
     }
 

@@ -20,6 +20,15 @@ export const serverInformationHandler = createPacketHandler({
             packet.localPlayer.x, packet.localPlayer.y
         );
 
+        client.app.renderer.on("resize", () => {
+            if (!client.localPlayer) return;
+
+            clampViewportAroundSquare(client,
+                client.localPlayer.position.x,
+                client.localPlayer.position.y
+            );
+        });
+
         // Spawn local player entity
         client.localPlayer = new Player({
             client: client,
