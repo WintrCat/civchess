@@ -52,3 +52,32 @@ export async function* getSurroundingChunks(
         }
     }
 }
+
+export async function setChunkSubscription(
+    worldCode: string,
+    x: number,
+    y: number,
+    userId: string,
+    subscribed: boolean
+) {
+    const path = `$.chunks[${y}][${x}].subscribers.${userId}`;
+
+    if (subscribed) {
+        await getRedisClient().json.set(worldCode, path, true);
+    } else {
+        await getRedisClient().json.delete(worldCode, path);
+    }
+}
+
+export async function getChunkSubscription(
+    worldCode: string,
+    x: number,
+    y: number,
+    userId: string
+) {
+    const value = await getRedisClient().json.get(worldCode,
+        `$.chunks[${y}][${x}].subscribers.${userId}`
+    );
+
+    return !!value;
+}

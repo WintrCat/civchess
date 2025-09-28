@@ -1,6 +1,6 @@
 import { Socket } from "socket.io";
 import { Types } from "mongoose";
-import { remove, random } from "es-toolkit";
+import { remove, random, omit } from "es-toolkit";
 
 import { Player } from "shared/types/world/Player";
 import { SocketIdentity } from "@/types/SocketIdentity";
@@ -10,7 +10,7 @@ import { isWorldOnline } from "@/lib/worlds/server";
 import { worldExists } from "@/lib/worlds/fetch";
 import { toPublicProfile } from "@/lib/public-profile";
 import { kickPlayer } from "../lib/manage-players";
-import { getSurroundingChunks } from "../lib/world-chunks";
+import { getSurroundingChunks, setChunkSubscription } from "../lib/world-chunks";
 import { createPacketHandler, sendPacket } from "../packets";
 
 function rejectJoin(socket: Socket, reason: string) {
@@ -125,13 +125,21 @@ export const playerJoinHandler = createPacketHandler({
                 .length(worldCode, "$.chunks")
         });
 
-        // Return chunk packets that surround the player's location
+        // Subscribe player to and send surrounding chunks
         const surroundingChunks = getSurroundingChunks(
             worldCode, playerData.x, playerData.y
         );
 
         for await (const chunkData of surroundingChunks) {
-            sendPacket(socket, "worldChunk", chunkData);
+            await setChunkSubscription(
+                worldCode, chunkData.x, chunkData.y,
+                userId, true
+            );
+
+            sendPacket(socket, "worldChunk", {
+                ...chunkData,
+                chunk: omit(chunkData.chunk, ["subscribers"])
+            });
         }
 
         // Broadcast join to others

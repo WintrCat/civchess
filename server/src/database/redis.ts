@@ -1,8 +1,19 @@
 import { Redis } from "ioredis";
 
-type ObjectValue = string | number | object;
+type ObjectValue = string | number | boolean | object;
 
 class ExtendedRedis extends Redis {
+    private async getNumericalResponse(
+        command: string,
+        key: string,
+        path: string
+    ) {
+        const response = await this.call(command, key, path);
+        if (!Array.isArray(response)) return 0;
+
+        return Number(response.at(0)) || 0;
+    }
+
     json = {
         set: async (
             key: string,
@@ -36,11 +47,12 @@ class ExtendedRedis extends Redis {
             }
         },
 
-        length: async (key: string, path: string) => {
-            const lengthResponse = await this.call("json.arrlen", key, path);
-            if (!Array.isArray(lengthResponse)) return 0;
+        delete: async (key: string, path: string) => {
+            return await this.getNumericalResponse("json.del", key, path);
+        },
 
-            return Number(lengthResponse.at(0)) || 0;
+        length: async (key: string, path: string) => {
+            return await this.getNumericalResponse("json.arrlen", key, path);
         },
 
         push: async <Val extends ObjectValue>(

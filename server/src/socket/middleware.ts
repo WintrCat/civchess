@@ -7,7 +7,11 @@ import { kickPlayer } from "./lib/manage-players";
 export function attachPacketMiddleware(socket: Socket) {
     socket.onAny(async () => {
         const identity = socket.data as SocketIdentity | undefined;
-        if (!identity || Date.now() < identity.sessionExpiresAt) return;
+        
+        if (
+            !identity?.sessionExpiresAt
+            || Date.now() < identity.sessionExpiresAt
+        ) return;
 
         const session = await Session.exists({
             token: identity.sessionToken
