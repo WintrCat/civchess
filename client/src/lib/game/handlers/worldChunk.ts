@@ -2,7 +2,11 @@ import { Graphics } from "pixi.js";
 import { Viewport } from "pixi-viewport";
 
 import { SquareType } from "shared/constants/SquareType";
-import { squareColours, squareSize, chunkSize } from "@/constants/squares";
+import {
+    squareColours,
+    squareSize,
+    chunkSquareCount
+} from "@/constants/squares";
 import { createPacketHandler } from "../SocketClient";
 
 function drawSquare(
@@ -33,8 +37,8 @@ export const worldChunkHandler = createPacketHandler({
         packet.chunk.squares.forEach((row, relativeY) => {
             row.forEach((square, relativeX) => drawSquare(
                 client.viewport,
-                (packet.x * chunkSize) + relativeX,
-                (packet.y * chunkSize) + relativeY,
+                (packet.x * chunkSquareCount) + relativeX,
+                (packet.y * chunkSquareCount) + relativeY,
                 square.type
             ));
         });

@@ -1,4 +1,4 @@
-import { Application, Assets, ColorSource } from "pixi.js";
+import { Application, Assets } from "pixi.js";
 import { Viewport } from "pixi-viewport";
 
 import { Chunk } from "shared/types/world/Chunk";
@@ -6,11 +6,6 @@ import { pieceImages } from "@/constants/utils";
 import { SocketClient } from "./SocketClient";
 import { Player } from "./entity/Player";
 import { MoveHints } from "./utils/move-hints";
-
-interface GameClientConfig {
-    backgroundColour: ColorSource;
-    viewportPadding: number;
-}
 
 export class GameClient {
     container: HTMLDivElement;
@@ -23,11 +18,6 @@ export class GameClient {
 
     activeMoveHints?: MoveHints;
     localPlayer?: Player;
-
-    config: GameClientConfig = {
-        backgroundColour: "#ffffff",
-        viewportPadding: 160
-    };
 
     constructor(container: HTMLDivElement) {
         if (!import.meta.env.PUBLIC_ORIGIN)
@@ -45,7 +35,6 @@ export class GameClient {
 
     async init() {
         await this.app.init({
-            background: this.config.backgroundColour,
             resizeTo: this.container,
             preference: "webgpu"
         });

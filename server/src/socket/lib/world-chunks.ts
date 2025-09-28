@@ -1,11 +1,8 @@
 import { Socket } from "socket.io";
 
+import { getChunkCoordinates } from "shared/lib/world-chunks";
 import { getRedisClient } from "@/database/redis";
 import { OnlineChunk } from "@/types/OnlineWorld";
-
-export function getChunkCoordinates(squareX: number, squareY: number) {
-    return { x: Math.floor(squareX / 8), y: Math.floor(squareY / 8) };
-}
 
 export async function getChunk(
     worldCode: string, chunkX: number, chunkY: number
@@ -29,7 +26,7 @@ export async function* getSurroundingChunks(
     originSquareY: number,
     renderDistance?: number
 ) {
-    renderDistance ??= Number(process.env.RENDER_DISTANCE) || 3;
+    renderDistance ??= Number(process.env.PUBLIC_RENDER_DISTANCE) || 2;
 
     const worldSize = await getRedisClient().json
         .length(worldCode, "$.chunks");

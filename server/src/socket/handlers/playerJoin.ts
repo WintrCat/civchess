@@ -3,6 +3,7 @@ import { Types } from "mongoose";
 import { remove, random, omit } from "es-toolkit";
 
 import { Player } from "shared/types/world/Player";
+import { getChunkCoordinates } from "shared/lib/world-chunks";
 import { SocketIdentity } from "@/types/SocketIdentity";
 import { getRedisClient } from "@/database/redis";
 import { Session, User } from "@/database/models/account";
@@ -12,7 +13,6 @@ import { toPublicProfile } from "@/lib/public-profile";
 import { kickPlayer } from "../lib/manage-players";
 import {
     getChunkBroadcaster,
-    getChunkCoordinates,
     getSurroundingChunks,
     setChunkSubscription
 } from "../lib/world-chunks";

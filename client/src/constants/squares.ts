@@ -1,7 +1,9 @@
 import { SquareType } from "shared/constants/SquareType";
 
 export const squareSize = 80;
-export const chunkSize = 8;
+
+export const chunkSquareCount = 8;
+export const chunkSize = squareSize * chunkSquareCount;
 
 export const biomeNames = {
     [SquareType.GRASSLAND]: "Grassland",
