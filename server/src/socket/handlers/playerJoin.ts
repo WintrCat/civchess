@@ -25,8 +25,6 @@ function rejectJoin(socket: Socket, reason: string) {
 export const playerJoinHandler = createPacketHandler({
     type: "playerJoin",
     handle: async ({ sessionToken, worldCode }, socket) => {
-        console.log("player join packet received!");
-
         // Validate session token and get corresponding user
         const session = await Session.findOne({ token: sessionToken }).lean();
         if (!session) return rejectJoin(socket, "Invalid Session.");

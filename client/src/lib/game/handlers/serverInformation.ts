@@ -12,6 +12,13 @@ export const serverInformationHandler = createPacketHandler({
     handle: (packet, client) => {
         client.worldChunkSize = packet.worldChunkSize;
 
+        client.connectedPlayers = Object.fromEntries(
+            packet.players.map(player => [player.name, player])
+        );
+
+        client.ui.updatePlayerlist();
+
+        // Move camera and clamp viewport around player
         moveViewportToSquare(client,
             packet.localPlayer.x, packet.localPlayer.y
         );

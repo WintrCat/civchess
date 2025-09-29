@@ -2,6 +2,7 @@ import { PlayerJoinPacket } from "./serverbound/PlayerJoinPacket";
 import { PlayerMovePacket } from "./serverbound/PlayerMovePacket";
 
 import { PublicProfile } from "../PublicProfile";
+import { PlayerLeavePacket } from "./clientbound/PlayerLeavePacket";
 import { PlayerKickPacket } from "./clientbound/PlayerKickPacket";
 import { PlayerSpawnPacket } from "./clientbound/PlayerSpawnPacket";
 import { ServerInformationPacket } from "./clientbound/ServerInformationPacket";
@@ -14,6 +15,7 @@ export interface ServerboundPacketTypeMap {
 
 export interface ClientboundPacketTypeMap {
     playerJoin: PublicProfile;
+    playerLeave: PlayerLeavePacket;
     playerKick: PlayerKickPacket;
     playerSpawn: PlayerSpawnPacket;
     serverInformation: ServerInformationPacket;

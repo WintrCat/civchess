@@ -1,36 +1,41 @@
 import { Application, Assets } from "pixi.js";
 import { Viewport } from "pixi-viewport";
 
+import { PublicProfile } from "shared/types/PublicProfile";
 import { Chunk } from "shared/types/world/Chunk";
 import { pieceImages } from "@/constants/utils";
 import { SocketClient } from "./SocketClient";
 import { Player } from "./entity/Player";
 import { MoveHints } from "./utils/move-hints";
+import { InterfaceClient, UIHooks } from "./InterfaceClient";
 
 export class GameClient {
     container: HTMLDivElement;
     app: Application;
     viewport?: Viewport;
     socket: SocketClient;
+    ui: InterfaceClient;
 
     worldChunkSize?: number;
     loadedChunks: Chunk[][] = [];
 
+    connectedPlayers: Record<string, PublicProfile> = {};
     activeMoveHints?: MoveHints;
     localPlayer?: Player;
 
-    constructor(container: HTMLDivElement) {
+    constructor(container: HTMLDivElement, uiHooks?: UIHooks) {
         if (!import.meta.env.PUBLIC_ORIGIN)
             throw new Error("backend origin not specified.");
 
         this.container = container;
-
         this.app = new Application();
 
         this.socket = new SocketClient(this,
             import.meta.env.PUBLIC_ORIGIN,
             { path: "/api/socket", transports: ["websocket"] }
         );
+
+        this.ui = new InterfaceClient(this, uiHooks);
     }
 
     async init() {

@@ -4,3 +4,24 @@
 
     overflow: hidden;
 }
+
+.serverPanel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    position: fixed;
+    top: 0;
+    right: 0;
+    padding: 10px;
+
+    background-color: rgba(0, 0, 0, 0.3);
+    color: white;
+}
+
+.playerHeadline {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+    width: 100%;
+}
