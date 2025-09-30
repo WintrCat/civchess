@@ -6,6 +6,7 @@ import { AuthInfer } from "./auth";
 
 export function toPublicProfile(user: AuthInfer["user"]): PublicProfile {
     return {
+        id: user.id,
         name: user.name,
         createdAt: user.createdAt.toISOString(),
         roles: user.roles as UserRole[],

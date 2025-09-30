@@ -2,11 +2,8 @@ import { Graphics } from "pixi.js";
 import { Viewport } from "pixi-viewport";
 
 import { SquareType } from "shared/constants/SquareType";
-import {
-    squareColours,
-    squareSize,
-    chunkSquareCount
-} from "@/constants/squares";
+import { chunkSquareCount } from "shared/lib/world-chunks";
+import { squareColours, squareSize } from "@/constants/squares";
 import { createPacketHandler } from "../SocketClient";
 
 function drawSquare(

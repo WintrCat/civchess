@@ -1,10 +1,7 @@
-import { cloneDeep } from "es-toolkit";
-
 import { World } from "shared/types/world/World";
 import { getRedisClient } from "@/database/redis";
 import { UserWorld } from "@/database/models/UserWorld";
 import { fetchWorld, toBaseWorld } from "./fetch";
-import { OnlineChunk, OnlineWorld } from "@/types/OnlineWorld";
 
 export async function isWorldOnline(worldCode: string) {
     const matchCount = await getRedisClient().exists(worldCode);
@@ -26,18 +23,7 @@ export async function hostWorld(world: World | string) {
 
     if (await isWorldOnline(world.code)) throw new Error();
 
-    // Convert to online world (add chunk subscribers)
-    const worldChunks = cloneDeep(world.chunks) as OnlineChunk[][];
-
-    for (const row of worldChunks) {
-        for (const chunk of row) {
-            chunk.subscribers = {};
-        }
-    }
-
-    const onlineWorld: OnlineWorld = { ...world, chunks: worldChunks };
-
-    await getRedisClient().json.set(world.code, "$", onlineWorld);
+    await getRedisClient().json.set(world.code, "$", world);
 }
 
 /**

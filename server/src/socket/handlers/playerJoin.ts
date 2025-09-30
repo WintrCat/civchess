@@ -1,6 +1,6 @@
 import { Socket } from "socket.io";
 import { Types } from "mongoose";
-import { remove, random, omit } from "es-toolkit";
+import { remove, random } from "es-toolkit";
 
 import { Player } from "shared/types/world/Player";
 import { getChunkCoordinates } from "shared/lib/world-chunks";
@@ -10,7 +10,13 @@ import { Session, User } from "@/database/models/account";
 import { isWorldOnline } from "@/lib/worlds/server";
 import { worldExists } from "@/lib/worlds/fetch";
 import { toPublicProfile } from "@/lib/public-profile";
-import { kickPlayer } from "../lib/manage-players";
+import {
+    getMaxPlayers,
+    kickPlayer,
+    isPlayerBanned,
+    isWhitelistActive,
+    isPlayerWhitelisted
+} from "../lib/manage-players";
 import {
     getChunkBroadcaster,
     getSurroundingChunks,
@@ -25,7 +31,7 @@ function rejectJoin(socket: Socket, reason: string) {
 export const playerJoinHandler = createPacketHandler({
     type: "playerJoin",
     handle: async ({ sessionToken, worldCode }, socket) => {
-        // Validate session token and get corresponding user
+        // Validate session token and get corresponding user ID
         const session = await Session.findOne({ token: sessionToken }).lean();
         if (!session) return rejectJoin(socket, "Invalid Session.");
 
@@ -41,34 +47,25 @@ export const playerJoinHandler = createPacketHandler({
             const offlineWorldExists = await worldExists({ code: worldCode });
 
             return rejectJoin(socket, offlineWorldExists
-                ? "This world is currently offline, please try again later"
+                ? "This world is currently offline, please try again later."
                 : "A world with this world code does not exist."
             );
         }
 
-        // Enforce banned and whitelisted players lists
-        const banlist = await getRedisClient().json.get<string[]>(
-            worldCode, "$.bannedPlayers"
-        ) || [];
-
-        if (banlist.includes(userId))
+        // Ensure player is not banned from the world
+        if (await isPlayerBanned(worldCode, userId))
             return rejectJoin(socket, "You are banned from this world.");
 
-        const whitelist = await getRedisClient().json.get<string[]>(
-            worldCode, "$.whitelistedPlayers"
-        );
-
-        if (whitelist && !whitelist.includes(userId))
-            return rejectJoin(socket, "You are not on this world's whitelist.");
+        // Enforce world whitelist if applicable
+        if (
+            await isWhitelistActive(worldCode)
+            && !await isPlayerWhitelisted(worldCode, userId)
+        ) return rejectJoin(socket, "You are not whitelisted!");
 
         // Ensure the world is not full (reached its max player count)
         const connectedSockets = await socket.in(worldCode).fetchSockets();
 
-        const maxPlayers = await getRedisClient().json.get<number>(
-            worldCode, "$.maxPlayers"
-        ) || Infinity;
-
-        if (connectedSockets.length >= maxPlayers)
+        if (connectedSockets.length >= await getMaxPlayers(worldCode))
             return rejectJoin(socket, "This world is currently full.");
 
         // Add the socket to the world code room & create its identity
@@ -105,8 +102,6 @@ export const playerJoinHandler = createPacketHandler({
         );
 
         if (!playerData) {
-            // If the spawn location has been obstructed (block etc.), BFS to find
-            // nearest legal spawn location
             const createdPlayerData: Player = {
                 x: 0,
                 y: 0,
@@ -120,6 +115,9 @@ export const playerJoinHandler = createPacketHandler({
 
             playerData = createdPlayerData;
         }
+
+        // Move player if spawn location is now obstructed
+        // getNearestSpawnLocation(worldCode, x, y);
 
         // Return a server information packet with playerlist
         sendPacket(socket, "serverInformation", {
@@ -141,10 +139,7 @@ export const playerJoinHandler = createPacketHandler({
                 worldCode, chunkData.x, chunkData.y, true
             );
 
-            sendPacket(socket, "worldChunk", {
-                ...chunkData,
-                chunk: omit(chunkData.chunk, ["subscribers"])
-            });
+            sendPacket(socket, "worldChunk", chunkData);
         }
 
         // Broadcast join to others
@@ -153,7 +148,9 @@ export const playerJoinHandler = createPacketHandler({
         );
 
         // Broadcast spawn to those subscribed to spawn chunk
-        const spawnChunk = getChunkCoordinates(playerData.x, playerData.y);
+        const spawnChunkLocation = getChunkCoordinates(
+            playerData.x, playerData.y
+        );
 
         sendPacket(socket, "playerSpawn", {
             username: socketIdentity.profile.name,
@@ -161,7 +158,8 @@ export const playerJoinHandler = createPacketHandler({
             y: playerData.y,
             colour: playerData.colour
         }, sender => getChunkBroadcaster(
-            sender, worldCode, spawnChunk.x, spawnChunk.y
+            sender, worldCode,
+            spawnChunkLocation.x, spawnChunkLocation.y
         ));
     }
 });

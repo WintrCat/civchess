@@ -4,7 +4,7 @@ import { SquareType } from "@/constants/SquareType";
 import { chunkSchema } from "./Chunk";
 import { playerSchema } from "./Player";
 
-// change server related options (bans, ops etc.) while in game
+// Records are keyed by user ID
 export const worldSchema = z.object({
     name: z.string(),
     code: z.string(),
@@ -13,12 +13,12 @@ export const worldSchema = z.object({
 
     lastOnlineAt: z.string().optional(),
     maxPlayers: z.number().optional(),
-    bannedPlayers: z.string().array(),
-    whitelistedPlayers: z.string().array().optional(),
-    operatorPlayers: z.string().array(),
+    bannedPlayers: z.record(z.string(), z.literal(true)),
+    whitelistedPlayers: z.record(z.string(), z.literal(true)).optional(),
+    operatorPlayers: z.record(z.string(), z.literal(true)),
 
     chunks: chunkSchema.array().array(),
-    players: z.record(z.string(), playerSchema) // User ID to player
+    players: z.record(z.string(), playerSchema)
 });
 
 export type World = z.infer<typeof worldSchema>;

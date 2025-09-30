@@ -4,10 +4,10 @@ import { Viewport } from "pixi-viewport";
 import { PublicProfile } from "shared/types/PublicProfile";
 import { Chunk } from "shared/types/world/Chunk";
 import { pieceImages } from "@/constants/utils";
+import { InterfaceClient, UIHooks } from "./InterfaceClient";
 import { SocketClient } from "./SocketClient";
 import { Player } from "./entity/Player";
 import { MoveHints } from "./utils/move-hints";
-import { InterfaceClient, UIHooks } from "./InterfaceClient";
 
 export class GameClient {
     container: HTMLDivElement;

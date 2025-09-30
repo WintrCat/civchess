@@ -11,6 +11,7 @@ export const profileAvatarSchema = z.object({
 export type ProfileAvatar = z.infer<typeof profileAvatarSchema>;
 
 export interface PublicProfile {
+    id: string;
     name: string;
     createdAt: string;
     roles: UserRole[];

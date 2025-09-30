@@ -8,10 +8,20 @@ type ManageableSocket = Pick<Socket, "emit" | "data"> & {
     disconnect: () => void;
 };
 
-function getUserId(socketOrUserId: ManageableSocket | string) {
+type SocketOrUserId = ManageableSocket | string;
+
+type RecordSet = Record<string, true>;
+
+function getUserId(socketOrUserId: SocketOrUserId) {
     return typeof socketOrUserId == "string"
         ? socketOrUserId
         : (socketOrUserId.data as SocketIdentity).userId;
+}
+
+export async function getMaxPlayers(worldCode: string) {
+    return await getRedisClient().json.get<number>(
+        worldCode, "$.maxPlayers"
+    ) || Infinity;
 }
 
 export function kickPlayer(
@@ -26,42 +36,87 @@ export function kickPlayer(
     socket.disconnect();
 }
 
+// Manage banlist
 export async function banPlayer(
-    socket: ManageableSocket,
-    reason: string,
-    title?: string
+    worldCode: string,
+    socketOrUserId: SocketOrUserId
 ) {
-    const identity = socket.data as SocketIdentity;
+    if (typeof socketOrUserId == "string")
+        return await getRedisClient().json.set(
+            worldCode, `$.bannedPlayers.${socketOrUserId}`, true
+        );
 
-    await getRedisClient().json.push(
-        identity.worldCode, "$.bannedPlayers", identity.userId
+    const userId = getUserId(socketOrUserId);
+
+    await getRedisClient().json.set(
+        worldCode, `$.bannedPlayers.${userId}`, true
     );
 
-    kickPlayer(socket, reason, title);
+    kickPlayer(socketOrUserId,
+        "You have been banned from this world.",
+        "Banned from the world"
+    );
 }
 
-export const whitelist = {
-    add: async (
-        worldCode: string,
-        socketOrUserId: ManageableSocket | string
-    ) => {
-        await getRedisClient().json.push(
-            worldCode, "$.whitelistedPlayers", getUserId(socketOrUserId), []
-        );
-    },
+export async function unbanPlayer(worldCode: string, userId: string) {
+    await getRedisClient().json.delete(
+        worldCode, `$.bannedPlayers.${userId}`
+    );
+}
 
-    remove: async (
-        worldCode: string,
-        socketOrUserId: ManageableSocket | string
-    ) => {
-        await getRedisClient().json.remove(
-            worldCode, "$.whitelistedPlayers", getUserId(socketOrUserId)
-        );
-    },
-    
-    fetch: async (worldCode: string) => {
-        return await getRedisClient().json.get<string[]>(
-            worldCode, "$.whitelistedPlayers"
-        );
-    }
-};
+export async function getBannedPlayers(worldCode: string) {
+    const banlist = await getRedisClient().json
+        .get<RecordSet>(worldCode, "$.bannedPlayers");
+
+    return banlist ? Object.keys(banlist) : [];
+}
+
+export async function isPlayerBanned(worldCode: string, userId: string) {
+    const bannedPlayer = await getRedisClient().json
+        .get<RecordSet[string]>(worldCode, `$.bannedPlayers.${userId}`);
+
+    return !!bannedPlayer;
+}
+
+// Manage whitelist
+export async function whitelistPlayer(
+    worldCode: string,
+    socketOrUserId: SocketOrUserId
+) {
+    await getRedisClient().json.set(
+        worldCode,
+        `$.whitelistedPlayers.${getUserId(socketOrUserId)}`,
+        true
+    );
+}
+
+export async function unwhitelistPlayer(
+    worldCode: string,
+    socketOrUserId: SocketOrUserId
+) {
+    await getRedisClient().json.delete(
+        worldCode,
+        `$.whitelistedPlayers.${getUserId(socketOrUserId)}`
+    );
+}
+
+export async function getWhitelist(worldCode: string) {
+    const whitelist = await getRedisClient().json.get<RecordSet>(
+        worldCode, "$.whitelistedPlayers"
+    );
+
+    return whitelist && Object.keys(whitelist);
+}
+
+export async function isWhitelistActive(worldCode: string) {
+    return await getRedisClient().json.exists(
+        worldCode, "$.whitelistedPlayers"
+    );
+}
+
+export async function isPlayerWhitelisted(worldCode: string, userId: string) {
+    const whitelistedPlayer = await getRedisClient().json
+        .get<RecordSet[string]>(worldCode, `$.whitelistedPlayers.${userId}`);
+
+    return !!whitelistedPlayer;
+}

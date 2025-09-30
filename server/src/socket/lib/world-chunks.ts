@@ -1,13 +1,13 @@
 import { Socket } from "socket.io";
 
+import { Chunk } from "shared/types/world/Chunk";
 import { getChunkCoordinates } from "shared/lib/world-chunks";
 import { getRedisClient } from "@/database/redis";
-import { OnlineChunk } from "@/types/OnlineWorld";
 
 export async function getChunk(
     worldCode: string, chunkX: number, chunkY: number
 ) {
-    return await getRedisClient().json.get<OnlineChunk>(
+    return await getRedisClient().json.get<Chunk>(
         worldCode, `$.chunks[${chunkY}][${chunkX}]`
     );
 }

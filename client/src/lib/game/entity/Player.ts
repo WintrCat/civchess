@@ -1,5 +1,6 @@
 import { Point, ColorSource, Sprite } from "pixi.js";
 
+import { chunkSquareCount } from "shared/lib/world-chunks";
 import { pieceImages } from "@/constants/utils";
 import { InitialisedGameClient } from "../Client";
 import { Entity } from "./Entity";
@@ -38,7 +39,8 @@ export class Player extends Entity {
         const legalMoves: Point[] = [];
 
         const worldSquareSize = this.client.worldChunkSize
-            ? this.client.worldChunkSize * 8 : Infinity;
+            ? this.client.worldChunkSize * chunkSquareCount
+            : Infinity;
 
         const coords = {
             startX: Math.max(0, this.position.x - 1),

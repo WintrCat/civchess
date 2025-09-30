@@ -51,6 +51,12 @@ class ExtendedRedis extends Redis {
             return await this.getNumericalResponse("json.del", key, path);
         },
 
+        exists: async (key: string, path: string) => {
+            const response = await this.call("json.type", key, path);
+            
+            return Array.isArray(response) && response.length > 0;
+        },
+
         length: async (key: string, path: string) => {
             return await this.getNumericalResponse("json.arrlen", key, path);
         },

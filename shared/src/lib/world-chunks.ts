@@ -1,6 +1,8 @@
+export const chunkSquareCount = 8;
+
 export function getChunkCoordinates(squareX: number, squareY: number) {
     return {
-        x: Math.floor(squareX / 8),
-        y: Math.floor(squareY / 8)
+        x: Math.floor(squareX / chunkSquareCount),
+        y: Math.floor(squareY / chunkSquareCount)
     };
 }

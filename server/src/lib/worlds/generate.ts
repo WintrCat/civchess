@@ -25,8 +25,8 @@ export function generateWorld(options: WorldOptions): World {
         chunks: chunks,
         players: {},
         createdAt: new Date().toISOString(),
-        bannedPlayers: [],
-        operatorPlayers: []
+        bannedPlayers: {},
+        operatorPlayers: {}
     };
 }
 
