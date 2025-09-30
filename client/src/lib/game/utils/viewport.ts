@@ -14,16 +14,16 @@ export function clampViewportAroundSquare(
     squareX: number,
     squareY: number
 ) {
-    const spawnChunkSquare = mapValues(
+    const chunkPosition = mapValues(
         getChunkCoordinates(squareX, squareY),
         coordinate => coordinate * chunkSize
     );
 
-    const minCoordinate = Math.max(0, spawnChunkSquare.x - renderDistance);
+    const minCoordinate = Math.max(0, chunkPosition.x - renderDistance);
 
     const maxCoordinate = Math.min(
         (client.worldChunkSize || Infinity) * chunkSize,
-        spawnChunkSquare.x + chunkSize + renderDistance
+        chunkPosition.x + chunkSize + renderDistance
     );
 
     client.viewport.worldWidth = client.viewport.worldHeight = Math.abs(
