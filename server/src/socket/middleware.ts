@@ -1,17 +1,16 @@
 import { Socket } from "socket.io";
 
-import { SocketIdentity } from "@/types/SocketIdentity";
+import { isIdentified, SocketIdentity } from "@/types/SocketIdentity";
 import { Session } from "@/database/models/account";
-import { kickPlayer } from "./lib/manage-players";
+import { kickPlayer } from "./lib/players";
 
 export function attachPacketMiddleware(socket: Socket) {
     socket.onAny(async () => {
-        const identity = socket.data as SocketIdentity | undefined;
+        if (!isIdentified(socket)) return;
+
+        const identity = socket.data as SocketIdentity;
         
-        if (
-            !identity?.sessionExpiresAt
-            || Date.now() < identity.sessionExpiresAt
-        ) return;
+        if (Date.now() < identity.sessionExpiresAt) return;
 
         const session = await Session.exists({
             token: identity.sessionToken

@@ -6,7 +6,8 @@ import {
     ClientboundPacketType,
     ClientboundPacketTypeMap
 } from "shared/types/packets/PacketType";
-import { kickPlayer } from "./lib/manage-players";
+import { isIdentified } from "@/types/SocketIdentity";
+import { kickPlayer } from "./lib/players";
 
 type EmittableSocket = Pick<Socket, "emit">;
 
@@ -36,7 +37,7 @@ export function attachPacketHandlers(
     for (const handler of handlers) {
         socket.on(handler.type, async packet => {
             try {
-                if (handler.type != "playerJoin" && !socket.data?.userId)
+                if (handler.type != "playerJoin" && !isIdentified(socket))
                     throw new Error();
 
                 await handler.handle(packet, socket);

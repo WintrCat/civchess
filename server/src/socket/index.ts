@@ -2,7 +2,7 @@ import { Server as HTTPServer } from "http";
 import { Server as SocketServer } from "socket.io";
 import { createAdapter } from "@socket.io/redis-adapter";
 
-import { SocketIdentity } from "@/types/SocketIdentity";
+import { isIdentified, SocketIdentity } from "@/types/SocketIdentity";
 import { getRedisClient } from "@/database/redis";
 import { attachPacketMiddleware } from "./middleware";
 import { attachPacketHandlers, sendPacket } from "./packets";
@@ -29,7 +29,7 @@ export function createSocketServer(httpServer: HTTPServer) {
         attachPacketHandlers(socket, handlers);
 
         socket.on("disconnect", () => {
-            if (!socket.data?.userId) return;
+            if (!isIdentified(socket)) return;
 
             const identity = socket.data as SocketIdentity;
 

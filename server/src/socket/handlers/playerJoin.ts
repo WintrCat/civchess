@@ -1,28 +1,25 @@
 import { Socket } from "socket.io";
 import { Types } from "mongoose";
-import { remove, random } from "es-toolkit";
+import { remove, randomInt } from "es-toolkit";
 
 import { Player } from "shared/types/world/Player";
-import { getChunkCoordinates } from "shared/lib/world-chunks";
+import { chunkSquareCount, getChunkCoordinates } from "shared/lib/world-chunks";
 import { SocketIdentity } from "@/types/SocketIdentity";
 import { getRedisClient } from "@/database/redis";
-import { Session, User } from "@/database/models/account";
+import { Session } from "@/database/models/account";
 import { isWorldOnline } from "@/lib/worlds/server";
 import { worldExists } from "@/lib/worlds/fetch";
-import { toPublicProfile } from "@/lib/public-profile";
-import {
-    getMaxPlayers,
-    kickPlayer,
-    isPlayerBanned,
-    isWhitelistActive,
-    isPlayerWhitelisted
-} from "../lib/manage-players";
+import { getPublicProfile } from "@/lib/public-profile";
+import { getMaxPlayers, kickPlayer } from "../lib/players";
+import { isPlayerBanned } from "../lib/players/banlist";
+import { isWhitelistActive, isPlayerWhitelisted } from "../lib/players/whitelist";
 import {
     getChunkBroadcaster,
     getSurroundingChunks,
     setChunkSubscription
 } from "../lib/world-chunks";
 import { createPacketHandler, sendPacket } from "../packets";
+import { findNearestEmptySquare } from "../lib/empty-square";
 
 function rejectJoin(socket: Socket, reason: string) {
     kickPlayer(socket, reason, "Failed to join world");
@@ -35,12 +32,10 @@ export const playerJoinHandler = createPacketHandler({
         const session = await Session.findOne({ token: sessionToken }).lean();
         if (!session) return rejectJoin(socket, "Invalid Session.");
 
-        const user = await User.findById(
-            new Types.ObjectId(session.userId)
-        ).lean();
-        if (!user) return rejectJoin(socket, "Invalid Session.");
-
-        const userId = user._id.toString();
+        const profile = await getPublicProfile({
+            _id: new Types.ObjectId(session.userId)
+        });
+        if (!profile) return rejectJoin(socket, "Invalid Session.");
 
         // Ensure world exists and is online
         if (!await isWorldOnline(worldCode)) {
@@ -53,13 +48,13 @@ export const playerJoinHandler = createPacketHandler({
         }
 
         // Ensure player is not banned from the world
-        if (await isPlayerBanned(worldCode, userId))
+        if (await isPlayerBanned(worldCode, profile.userId))
             return rejectJoin(socket, "You are banned from this world.");
 
         // Enforce world whitelist if applicable
         if (
             await isWhitelistActive(worldCode)
-            && !await isPlayerWhitelisted(worldCode, userId)
+            && !await isPlayerWhitelisted(worldCode, profile.userId)
         ) return rejectJoin(socket, "You are not whitelisted!");
 
         // Ensure the world is not full (reached its max player count)
@@ -72,11 +67,10 @@ export const playerJoinHandler = createPacketHandler({
         socket.join(worldCode);
 
         const socketIdentity: SocketIdentity = {
-            userId: userId,
             sessionToken: sessionToken,
             sessionExpiresAt: Date.now() + (1000 * 60 * 10), // 10 mins
             worldCode: worldCode,
-            profile: toPublicProfile(user)
+            profile: profile
         };
 
         socket.data = socketIdentity;
@@ -85,7 +79,7 @@ export const playerJoinHandler = createPacketHandler({
         remove(connectedSockets, connSocket => {
             const identity = connSocket.data as SocketIdentity;
 
-            if (identity.userId == userId) {
+            if (identity.profile.userId == profile.userId) {
                 kickPlayer(connSocket,
                     "You logged in from another location."
                 );
@@ -97,27 +91,37 @@ export const playerJoinHandler = createPacketHandler({
         });
 
         // Create player data or fetch existing from the world server
+        const worldChunkSize = await getRedisClient().json
+            .length(worldCode, "$.chunks");
+
         let playerData = await getRedisClient().json.get<Player>(
-            worldCode, `$.players.${userId}`
+            worldCode, `$.players.${profile.userId}`
         );
 
         if (!playerData) {
             const createdPlayerData: Player = {
-                x: 0,
-                y: 0,
-                colour: "#" + random(0, 0xffffff).toString(16),
+                x: randomInt(0, worldChunkSize * chunkSquareCount),
+                y: randomInt(0, worldChunkSize * chunkSquareCount),
+                colour: "#" + randomInt(0, 0xffffff).toString(16),
                 inventory: []
             };
             
             await getRedisClient().json.set(
-                worldCode, `$.players.${userId}`, createdPlayerData
+                worldCode, `$.players.${profile.userId}`, createdPlayerData
             );
 
             playerData = createdPlayerData;
         }
 
         // Move player if spawn location is now obstructed
-        // getNearestSpawnLocation(worldCode, x, y);
+        const spawnLocation = await findNearestEmptySquare(
+            worldCode, playerData.x, playerData.y
+        );
+
+        if (spawnLocation) {
+            playerData.x = spawnLocation.x;
+            playerData.y = spawnLocation.y;
+        }
 
         // Return a server information packet with playerlist
         sendPacket(socket, "serverInformation", {
@@ -148,7 +152,7 @@ export const playerJoinHandler = createPacketHandler({
         );
 
         // Broadcast spawn to those subscribed to spawn chunk
-        const spawnChunkLocation = getChunkCoordinates(
+        const spawnChunkPosition = getChunkCoordinates(
             playerData.x, playerData.y
         );
 
@@ -159,7 +163,7 @@ export const playerJoinHandler = createPacketHandler({
             colour: playerData.colour
         }, sender => getChunkBroadcaster(
             sender, worldCode,
-            spawnChunkLocation.x, spawnChunkLocation.y
+            spawnChunkPosition.x, spawnChunkPosition.y
         ));
     }
 });

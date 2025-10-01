@@ -1,17 +1,16 @@
 import { Router } from "express";
 import { StatusCodes } from "http-status-codes";
 
-import { User } from "@/database/models/account";
-import { toPublicProfile } from "@/lib/public-profile";
+import { getPublicProfile } from "@/lib/public-profile";
 
 export const publicProfileRouter = Router();
 
 publicProfileRouter.get("/public-profile", async (req, res) => {
     const username = req.query.username?.toString();
-    const user = await User.findOne({ name: username }).lean();
+    if (!username) return res.status(StatusCodes.BAD_REQUEST).end();
+    
+    const profile = await getPublicProfile({ name: username });
+    if (!profile) return res.status(StatusCodes.NOT_FOUND).end();
 
-    if (!username || !user)
-        return res.status(StatusCodes.NOT_FOUND).end();
-
-    res.json(toPublicProfile(user));
+    res.json(profile);
 });
