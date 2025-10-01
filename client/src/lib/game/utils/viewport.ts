@@ -19,30 +19,22 @@ export function clampViewportAroundSquare(
         coordinate => coordinate * chunkSize
     );
 
-<<<<<<< Updated upstream
-    const minCoordinate = Math.max(0, chunkPosition.x - renderDistance);
-=======
     const minCoord = (coord: number) => Math.max(0, coord - renderDistance);
->>>>>>> Stashed changes
 
     const maxCoord = (coord: number) => Math.min(
         (client.worldChunkSize || Infinity) * chunkSize,
-<<<<<<< Updated upstream
-        chunkPosition.x + chunkSize + renderDistance
-=======
         coord + chunkSize + renderDistance
->>>>>>> Stashed changes
     );
 
     client.viewport.worldWidth = client.viewport.worldHeight = Math.abs(
-        maxCoord(spawnChunkSquare.x) - minCoord(spawnChunkSquare.x)
+        maxCoord(chunkPosition.x) - minCoord(chunkPosition.x)
     );
 
     client.viewport.clamp({
-        left: minCoord(spawnChunkSquare.x),
-        right: maxCoord(spawnChunkSquare.x),
-        top: minCoord(spawnChunkSquare.y),
-        bottom: maxCoord(spawnChunkSquare.y)
+        left: minCoord(chunkPosition.x),
+        right: maxCoord(chunkPosition.x),
+        top: minCoord(chunkPosition.y),
+        bottom: maxCoord(chunkPosition.y)
     });
 }
 
