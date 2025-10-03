@@ -1,6 +1,6 @@
 import z from "zod";
 
-import { standardPieceTypes } from "@/constants/StandardPieceType";
+import { standardPieceTypes } from "@/constants/PieceType";
 import { UserRole } from "@/constants/UserRole";
 
 export const profileAvatarSchema = z.object({

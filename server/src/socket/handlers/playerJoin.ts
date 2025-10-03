@@ -1,8 +1,7 @@
 import { Socket } from "socket.io";
 import { Types } from "mongoose";
-import { remove, randomInt } from "es-toolkit";
+import { randomInt } from "es-toolkit";
 
-import { Player } from "shared/types/world/Player";
 import { chunkSquareCount, getChunkCoordinates } from "shared/lib/world-chunks";
 import { SocketIdentity } from "@/types/SocketIdentity";
 import { getRedisClient } from "@/database/redis";
@@ -10,16 +9,24 @@ import { Session } from "@/database/models/account";
 import { isWorldOnline } from "@/lib/worlds/server";
 import { worldExists } from "@/lib/worlds/fetch";
 import { getPublicProfile } from "@/lib/public-profile";
-import { getMaxPlayers, kickPlayer } from "../lib/players";
-import { isPlayerBanned } from "../lib/players/banlist";
-import { isWhitelistActive, isPlayerWhitelisted } from "../lib/players/whitelist";
+import { getSocketServer } from "@/socket";
 import {
     getChunkBroadcaster,
     getSurroundingChunks,
-    setChunkSubscription
+    getWorldChunkSize,
+    setChunkSubscription,
+    setSquare
 } from "../lib/world-chunks";
-import { createPacketHandler, sendPacket } from "../packets";
 import { findNearestEmptySquare } from "../lib/empty-square";
+import { getPlayer, kickPlayer } from "../lib/players";
+import { isWhitelistActive, isPlayerWhitelisted } from "../lib/players/whitelist";
+import { isPlayerBanned } from "../lib/players/banlist";
+import {
+    incrementPlayerCount,
+    getPlayerCount,
+    getMaxPlayers
+} from "../lib/players/count";
+import { createPacketHandler, sendPacket } from "../packets";
 
 function rejectJoin(socket: Socket, reason: string) {
     kickPlayer(socket, reason, "Failed to join world");
@@ -58,62 +65,36 @@ export const playerJoinHandler = createPacketHandler({
         ) return rejectJoin(socket, "You are not whitelisted!");
 
         // Ensure the world is not full (reached its max player count)
-        const connectedSockets = await socket.in(worldCode).fetchSockets();
-
-        if (connectedSockets.length >= await getMaxPlayers(worldCode))
+        if (await getPlayerCount(worldCode) >= await getMaxPlayers(worldCode))
             return rejectJoin(socket, "This world is currently full.");
 
-        // Add the socket to the world code room & create its identity
-        socket.join(worldCode);
+        // Terminate any open socket with the same user ID as the joiner
+        kickPlayer(socket.in(profile.userId),
+            "You logged in from another location."
+        );
 
-        const socketIdentity: SocketIdentity = {
+        // Add the socket to the world code room & create its identity
+        await socket.join([ worldCode, profile.userId ]);
+        await incrementPlayerCount(worldCode);
+
+        socket.data = {
             sessionToken: sessionToken,
             sessionExpiresAt: Date.now() + (1000 * 60 * 10), // 10 mins
             worldCode: worldCode,
             profile: profile
         };
 
-        socket.data = socketIdentity;
-
-        // Terminate any open socket with the same user ID as the joiner
-        remove(connectedSockets, connSocket => {
-            const identity = connSocket.data as SocketIdentity;
-
-            if (identity.profile.userId == profile.userId) {
-                kickPlayer(connSocket,
-                    "You logged in from another location."
-                );
-                
-                return true;
-            }
-
-            return false;
-        });
-
         // Create player data or fetch existing from the world server
-        const worldChunkSize = await getRedisClient().json
-            .length(worldCode, "$.chunks");
+        const worldChunkSize = await getWorldChunkSize(worldCode);
 
-        let playerData = await getRedisClient().json.get<Player>(
-            worldCode, `$.players.${profile.userId}`
-        );
+        const playerData = await getPlayer(worldCode, profile.userId) || {
+            x: randomInt(0, worldChunkSize * chunkSquareCount),
+            y: randomInt(0, worldChunkSize * chunkSquareCount),
+            colour: "#" + randomInt(0, 0xffffff).toString(16),
+            inventory: []
+        };
 
-        if (!playerData) {
-            const createdPlayerData: Player = {
-                x: randomInt(0, worldChunkSize * chunkSquareCount),
-                y: randomInt(0, worldChunkSize * chunkSquareCount),
-                colour: "#" + randomInt(0, 0xffffff).toString(16),
-                inventory: []
-            };
-            
-            await getRedisClient().json.set(
-                worldCode, `$.players.${profile.userId}`, createdPlayerData
-            );
-
-            playerData = createdPlayerData;
-        }
-
-        // Move player if spawn location is now obstructed
+        // Move player if spawn location is obstructed
         const spawnLocation = await findNearestEmptySquare(
             worldCode, playerData.x, playerData.y
         );
@@ -123,14 +104,25 @@ export const playerJoinHandler = createPacketHandler({
             playerData.y = spawnLocation.y;
         }
 
+        // Register player entity in world & spawn chunk
+        await getRedisClient().json.set(worldCode,
+            `$.players.${profile.userId}`, playerData
+        );
+
+        await setSquare(worldCode, playerData.x, playerData.y, {
+            piece: playerData
+        });
+
         // Return a server information packet with playerlist
+        const connectedSockets = await getSocketServer()
+            .in(worldCode).fetchSockets();
+
         sendPacket(socket, "serverInformation", {
             localPlayer: playerData,
-            players: connectedSockets
-                .map(socket => (socket.data as SocketIdentity).profile)
-                .concat(socketIdentity.profile),
-            worldChunkSize: await getRedisClient().json
-                .length(worldCode, "$.chunks")
+            players: connectedSockets.map(
+                socket => (socket.data as SocketIdentity).profile
+            ),
+            worldChunkSize: worldChunkSize
         });
 
         // Subscribe player to and send surrounding chunks
@@ -139,15 +131,12 @@ export const playerJoinHandler = createPacketHandler({
         );
 
         for await (const chunkData of surroundingChunks) {
-            setChunkSubscription(socket,
-                worldCode, chunkData.x, chunkData.y, true
-            );
-
+            setChunkSubscription(socket, chunkData.x, chunkData.y, true);
             sendPacket(socket, "worldChunk", chunkData);
         }
 
         // Broadcast join to others
-        sendPacket(socket, "playerJoin", socketIdentity.profile,
+        sendPacket(socket, "playerJoin", profile,
             sender => sender.broadcast.to(worldCode)
         );
 
@@ -157,7 +146,7 @@ export const playerJoinHandler = createPacketHandler({
         );
 
         sendPacket(socket, "playerSpawn", {
-            username: socketIdentity.profile.name,
+            username: profile.name,
             x: playerData.x,
             y: playerData.y,
             colour: playerData.colour

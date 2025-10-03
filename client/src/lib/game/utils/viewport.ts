@@ -1,7 +1,7 @@
 import { mapValues } from "es-toolkit";
 
 import { getChunkCoordinates } from "shared/lib/world-chunks";
-import { squareSize, chunkSize } from "@/constants/squares";
+import { chunkSize } from "@/constants/squares";
 import { InitialisedGameClient } from "../Client";
 import { toWorldPosition } from "./square-position";
 

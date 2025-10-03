@@ -1,5 +1,5 @@
 import { UserRole } from "shared/constants/UserRole";
-import { StandardPieceType } from "shared/constants/StandardPieceType";
+import { StandardPieceType } from "shared/constants/PieceType";
 
 // Chess pieces
 import wP from "@assets/img/pieces/wP.svg";

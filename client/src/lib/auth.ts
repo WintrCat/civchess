@@ -2,7 +2,7 @@ import { createAuthClient } from "better-auth/react";
 import { inferAdditionalFields } from "better-auth/client/plugins";
 
 import { ProfileAvatar } from "shared/types/PublicProfile";
-import { StandardPieceType } from "shared/constants/StandardPieceType";
+import { StandardPieceType } from "shared/constants/PieceType";
 
 export type AuthInfer = typeof authClient["$Infer"]["Session"];
 

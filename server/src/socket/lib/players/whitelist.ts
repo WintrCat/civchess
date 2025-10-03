@@ -1,5 +1,8 @@
+import { World } from "shared/types/world/World";
 import { getRedisClient } from "@/database/redis";
-import { SocketOrUserId, RecordSet, getUserId } from "@/socket/lib/players";
+import { SocketOrUserId, getUserId } from "@/socket/lib/players";
+
+type Whitelist = NonNullable<World["whitelistedPlayers"]>;
 
 export async function whitelistPlayer(
     worldCode: string,
@@ -23,9 +26,8 @@ export async function unwhitelistPlayer(
 }
 
 export async function getWhitelist(worldCode: string) {
-    const whitelist = await getRedisClient().json.get<RecordSet>(
-        worldCode, "$.whitelistedPlayers"
-    );
+    const whitelist = await getRedisClient().json
+        .get<Whitelist>(worldCode, "$.whitelistedPlayers");
 
     return whitelist && Object.keys(whitelist);
 }
@@ -37,8 +39,7 @@ export async function isWhitelistActive(worldCode: string) {
 }
 
 export async function isPlayerWhitelisted(worldCode: string, userId: string) {
-    const whitelistedPlayer = await getRedisClient().json
-        .get<RecordSet[string]>(worldCode, `$.whitelistedPlayers.${userId}`);
-
-    return !!whitelistedPlayer;
+    return await getRedisClient().json.exists(
+        worldCode, `$.whitelistedPlayers.${userId}`
+    );
 }

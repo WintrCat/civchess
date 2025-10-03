@@ -11,7 +11,7 @@ import {
 } from "@mantine/core";
 
 import { ProfileAvatar } from "shared/types/PublicProfile";
-import { StandardPieceType } from "shared/constants/StandardPieceType";
+import { StandardPieceType } from "shared/constants/PieceType";
 import ProfileAvatarUI from "@/components/ProfileAvatar";
 import { pieceImages } from "@/constants/utils";
 import { authClient } from "@/lib/auth";

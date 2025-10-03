@@ -1,7 +1,7 @@
 import { User as AuthBaseUser } from "better-auth";
 import { generateUsername } from "unique-username-generator";
 
-import { StandardPieceType } from "shared/constants/StandardPieceType";
+import { StandardPieceType } from "shared/constants/PieceType";
 import { AuthInfer } from "@/lib/auth";
 import { User } from "@/database/models/account";
 

@@ -4,6 +4,7 @@ import { createAdapter } from "@socket.io/redis-adapter";
 
 import { isIdentified, SocketIdentity } from "@/types/SocketIdentity";
 import { getRedisClient } from "@/database/redis";
+import { decrementPlayerCount } from "./lib/players/count";
 import { attachPacketMiddleware } from "./middleware";
 import { attachPacketHandlers, sendPacket } from "./packets";
 import handlers from "./handlers";
@@ -28,10 +29,11 @@ export function createSocketServer(httpServer: HTTPServer) {
         attachPacketMiddleware(socket);
         attachPacketHandlers(socket, handlers);
 
-        socket.on("disconnect", () => {
+        socket.on("disconnect", async () => {
             if (!isIdentified(socket)) return;
-
             const identity = socket.data as SocketIdentity;
+
+            await decrementPlayerCount(identity.worldCode);
 
             sendPacket(server, "playerLeave", {
                 username: identity.profile.name

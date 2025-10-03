@@ -1,8 +1,14 @@
 import { Socket } from "socket.io";
 
+import { Square } from "shared/types/world/Square";
 import { Chunk } from "shared/types/world/Chunk";
-import { getChunkCoordinates } from "shared/lib/world-chunks";
+import { chunkSquareCount, getChunkCoordinates } from "shared/lib/world-chunks";
 import { getRedisClient } from "@/database/redis";
+import { SocketIdentity } from "@/types/SocketIdentity";
+
+export async function getWorldChunkSize(worldCode: string) {
+    return await getRedisClient().json.length(worldCode, "$.chunks");
+}
 
 export async function getChunk(
     worldCode: string, chunkX: number, chunkY: number
@@ -52,14 +58,39 @@ export async function* getSurroundingChunks(
     }
 }
 
+export async function setSquare(
+    worldCode: string,
+    squareX: number,
+    squareY: number,
+    updates: Partial<Square>
+) {
+    const { x: chunkX, y: chunkY } = getChunkCoordinates(squareX, squareY);
+
+    const relativeX = squareX % chunkSquareCount;
+    const relativeY = squareY % chunkSquareCount;
+
+    const squarePath = `$.chunks[${chunkY}][${chunkX}]`
+        + `.squares[${relativeY}][${relativeX}]`;
+
+    const square = await getRedisClient().json
+        .get<Square>(worldCode, squarePath);
+    if (!square) return;
+
+    for (const [ key, value ] of Object.entries(updates)) {
+        await getRedisClient().json.set(worldCode,
+            `${squarePath}.${key}`, value
+        );
+    }
+}
+
 export function setChunkSubscription(
     socket: Socket,
-    worldCode: string,
     x: number,
     y: number,
     subscribed: boolean
 ) {
-    const subRoom = `${worldCode}:chunk-${x}-${y}`;
+    const identity = socket.data as SocketIdentity;
+    const subRoom = `${identity.worldCode}:chunk-${x}-${y}`;
 
     if (subscribed) {
         socket.join(subRoom);

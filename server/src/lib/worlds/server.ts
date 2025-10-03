@@ -9,6 +9,10 @@ export async function isWorldOnline(worldCode: string) {
     return matchCount > 0;
 }
 
+export function playerCountKey(worldCode: string) {
+    return `${worldCode}:socket-count`;
+}
+
 /**
  * @description Will throw an error if the world is already online,
  * or if the given world code doesn't exist.
@@ -37,6 +41,7 @@ export async function shutdownWorld(worldCode: string) {
     await UserWorld.updateOne({ code: world.code }, world);
 
     await getRedisClient().del(worldCode);
+    await getRedisClient().del(playerCountKey(worldCode));
 
     return true;
 }

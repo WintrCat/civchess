@@ -1,10 +1,6 @@
+import { World } from "shared/types/world/World";
 import { getRedisClient } from "@/database/redis";
-import {
-    SocketOrUserId,
-    RecordSet,
-    getUserId,
-    kickPlayer
-} from "@/socket/lib/players";
+import { SocketOrUserId, getUserId, kickPlayer } from "@/socket/lib/players";
 
 export async function banPlayer(
     worldCode: string,
@@ -35,14 +31,13 @@ export async function unbanPlayer(worldCode: string, userId: string) {
 
 export async function getBannedPlayers(worldCode: string) {
     const banlist = await getRedisClient().json
-        .get<RecordSet>(worldCode, "$.bannedPlayers");
+        .get<World["bannedPlayers"]>(worldCode, "$.bannedPlayers");
 
     return banlist ? Object.keys(banlist) : [];
 }
 
 export async function isPlayerBanned(worldCode: string, userId: string) {
-    const bannedPlayer = await getRedisClient().json
-        .get<RecordSet[string]>(worldCode, `$.bannedPlayers.${userId}`);
-
-    return !!bannedPlayer;
+    return await getRedisClient().json.exists(
+        worldCode, `$.bannedPlayers.${userId}`
+    );
 }
