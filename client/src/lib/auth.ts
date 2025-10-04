@@ -2,7 +2,7 @@ import { createAuthClient } from "better-auth/react";
 import { inferAdditionalFields } from "better-auth/client/plugins";
 
 import { ProfileAvatar } from "shared/types/PublicProfile";
-import { StandardPieceType } from "shared/constants/PieceType";
+import { ProfileAvatarPiece } from "shared/constants/PieceType";
 
 export type AuthInfer = typeof authClient["$Infer"]["Session"];
 
@@ -20,6 +20,6 @@ export const authClient = createAuthClient({
 export function getAvatar(user: AuthInfer["user"]): ProfileAvatar {
     return {
         colour: user.avatarColour,
-        piece: user.avatarPiece as StandardPieceType
+        piece: user.avatarPiece as ProfileAvatarPiece
     };
 }

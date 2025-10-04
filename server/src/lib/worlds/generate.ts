@@ -8,10 +8,10 @@ import { World, WorldOptions } from "shared/types/world/World";
 export function generateWorld(options: WorldOptions): World {
     const chunks: Chunk[][] = [];
 
-    for (let y = 0; y < 5; y++) {
+    for (let y = 0; y < 2; y++) {
         const row: Chunk[] = [];
 
-        for (let x = 0; x < 5; x++) {
+        for (let x = 0; x < 2; x++) {
             row.push(generateChunk(options, x, y));
         }
         

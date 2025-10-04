@@ -58,28 +58,24 @@ export async function* getSurroundingChunks(
     }
 }
 
-export async function setSquare(
+export async function setSquarePiece(
     worldCode: string,
     squareX: number,
     squareY: number,
-    updates: Partial<Square>
+    piece: Square["piece"]
 ) {
     const { x: chunkX, y: chunkY } = getChunkCoordinates(squareX, squareY);
 
     const relativeX = squareX % chunkSquareCount;
     const relativeY = squareY % chunkSquareCount;
 
-    const squarePath = `$.chunks[${chunkY}][${chunkX}]`
-        + `.squares[${relativeY}][${relativeX}]`;
+    const piecePath = `$.chunks[${chunkY}][${chunkX}]`
+        + `.squares[${relativeY}][${relativeX}].piece`;
 
-    const square = await getRedisClient().json
-        .get<Square>(worldCode, squarePath);
-    if (!square) return;
-
-    for (const [ key, value ] of Object.entries(updates)) {
-        await getRedisClient().json.set(worldCode,
-            `${squarePath}.${key}`, value
-        );
+    if (piece) {
+        await getRedisClient().json.set(worldCode, piecePath, piece);
+    } else {
+        await getRedisClient().json.delete(worldCode, piecePath);
     }
 }
 

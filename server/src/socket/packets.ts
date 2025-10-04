@@ -6,8 +6,8 @@ import {
     ClientboundPacketType,
     ClientboundPacketTypeMap
 } from "shared/types/packets/PacketType";
-import { isIdentified } from "@/types/SocketIdentity";
 import { kickPlayer } from "./lib/players";
+import { PacketMiddleware } from "./middleware";
 
 type EmittableSocket = Pick<Socket, "emit">;
 
@@ -32,14 +32,13 @@ export function createPacketHandler<Type extends ServerboundPacketType>(
 
 export function attachPacketHandlers(
     socket: Socket,
-    handlers: AnyPacketHandler[]
+    handlers: AnyPacketHandler[],
+    middleware?: PacketMiddleware
 ) {
     for (const handler of handlers) {
         socket.on(handler.type, async packet => {
             try {
-                if (handler.type != "playerJoin" && !isIdentified(socket))
-                    throw new Error();
-
+                await middleware?.(socket, handler.type, packet);
                 await handler.handle(packet, socket);
             } catch {
                 kickPlayer(socket, "Illegal packet.");

@@ -1,7 +1,7 @@
 import { User as AuthBaseUser } from "better-auth";
 import { generateUsername } from "unique-username-generator";
 
-import { StandardPieceType } from "shared/constants/PieceType";
+import { ProfileAvatarPiece } from "shared/constants/PieceType";
 import { AuthInfer } from "@/lib/auth";
 import { User } from "@/database/models/account";
 
@@ -25,7 +25,7 @@ export const userInitialiser = async (
         name: username,
         roles: [],
         avatarColour: "#3b3e43",
-        avatarPiece: "wK" satisfies StandardPieceType
+        avatarPiece: "wK" satisfies ProfileAvatarPiece
     };
 
     return { data: initialisedUser };

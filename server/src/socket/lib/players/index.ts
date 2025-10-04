@@ -1,5 +1,6 @@
 import { BroadcastOperator, RemoteSocket, Socket } from "socket.io";
 
+import { World } from "shared/types/world/World";
 import { Player } from "shared/types/world/Player";
 import { SocketIdentity } from "@/types/SocketIdentity";
 import { getRedisClient } from "@/database/redis";
@@ -18,6 +19,12 @@ export function getUserId(socketOrUserId: SocketOrUserId) {
 export async function getPlayer(worldCode: string, userId: string) {
     return await getRedisClient().json.get<Player>(
         worldCode, `$.players.${userId}`
+    );
+}
+
+export async function getPlayers(worldCode: string) {
+    return await getRedisClient().json.get<World["players"]>(
+        worldCode, "$.players"
     );
 }
 

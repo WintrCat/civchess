@@ -1,5 +1,5 @@
 export enum SquareType {
-    GRASSLAND = "grassland",
-    DESERT = "desert",
-    OCEAN = "ocean"
+    GRASSLAND = "g",
+    DESERT = "d",
+    OCEAN = "o"
 }

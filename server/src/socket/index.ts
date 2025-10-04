@@ -2,10 +2,12 @@ import { Server as HTTPServer } from "http";
 import { Server as SocketServer } from "socket.io";
 import { createAdapter } from "@socket.io/redis-adapter";
 
-import { isIdentified, SocketIdentity } from "@/types/SocketIdentity";
+import { isIdentified } from "@/types/SocketIdentity";
 import { getRedisClient } from "@/database/redis";
+import { getPlayer } from "./lib/players";
 import { decrementPlayerCount } from "./lib/players/count";
-import { attachPacketMiddleware } from "./middleware";
+import { setSquarePiece } from "./lib/world-chunks";
+import { packetMiddleware } from "./middleware";
 import { attachPacketHandlers, sendPacket } from "./packets";
 import handlers from "./handlers";
 
@@ -26,13 +28,25 @@ export function createSocketServer(httpServer: HTTPServer) {
     });
 
     server.on("connect", socket => {
-        attachPacketMiddleware(socket);
-        attachPacketHandlers(socket, handlers);
+        attachPacketHandlers(socket, handlers, packetMiddleware);
 
         socket.on("disconnect", async () => {
-            if (!isIdentified(socket)) return;
-            const identity = socket.data as SocketIdentity;
+            if (!isIdentified(socket.data)) return;
+            const identity = socket.data;
 
+            // Remove player piece from the world
+            const player = await getPlayer(
+                identity.worldCode, identity.profile.userId
+            );
+
+            if (player) await setSquarePiece(
+                identity.worldCode,
+                player.x,
+                player.y,
+                undefined
+            );
+
+            // Decrement player count and notify sockets of leave
             await decrementPlayerCount(identity.worldCode);
 
             sendPacket(server, "playerLeave", {

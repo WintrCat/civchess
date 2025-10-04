@@ -9,7 +9,9 @@ export interface SocketIdentity {
     profile: PublicProfile;
 }
 
-export function isIdentified(socket: Pick<Socket, "data">) {
-    const identity = socket.data as Partial<SocketIdentity>;
+export function isIdentified(
+    socketData: Socket["data"]
+): socketData is SocketIdentity {
+    const identity = socketData as Partial<SocketIdentity>;
     return !!identity.sessionToken;
 }

@@ -12,7 +12,7 @@ export const worldSchema = z.object({
     createdAt: z.iso.datetime(),
 
     lastOnlineAt: z.string().optional(),
-    maxPlayers: z.number().optional(),
+    maxPlayers: z.int().optional(),
     bannedPlayers: z.record(z.string(), z.literal(true)),
     whitelistedPlayers: z.record(z.string(), z.literal(true)).optional(),
     operatorPlayers: z.record(z.string(), z.literal(true)),

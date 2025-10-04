@@ -1,8 +1,8 @@
 import z from "zod";
 
 export const playerSchema = z.object({
-    x: z.number(),
-    y: z.number(),
+    x: z.int(),
+    y: z.int(),
     colour: z.string(),
     inventory: z.string().array()
 });

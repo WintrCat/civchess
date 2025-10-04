@@ -2,7 +2,7 @@ import { RootFilterQuery } from "mongoose";
 
 import { PublicProfile } from "shared/types/PublicProfile";
 import { UserRole } from "shared/constants/UserRole";
-import { StandardPieceType } from "shared/constants/PieceType";
+import { ProfileAvatarPiece } from "shared/constants/PieceType";
 import { User } from "@/database/models/account";
 import { AuthInfer } from "./auth";
 
@@ -18,7 +18,7 @@ export async function getPublicProfile(
         roles: user.roles as UserRole[],
         avatar: {
             colour: user.avatarColour,
-            piece: user.avatarPiece as StandardPieceType
+            piece: user.avatarPiece as ProfileAvatarPiece
         }
     };
 }

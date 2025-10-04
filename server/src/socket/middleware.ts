@@ -1,21 +1,31 @@
 import { Socket } from "socket.io";
 
-import { isIdentified, SocketIdentity } from "@/types/SocketIdentity";
+import { ServerboundPacketType } from "shared/types/packets/PacketType";
+import { isIdentified } from "@/types/SocketIdentity";
 import { Session } from "@/database/models/account";
 import { kickPlayer } from "./lib/players";
 
-export function attachPacketMiddleware(socket: Socket) {
-    socket.onAny(async () => {
-        if (!isIdentified(socket)) return;
+export type PacketMiddleware = (
+    socket: Socket,
+    type: ServerboundPacketType,
+    packet: object
+) => void | Promise<void>;
 
-        const identity = socket.data as SocketIdentity;
-        
-        if (Date.now() < identity.sessionExpiresAt) return;
+export const packetMiddleware: PacketMiddleware = async (
+    socket, type
+) => {
+    if (!isIdentified(socket.data)) {
+        if (type != "playerJoin") throw new Error();
+        return;
+    }
+    
+    const identity = socket.data;
+    
+    if (Date.now() < identity.sessionExpiresAt) return;
 
-        const session = await Session.exists({
-            token: identity.sessionToken
-        });
-
-        if (!session) kickPlayer(socket, "Invalid Session.");
+    const session = await Session.exists({
+        token: identity.sessionToken
     });
-}
+
+    if (!session) kickPlayer(socket, "Invalid Session.");
+};

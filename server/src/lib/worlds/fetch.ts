@@ -1,6 +1,5 @@
 import { HydratedDocument, RootFilterQuery } from "mongoose";
-import { mapValues, omit } from "es-toolkit";
-import z from "zod";
+import { mapValues, omit, pick } from "es-toolkit";
 
 import {
     World,
@@ -112,16 +111,16 @@ export async function fetchWorld<
 
 // Fetch world metadatas (predefined selection)
 const nativeMetadataSchema = worldMetadataSchema.omit({ online: true });
-type NativeMetadata = z.infer<typeof nativeMetadataSchema>;
 
 export async function fetchWorldMetadatas(
     filter?: RootFilterQuery<UserWorld>
 ): Promise<WorldMetadata[]> {
-    const nativeMetadataSelection = (
-        mapValues(nativeMetadataSchema.shape, () => true)
-    ) as { [K in keyof NativeMetadata]-?: true };
+    const nativeMetadataSelection = mapValues(
+        nativeMetadataSchema.shape,
+        () => true as const
+    );
 
-    const nativeMetadatas: NativeMetadata[] = await fetchWorlds(
+    const nativeMetadatas = await fetchWorlds(
         filter, nativeMetadataSelection
     );
 
@@ -134,6 +133,8 @@ export async function fetchWorldMetadatas(
 }
 
 // Convert UserWorld etc. to base World
+const worldKeys = Object.keys(worldSchema.shape) as (keyof World)[];
+
 export function toBaseWorld<T extends World>(world: T): World {
-    return worldSchema.safeParse(world).data!;
+    return pick(world, worldKeys);
 }

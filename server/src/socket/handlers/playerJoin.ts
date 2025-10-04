@@ -2,7 +2,8 @@ import { Socket } from "socket.io";
 import { Types } from "mongoose";
 import { randomInt } from "es-toolkit";
 
-import { chunkSquareCount, getChunkCoordinates } from "shared/lib/world-chunks";
+import { PieceType } from "shared/constants/PieceType";
+import { chunkSquareCount } from "shared/lib/world-chunks";
 import { SocketIdentity } from "@/types/SocketIdentity";
 import { getRedisClient } from "@/database/redis";
 import { Session } from "@/database/models/account";
@@ -11,11 +12,10 @@ import { worldExists } from "@/lib/worlds/fetch";
 import { getPublicProfile } from "@/lib/public-profile";
 import { getSocketServer } from "@/socket";
 import {
-    getChunkBroadcaster,
     getSurroundingChunks,
     getWorldChunkSize,
     setChunkSubscription,
-    setSquare
+    setSquarePiece
 } from "../lib/world-chunks";
 import { findNearestEmptySquare } from "../lib/empty-square";
 import { getPlayer, kickPlayer } from "../lib/players";
@@ -82,7 +82,7 @@ export const playerJoinHandler = createPacketHandler({
             sessionExpiresAt: Date.now() + (1000 * 60 * 10), // 10 mins
             worldCode: worldCode,
             profile: profile
-        };
+        } satisfies SocketIdentity;
 
         // Create player data or fetch existing from the world server
         const worldChunkSize = await getWorldChunkSize(worldCode);
@@ -104,13 +104,17 @@ export const playerJoinHandler = createPacketHandler({
             playerData.y = spawnLocation.y;
         }
 
-        // Register player entity in world & spawn chunk
+        // Register player data in world
         await getRedisClient().json.set(worldCode,
             `$.players.${profile.userId}`, playerData
         );
 
-        await setSquare(worldCode, playerData.x, playerData.y, {
-            piece: playerData
+        // Put player piece on to spawn square
+        await setSquarePiece(worldCode, playerData.x, playerData.y, {
+            id: PieceType.PLAYER,
+            username: profile.name,
+            colour: playerData.colour,
+            health: 3
         });
 
         // Return a server information packet with playerlist
@@ -139,20 +143,5 @@ export const playerJoinHandler = createPacketHandler({
         sendPacket(socket, "playerJoin", profile,
             sender => sender.broadcast.to(worldCode)
         );
-
-        // Broadcast spawn to those subscribed to spawn chunk
-        const spawnChunkPosition = getChunkCoordinates(
-            playerData.x, playerData.y
-        );
-
-        sendPacket(socket, "playerSpawn", {
-            username: profile.name,
-            x: playerData.x,
-            y: playerData.y,
-            colour: playerData.colour
-        }, sender => getChunkBroadcaster(
-            sender, worldCode,
-            spawnChunkPosition.x, spawnChunkPosition.y
-        ));
     }
 });

@@ -1,11 +1,11 @@
 import z from "zod";
 
-import { standardPieceTypes } from "@/constants/PieceType";
+import { profileAvatarPieces } from "@/constants/PieceType";
 import { UserRole } from "@/constants/UserRole";
 
 export const profileAvatarSchema = z.object({
     colour: z.string().regex(/^#[a-f0-9]{6}/),
-    piece: z.enum(standardPieceTypes)
+    piece: z.enum(profileAvatarPieces)
 });
 
 export type ProfileAvatar = z.infer<typeof profileAvatarSchema>;

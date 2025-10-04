@@ -1,5 +1,5 @@
 import { UserRole } from "shared/constants/UserRole";
-import { StandardPieceType } from "shared/constants/PieceType";
+import { ProfileAvatarPiece } from "shared/constants/PieceType";
 
 // Chess pieces
 import wP from "@assets/img/pieces/wP.svg";
@@ -30,7 +30,7 @@ export const userRoleDisplays = {
     }
 };
 
-export const pieceImages: Record<StandardPieceType, any> = {
+export const pieceImages: Record<ProfileAvatarPiece, any> = {
     wP, wN, wB, wR, wQ, wK,
     bP, bN, bB, bR, bQ, bK
 };

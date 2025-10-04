@@ -11,7 +11,7 @@ import {
 } from "@mantine/core";
 
 import { ProfileAvatar } from "shared/types/PublicProfile";
-import { StandardPieceType } from "shared/constants/PieceType";
+import { ProfileAvatarPiece } from "shared/constants/PieceType";
 import ProfileAvatarUI from "@/components/ProfileAvatar";
 import { pieceImages } from "@/constants/utils";
 import { authClient } from "@/lib/auth";
@@ -26,7 +26,7 @@ function AvatarEditor(props: ModalProps) {
     const { data: session } = authClient.useSession();
 
     const [ colour, setColour ] = useState("#3b3e43");
-    const [ piece, setPiece ] = useState<StandardPieceType>("wK");
+    const [ piece, setPiece ] = useState<ProfileAvatarPiece>("wK");
 
     const [ status, setStatus ] = useState<Status>("idle");
 
@@ -34,7 +34,7 @@ function AvatarEditor(props: ModalProps) {
         if (!session) return;
 
         setColour(session.user.avatarColour);
-        setPiece(session.user.avatarPiece as StandardPieceType);
+        setPiece(session.user.avatarPiece as ProfileAvatarPiece);
     }, [session]);
 
     async function saveAvatar() {
@@ -116,7 +116,7 @@ function AvatarEditor(props: ModalProps) {
                         }}
                         height={75}
                         src={icon}
-                        onClick={() => setPiece(type as StandardPieceType)}
+                        onClick={() => setPiece(type as ProfileAvatarPiece)}
                         draggable={false}
                     />)}
                 </Tabs.Panel>
