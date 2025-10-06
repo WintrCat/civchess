@@ -27,7 +27,7 @@ export async function findNearestEmptySquare(
         if (!node) continue;
 
         // Get square of node, using chunk cache if possible
-        const { x: chunkX, y: chunkY } = getChunkCoordinates(node.x, node.y);
+        const { chunkX, chunkY } = getChunkCoordinates(node.x, node.y);
 
         let nodeChunk = chunkCache.at(chunkY)?.at(chunkX);
 

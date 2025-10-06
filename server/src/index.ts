@@ -1,7 +1,7 @@
 import { Server } from "http";
 import express from "express";
 import cluster from "cluster";
-import os from "os";
+import { cpus } from "os";
 import { toNodeHandler } from "better-auth/node";
 import { resolve } from "path";
 import dotenv from "dotenv";
@@ -15,11 +15,11 @@ import { createSocketServer } from "./socket";
 
 dotenv.config({ quiet: true });
 
-const coreCount = Number(process.env.THREAD_COUNT) || os.cpus().length;
+const coreCount = Number(process.env.THREAD_COUNT) || cpus().length;
 
 async function main() {
     if (!process.env.PUBLIC_ORIGIN)
-        return console.log("origin not specified.");
+        throw new Error("origin not specified.");
 
     if (cluster.isPrimary) {
         console.log("starting server...");

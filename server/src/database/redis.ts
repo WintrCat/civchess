@@ -1,6 +1,6 @@
 import { Redis } from "ioredis";
 
-type ObjectValue = string | number | boolean | object;
+type ObjectValue = string | number | boolean | object | null;
 
 class ExtendedRedis extends Redis {
     private async getNumericalResponse(

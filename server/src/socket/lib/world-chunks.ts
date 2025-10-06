@@ -1,8 +1,9 @@
 import { Socket } from "socket.io";
 
-import { Square } from "shared/types/world/Square";
 import { Chunk } from "shared/types/world/Chunk";
-import { chunkSquareCount, getChunkCoordinates } from "shared/lib/world-chunks";
+import { Piece } from "shared/types/world/Piece";
+import { coordinateIndex, RuntimeChunk } from "shared/types/world/OnlineWorld";
+import { getChunkCoordinates } from "shared/lib/world-chunks";
 import { getRedisClient } from "@/database/redis";
 import { SocketIdentity } from "@/types/SocketIdentity";
 
@@ -11,19 +12,23 @@ export async function getWorldChunkSize(worldCode: string) {
 }
 
 export async function getChunk(
-    worldCode: string, chunkX: number, chunkY: number
+    worldCode: string,
+    chunkX: number,
+    chunkY: number
 ) {
     return await getRedisClient().json.get<Chunk>(
         worldCode, `$.chunks[${chunkY}][${chunkX}]`
     );
 }
 
-export async function getSquareChunk(
-    worldCode: string, squareX: number, squareY: number
+export async function getRuntimeChunk(
+    worldCode: string,
+    chunkX: number,
+    chunkY: number
 ) {
-    const { x, y } = getChunkCoordinates(squareX, squareY);
-
-    return await getChunk(worldCode, x, y);
+    return await getRedisClient().json.get<RuntimeChunk>(worldCode,
+        `$.runtimeChunks["${coordinateIndex(chunkX, chunkY)}"]`
+    ) || {};
 }
 
 export async function* getSurroundingChunks(
@@ -37,15 +42,16 @@ export async function* getSurroundingChunks(
     const worldSize = await getRedisClient().json
         .length(worldCode, "$.chunks");
 
-    const { x: originX, y: originY } = getChunkCoordinates(
-        originSquareX, originSquareY
-    );
+    const {
+        chunkX: originChunkX,
+        chunkY: originChunkY
+    } = getChunkCoordinates(originSquareX, originSquareY);
 
     const coords = {
-        startX: Math.max(0, originX - renderDistance),
-        startY: Math.max(0, originY - renderDistance),
-        endX: Math.min(worldSize - 1, originX + renderDistance),
-        endY: Math.min(worldSize - 1, originY + renderDistance)
+        startX: Math.max(0, originChunkX - renderDistance),
+        startY: Math.max(0, originChunkY - renderDistance),
+        endX: Math.min(worldSize - 1, originChunkX + renderDistance),
+        endY: Math.min(worldSize - 1, originChunkY + renderDistance)
     };
 
     for (let y = coords.startY; y <= coords.endY; y++) {
@@ -53,33 +59,14 @@ export async function* getSurroundingChunks(
             const chunk = await getChunk(worldCode, x, y);
             if (!chunk) continue;
 
-            yield { x, y, chunk };
+            const runtimeChunk = await getRuntimeChunk(worldCode, x, y);
+
+            yield { x, y, chunk, runtimeChunk };
         }
     }
 }
 
-export async function setSquarePiece(
-    worldCode: string,
-    squareX: number,
-    squareY: number,
-    piece: Square["piece"]
-) {
-    const { x: chunkX, y: chunkY } = getChunkCoordinates(squareX, squareY);
-
-    const relativeX = squareX % chunkSquareCount;
-    const relativeY = squareY % chunkSquareCount;
-
-    const piecePath = `$.chunks[${chunkY}][${chunkX}]`
-        + `.squares[${relativeY}][${relativeX}].piece`;
-
-    if (piece) {
-        await getRedisClient().json.set(worldCode, piecePath, piece);
-    } else {
-        await getRedisClient().json.delete(worldCode, piecePath);
-    }
-}
-
-export function setChunkSubscription(
+export async function setChunkSubscription(
     socket: Socket,
     x: number,
     y: number,
@@ -89,9 +76,9 @@ export function setChunkSubscription(
     const subRoom = `${identity.worldCode}:chunk-${x}-${y}`;
 
     if (subscribed) {
-        socket.join(subRoom);
+        await socket.join(subRoom);
     } else {
-        socket.leave(subRoom);
+        await socket.leave(subRoom);
     }
 }
 
@@ -102,4 +89,39 @@ export function getChunkBroadcaster(
     y: number 
 ) {
     return socket.broadcast.to(`${worldCode}:chunk-${x}-${y}`);
+}
+
+export async function setSquarePiece(
+    worldCode: string,
+    squareX: number,
+    squareY: number,
+    piece: Piece | undefined,
+    persistence: "persistent" | "runtime" = "persistent"
+) {
+    const { chunkX, chunkY, relativeX, relativeY } = (
+        getChunkCoordinates(squareX, squareY)
+    );
+
+    let piecePath: string;
+
+    if (persistence == "persistent") {
+        piecePath = `$.chunks[${chunkY}][${chunkX}]`
+            + `.squares[${relativeY}][${relativeX}].piece`;
+    } else {
+        const runtimeChunkPath = "$.runtimeChunks"
+            + `["${coordinateIndex(chunkX, chunkY)}"]`;
+
+        if (piece) await getRedisClient().json.set(
+            worldCode, runtimeChunkPath, {}, "NX"
+        );
+
+        piecePath = runtimeChunkPath
+            + `["${coordinateIndex(relativeX, relativeY)}"]`;
+    }
+
+    if (piece) {
+        await getRedisClient().json.set(worldCode, piecePath, piece);
+    } else {
+        await getRedisClient().json.delete(worldCode, piecePath);
+    }
 }

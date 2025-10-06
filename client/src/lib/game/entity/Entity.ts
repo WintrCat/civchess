@@ -3,7 +3,7 @@ import { FederatedPointerEvent, ColorSource, Point, Sprite } from "pixi.js";
 import { squareSize } from "@/constants/squares";
 import { InitialisedGameClient } from "../Client";
 import { TypedEmitter } from "../utils/event-emitter";
-import { toWorldPosition } from "../utils/square-position";
+import { squareWorldPosition } from "../utils/world-position";
 
 export type EntityEvents = {
     hold: () => void;
@@ -76,7 +76,7 @@ export class Entity extends TypedEmitter<EntityEvents> {
         this.position = new Point(x, y);
         
         this.sprite.position.copyFrom(
-            toWorldPosition(x, y)
+            squareWorldPosition(x, y)
         );
     }
 

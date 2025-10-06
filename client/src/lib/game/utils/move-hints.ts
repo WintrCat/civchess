@@ -2,7 +2,7 @@ import { Container, Graphics, Point } from "pixi.js";
 
 import { squareSize } from "@/constants/squares";
 import { Entity, EntityEvents } from "../entity/Entity";
-import { toWorldPosition } from "./square-position";
+import { squareWorldPosition } from "./world-position";
 
 export class MoveHints {
     entity: Entity;
@@ -66,7 +66,7 @@ export class MoveHints {
                 square.x * squareSize,
                 square.y * squareSize
             );
-            const squarePosition = toWorldPosition(square.x, square.y);
+            const squarePosition = squareWorldPosition(square.x, square.y);
 
             // Square container with correct hover area
             const moveHintSquare = new Graphics()

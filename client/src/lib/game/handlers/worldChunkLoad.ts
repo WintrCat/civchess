@@ -26,8 +26,8 @@ function drawSquare(
     viewport.addChild(graphics);
 }
 
-export const worldChunkHandler = createPacketHandler({
-    type: "worldChunk",
+export const worldChunkLoadHandler = createPacketHandler({
+    type: "worldChunkLoad",
     handle: (packet, client) => {
         client.setChunkCache(packet.x, packet.y, packet.chunk);
 

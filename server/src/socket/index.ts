@@ -4,9 +4,9 @@ import { createAdapter } from "@socket.io/redis-adapter";
 
 import { isIdentified } from "@/types/SocketIdentity";
 import { getRedisClient } from "@/database/redis";
+import { setSquarePiece } from "./lib/world-chunks";
 import { getPlayer } from "./lib/players";
 import { decrementPlayerCount } from "./lib/players/count";
-import { setSquarePiece } from "./lib/world-chunks";
 import { packetMiddleware } from "./middleware";
 import { attachPacketHandlers, sendPacket } from "./packets";
 import handlers from "./handlers";
@@ -34,19 +34,16 @@ export function createSocketServer(httpServer: HTTPServer) {
             if (!isIdentified(socket.data)) return;
             const identity = socket.data;
 
-            // Remove player piece from the world
+            // Remove player piece from runtime chunks
             const player = await getPlayer(
                 identity.worldCode, identity.profile.userId
             );
 
-            if (player) await setSquarePiece(
-                identity.worldCode,
-                player.x,
-                player.y,
-                undefined
+            if (player) await setSquarePiece(identity.worldCode,
+                player.x, player.y, undefined, "runtime"
             );
 
-            // Decrement player count and notify sockets of leave
+            // Decrement player count and notify others of leave
             await decrementPlayerCount(identity.worldCode);
 
             sendPacket(server, "playerLeave", {

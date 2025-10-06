@@ -10,8 +10,8 @@ export const worldSchema = z.object({
     code: z.string(),
     pinned: z.boolean(),
     createdAt: z.iso.datetime(),
+    lastOnlineAt: z.iso.datetime().optional(),
 
-    lastOnlineAt: z.string().optional(),
     maxPlayers: z.int().optional(),
     bannedPlayers: z.record(z.string(), z.literal(true)),
     whitelistedPlayers: z.record(z.string(), z.literal(true)).optional(),

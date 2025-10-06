@@ -1,9 +1,6 @@
-import { mapValues } from "es-toolkit";
-
-import { getChunkCoordinates } from "shared/lib/world-chunks";
 import { chunkSize } from "@/constants/squares";
 import { InitialisedGameClient } from "../Client";
-import { toWorldPosition } from "./square-position";
+import { squareChunkWorldPosition, squareWorldPosition } from "./world-position";
 
 const renderDistance = chunkSize * (
     Number(import.meta.env.PUBLIC_RENDER_DISTANCE) || 2
@@ -14,10 +11,7 @@ export function clampViewportAroundSquare(
     squareX: number,
     squareY: number
 ) {
-    const chunkPosition = mapValues(
-        getChunkCoordinates(squareX, squareY),
-        coordinate => coordinate * chunkSize
-    );
+    const chunkPosition = squareChunkWorldPosition(squareX, squareY);
 
     const minCoord = (coord: number) => Math.max(0, coord - renderDistance);
 
@@ -43,5 +37,7 @@ export function moveViewportToSquare(
     squareX: number,
     squareY: number
 ) {
-    client.viewport.moveCenter(toWorldPosition(squareX, squareY));
+    client.viewport.moveCenter(
+        squareWorldPosition(squareX, squareY)
+    );
 }

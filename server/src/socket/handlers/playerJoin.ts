@@ -84,10 +84,12 @@ export const playerJoinHandler = createPacketHandler({
             profile: profile
         } satisfies SocketIdentity;
 
-        // Create player data or fetch existing from the world server
+        // Fetch player data from world or create new player data
         const worldChunkSize = await getWorldChunkSize(worldCode);
 
-        const playerData = await getPlayer(worldCode, profile.userId) || {
+        const playerData = await getPlayer(
+            worldCode, profile.userId
+        ) || {
             x: randomInt(0, worldChunkSize * chunkSquareCount),
             y: randomInt(0, worldChunkSize * chunkSquareCount),
             colour: "#" + randomInt(0, 0xffffff).toString(16),
@@ -112,10 +114,11 @@ export const playerJoinHandler = createPacketHandler({
         // Put player piece on to spawn square
         await setSquarePiece(worldCode, playerData.x, playerData.y, {
             id: PieceType.PLAYER,
+            userId: profile.userId,
             username: profile.name,
             colour: playerData.colour,
             health: 3
-        });
+        }, "runtime");
 
         // Return a server information packet with playerlist
         const connectedSockets = await getSocketServer()
@@ -135,8 +138,11 @@ export const playerJoinHandler = createPacketHandler({
         );
 
         for await (const chunkData of surroundingChunks) {
-            setChunkSubscription(socket, chunkData.x, chunkData.y, true);
-            sendPacket(socket, "worldChunk", chunkData);
+            await setChunkSubscription(socket,
+                chunkData.x, chunkData.y, true
+            );
+
+            sendPacket(socket, "worldChunkLoad", chunkData);
         }
 
         // Broadcast join to others

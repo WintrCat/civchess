@@ -7,7 +7,7 @@ export type ProfileAvatarPiece = typeof profileAvatarPieces[number];
 
 export enum PieceType {
     PLAYER = "player",
-    REMOTE_PIECE = "remotePiece",
+    REMOTE = "remotePiece",
     GUARD = "guard",
     FLAG = "flag"
 }

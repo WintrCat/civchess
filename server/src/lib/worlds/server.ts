@@ -1,10 +1,10 @@
 import { World } from "shared/types/world/World";
+import { OnlineWorld } from "shared/types/world/OnlineWorld";
 import { getRedisClient } from "@/database/redis";
 import { UserWorld } from "@/database/models/UserWorld";
 import { fetchWorld, toBaseWorld } from "./fetch";
 import { getSocketServer } from "@/socket";
-import { getPlayers, kickPlayer } from "@/socket/lib/players";
-import { setSquarePiece } from "@/socket/lib/world-chunks";
+import { kickPlayer } from "@/socket/lib/players";
 
 export async function isWorldOnline(worldCode: string) {
     const matchCount = await getRedisClient().exists(worldCode);
@@ -30,7 +30,11 @@ export async function hostWorld(world: World | string) {
 
     if (await isWorldOnline(world.code)) throw new Error();
 
-    await getRedisClient().json.set(world.code, "$", world);
+    const onlineWorld: OnlineWorld = {
+        ...world, runtimeChunks: {}
+    };
+
+    await getRedisClient().json.set(world.code, "$", onlineWorld);
 }
 
 /**
@@ -46,19 +50,13 @@ export async function shutdownWorld(worldCode: string) {
         "The world has been shut down."
     );
 
-    // Remove all player pieces from world
-    const players = await getPlayers(worldCode) || {};
-
-    for (const userId in players) {
-        const player = players[userId];
-        await setSquarePiece(worldCode, player.x, player.y, undefined);
-    }
-
     // Save world to database
-    const world = await getRedisClient().json.get<World>(worldCode, "$");
+    const world = await getRedisClient().json
+        .get<OnlineWorld>(worldCode, "$");
+        
     if (!world) return false;
 
-    await UserWorld.updateOne({ code: world.code }, world);
+    await UserWorld.updateOne({ code: world.code }, toBaseWorld(world));
 
     // Delete world's Redis keys
     await getRedisClient().del(worldCode);
