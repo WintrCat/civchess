@@ -14,14 +14,10 @@ import discordIcon from "@assets/img/discord.png";
 
 function SignIn() {
     function signIn(provider: "google" | "discord") {
-        const callbackOrigin = import.meta.env.DEV
-            ? import.meta.env.PUBLIC_DEV_ORIGIN
-            : import.meta.env.PUBLIC_ORIGIN;
-
         authClient.signIn.social({
             provider: provider,
-            callbackURL: `${callbackOrigin}/lobby`,
-            errorCallbackURL: "/sign-in"
+            callbackURL: `${location.origin}/lobby`,
+            errorCallbackURL: `${location.origin}/sign-in`
         });
     }
 
