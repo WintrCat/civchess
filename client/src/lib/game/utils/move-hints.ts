@@ -12,8 +12,8 @@ export class MoveHints {
 
     private hintContainers = new Set<Container>();
 
-    private entityDragListeners = new Set<EntityEvents["drag"]>();
-    private entityDropListeners = new Set<EntityEvents["drop"]>();
+    private entityDragListener?: EntityEvents["drag"];
+    private entityDropListener?: EntityEvents["drop"];
 
     constructor(
         entity: Entity,
@@ -29,16 +29,14 @@ export class MoveHints {
 
         this.hintContainers.clear();
 
-        this.entityDragListeners.forEach(
-            listener => this.entity.off("drag", listener)
-        );
+        if (this.entityDragListener)
+            this.entity.off("drag", this.entityDragListener);
 
-        this.entityDropListeners.forEach(
-            listener => this.entity.off("drop", listener)
-        );
+        if (this.entityDropListener)
+            this.entity.off("drop", this.entityDropListener);
 
-        this.entityDragListeners.clear();
-        this.entityDropListeners.clear();
+        this.entityDragListener = undefined;
+        this.entityDropListener = undefined;
 
         this.visible = false;
     }
@@ -55,7 +53,7 @@ export class MoveHints {
             if (!squares.some(square => square.equals(to))) cancel?.();
         };
 
-        this.entityDropListeners.add(dropListener);
+        this.entityDropListener = dropListener;
         this.entity.on("drop", dropListener);
 
         // Generate move hint objects
@@ -103,7 +101,7 @@ export class MoveHints {
                 }
             };
 
-            this.entityDragListeners.add(dragListener);
+            this.entityDragListener = dragListener;
             this.entity.on("drag", dragListener);          
 
             // Move when a hint is clicked
@@ -121,7 +119,5 @@ export class MoveHints {
         }
 
         this.visible = true;
-
-        this.entity.client.activeMoveHints = this;
     }
 }

@@ -72,6 +72,14 @@ export class Entity extends TypedEmitter<EntityEvents> {
         this.client.viewport.removeChild(this.sprite);
     }
 
+    get x() {
+        return this.position.x;
+    }
+
+    get y() {
+        return this.position.y;
+    }
+
     setPosition(x: number, y: number) {
         this.position = new Point(x, y);
         

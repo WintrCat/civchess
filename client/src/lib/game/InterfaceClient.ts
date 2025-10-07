@@ -17,8 +17,6 @@ export class InterfaceClient {
     }
 
     updatePlayerlist() {
-        this.hooks.setPlayerlist?.(
-            Object.values(this.client.connectedPlayers)
-        );
+        this.hooks.setPlayerlist?.(this.client.world.playerlist);
     }
 }

@@ -16,7 +16,7 @@ export function clampViewportAroundSquare(
     const minCoord = (coord: number) => Math.max(0, coord - renderDistance);
 
     const maxCoord = (coord: number) => Math.min(
-        (client.worldChunkSize || Infinity) * chunkSize,
+        (client.world.chunkSize || Infinity) * chunkSize,
         coord + chunkSize + renderDistance
     );
 

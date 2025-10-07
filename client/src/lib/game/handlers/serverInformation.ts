@@ -10,11 +10,8 @@ import {
 export const serverInformationHandler = createPacketHandler({
     type: "serverInformation",
     handle: (packet, client) => {
-        client.worldChunkSize = packet.worldChunkSize;
-
-        client.connectedPlayers = Object.fromEntries(
-            packet.players.map(player => [player.name, player])
-        );
+        client.world.chunkSize = packet.worldChunkSize;
+        client.world.playerlist = packet.players;
 
         client.ui.updatePlayerlist();
 
@@ -28,22 +25,27 @@ export const serverInformationHandler = createPacketHandler({
         );
 
         client.app.renderer.on("resize", () => {
-            if (!client.localPlayer) return;
+            if (!client.world.localPlayer) return;
 
             clampViewportAroundSquare(client,
-                client.localPlayer.position.x,
-                client.localPlayer.position.y
+                client.world.localPlayer.entity.x,
+                client.world.localPlayer.entity.y
             );
         });
 
         // Spawn local player entity
-        client.localPlayer = new Player({
+        const localPlayerEntity = new Player({
             client: client,
             position: new Point(packet.localPlayer.x, packet.localPlayer.y),
             colour: parseInt(packet.localPlayer.colour.slice(1), 16),
             controllable: true
         });
 
-        client.localPlayer.spawn();
+        client.world.localPlayer = {
+            entity: localPlayerEntity,
+            data: packet.localPlayer
+        };
+
+        localPlayerEntity.spawn();
     }
 });

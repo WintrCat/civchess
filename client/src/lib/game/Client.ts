@@ -1,13 +1,10 @@
 import { Application, Assets } from "pixi.js";
 import { Viewport } from "pixi-viewport";
 
-import { PublicProfile } from "shared/types/PublicProfile";
-import { Chunk } from "shared/types/world/Chunk";
 import { pieceImages } from "@/constants/utils";
 import { InterfaceClient, UIHooks } from "./InterfaceClient";
 import { SocketClient } from "./SocketClient";
-import { Player } from "./entity/Player";
-import { MoveHints } from "./utils/move-hints";
+import { ClientWorld } from "./ClientWorld";
 
 export class GameClient {
     container: HTMLDivElement;
@@ -16,12 +13,7 @@ export class GameClient {
     socket: SocketClient;
     ui: InterfaceClient;
 
-    worldChunkSize?: number;
-    loadedChunks: Chunk[][] = [];
-
-    connectedPlayers: Record<string, PublicProfile> = {};
-    activeMoveHints?: MoveHints;
-    localPlayer?: Player;
+    world = new ClientWorld();
 
     constructor(container: HTMLDivElement, uiHooks?: UIHooks) {
         if (!import.meta.env.PUBLIC_ORIGIN)
@@ -76,15 +68,6 @@ export class GameClient {
 
     joinWorld(worldCode: string, sessionToken: string) {
         this.socket.sendPacket("playerJoin", { worldCode, sessionToken });
-    }
-
-    setChunkCache(x: number, y: number, chunk: Chunk) {
-        this.loadedChunks[y] ??= [];
-        this.loadedChunks[y][x] = chunk;
-    }
-
-    getChunkCache(x: number, y: number) {
-        return this.loadedChunks.at(y)?.at(x);
     }
 }
 

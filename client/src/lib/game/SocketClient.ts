@@ -75,11 +75,15 @@ export class SocketClient {
                 await handler.handle(
                     packet, this.gameClient as InitialisedGameClient
                 );
-            } catch (err) {
+            } catch (rawError) {
+                const error = rawError as Error;
+
+                const message = error.stack
+                    || `${error.name}: ${error.message}`;
+
                 console.error(
                     `failed to handle packet(${handler.type}): `
-                    + JSON.stringify(packet)
-                    + `\n\n${(err as Error).message}`
+                    + `${JSON.stringify(packet)}\n\n${message}`
                 );
             }
         });

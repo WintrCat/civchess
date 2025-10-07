@@ -38,8 +38,8 @@ export class Player extends Entity {
     getLegalMoves() {
         const legalMoves: Point[] = [];
 
-        const worldSquareSize = this.client.worldChunkSize
-            ? this.client.worldChunkSize * chunkSquareCount
+        const worldSquareSize = this.client.world.chunkSize
+            ? this.client.world.chunkSize * chunkSquareCount
             : Infinity;
 
         const coords = {

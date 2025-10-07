@@ -90,6 +90,7 @@ export const playerJoinHandler = createPacketHandler({
         const playerData = await getPlayer(
             worldCode, profile.userId
         ) || {
+            userId: profile.userId,
             x: randomInt(0, worldChunkSize * chunkSquareCount),
             y: randomInt(0, worldChunkSize * chunkSquareCount),
             colour: "#" + randomInt(0, 0xffffff).toString(16),
