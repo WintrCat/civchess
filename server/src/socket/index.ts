@@ -47,7 +47,7 @@ export function createSocketServer(httpServer: HTTPServer) {
             await decrementPlayerCount(identity.worldCode);
 
             sendPacket(server, "playerLeave", {
-                username: identity.profile.name
+                userId: identity.profile.userId
             }, sender => sender.to(identity.worldCode));
         });
     });

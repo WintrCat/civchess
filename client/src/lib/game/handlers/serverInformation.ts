@@ -11,9 +11,26 @@ export const serverInformationHandler = createPacketHandler({
     type: "serverInformation",
     handle: (packet, client) => {
         client.world.chunkSize = packet.worldChunkSize;
-        client.world.playerlist = packet.players;
+
+        client.world.playerlist = Object.fromEntries(
+            packet.players.map(profile => [profile.userId, profile])
+        );
 
         client.ui.updatePlayerlist();
+
+        // Spawn local player entity
+        const localPlayerEntity = new Player({
+            client: client,
+            userId: packet.localPlayer.userId,
+            colour: packet.localPlayer.colour,
+            position: new Point(packet.localPlayer.x, packet.localPlayer.y),
+            health: 3,
+            inventory: packet.localPlayer.inventory,
+            controllable: true
+        });
+        client.world.localPlayer = localPlayerEntity;
+
+        localPlayerEntity.spawn();
 
         // Move camera and clamp viewport around player
         moveViewportToSquare(client,
@@ -28,24 +45,9 @@ export const serverInformationHandler = createPacketHandler({
             if (!client.world.localPlayer) return;
 
             clampViewportAroundSquare(client,
-                client.world.localPlayer.entity.x,
-                client.world.localPlayer.entity.y
+                client.world.localPlayer.x,
+                client.world.localPlayer.y
             );
         });
-
-        // Spawn local player entity
-        const localPlayerEntity = new Player({
-            client: client,
-            position: new Point(packet.localPlayer.x, packet.localPlayer.y),
-            colour: parseInt(packet.localPlayer.colour.slice(1), 16),
-            controllable: true
-        });
-
-        client.world.localPlayer = {
-            entity: localPlayerEntity,
-            data: packet.localPlayer
-        };
-
-        localPlayerEntity.spawn();
     }
 });

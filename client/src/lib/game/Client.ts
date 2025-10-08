@@ -4,7 +4,7 @@ import { Viewport } from "pixi-viewport";
 import { pieceImages } from "@/constants/utils";
 import { InterfaceClient, UIHooks } from "./InterfaceClient";
 import { SocketClient } from "./SocketClient";
-import { ClientWorld } from "./ClientWorld";
+import { LocalWorld } from "./LocalWorld";
 
 export class GameClient {
     container: HTMLDivElement;
@@ -13,7 +13,7 @@ export class GameClient {
     socket: SocketClient;
     ui: InterfaceClient;
 
-    world = new ClientWorld();
+    world = new LocalWorld(this);
 
     constructor(container: HTMLDivElement, uiHooks?: UIHooks) {
         if (!import.meta.env.PUBLIC_ORIGIN)
@@ -64,6 +64,10 @@ export class GameClient {
         this.container.appendChild(this.app.canvas);
 
         return this as InitialisedGameClient;
+    }
+
+    isInitialised(): this is InitialisedGameClient {
+        return !!this.viewport;
     }
 
     joinWorld(worldCode: string, sessionToken: string) {

@@ -1,3 +1,3 @@
 export interface PlayerLeavePacket {
-    username: string;
+    userId: string;
 }

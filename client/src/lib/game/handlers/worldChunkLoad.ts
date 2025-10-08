@@ -2,24 +2,23 @@ import { Graphics, Point } from "pixi.js";
 import { Viewport } from "pixi-viewport";
 
 import { SquareType } from "shared/constants/SquareType";
+import { coordinateIndex } from "shared/types/world/OnlineWorld";
 import { chunkSquareCount } from "shared/lib/world-chunks";
 import { squareColours, squareSize } from "@/constants/squares";
+import { LocalChunk } from "../types/chunks";
 import { createPacketHandler } from "../SocketClient";
-import { PieceType } from "shared/constants/PieceType";
-import { Player } from "../entity/Player";
-import { coordinateIndex } from "shared/types/world/OnlineWorld";
 
 function drawSquare(
     viewport: Viewport,
-    squareX: number,
-    squareY: number,
+    position: Point,
     type: SquareType
 ) {
-    const squareShade = (squareX + squareY) % 2 == 0 ? "light" : "dark";
+    const squareShade = (position.x + position.y) % 2 == 0
+        ? "light" : "dark";
 
     const graphics = new Graphics()
         .rect(
-            squareX * squareSize, squareY * squareSize,
+            position.x * squareSize, position.y * squareSize,
             squareSize, squareSize
         )
         .fill(squareColours[type][squareShade]);
@@ -32,42 +31,56 @@ function drawSquare(
 export const worldChunkLoadHandler = createPacketHandler({
     type: "worldChunkLoad",
     handle: (packet, client) => {
-        client.world.setChunkCache(packet.x, packet.y, {
-            persistent: packet.chunk,
-            runtime: packet.runtimeChunk
-        });
+        const localChunk: LocalChunk = {
+            squares: [],
+            runtimeSquares: {}
+        };
 
         for (const position in packet.runtimeChunk) {
             const { x: relativeX, y: relativeY } = coordinateIndex(position);
-            
+
             const squarePosition = new Point(
                 packet.x * chunkSquareCount + relativeX,
                 packet.y * chunkSquareCount + relativeY
             );
 
-            const piece = packet.runtimeChunk[position];
+            const piece = packet.runtimeChunk[position]!;
 
-            if (piece.id == PieceType.PLAYER) {
-                const localUserId = client.world.localPlayer?.data.userId;
-                if (piece.userId == localUserId) continue;
+            if (client.world.isLocalPlayer(piece)) {
+                localChunk.runtimeSquares[position] = (
+                    client.world.localPlayer!
+                );
 
-                const player = new Player({
-                    client: client,
-                    colour: piece.colour,
-                    position: squarePosition
-                });
-
-                player.spawn();
+                continue;
             }
+
+            const entity = client.world.pieceToEntity(squarePosition, piece);
+
+            localChunk.runtimeSquares[position] = entity;
+            entity.spawn();
         }
 
         packet.chunk.squares.forEach((row, relativeY) => {
-            row.forEach((square, relativeX) => drawSquare(
-                client.viewport,
-                (packet.x * chunkSquareCount) + relativeX,
-                (packet.y * chunkSquareCount) + relativeY,
-                square.type
-            ));
+            row.forEach((square, relativeX) => {
+                const position = new Point(
+                    (packet.x * chunkSquareCount) + relativeX,
+                    (packet.y * chunkSquareCount) + relativeY 
+                );
+
+                drawSquare(client.viewport, position, square.type);
+
+                const entity = square.piece && client.world
+                    .pieceToEntity(position, square.piece);
+
+                localChunk.squares[relativeY] ??= [];
+                localChunk.squares[relativeY][relativeX] = {
+                    ...square, piece: entity
+                };
+
+                entity?.spawn();
+            });
         });
+
+        client.world.setLocalChunk(packet.x, packet.y, localChunk);
     }
 });

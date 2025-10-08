@@ -25,7 +25,6 @@ export class Entity extends TypedEmitter<EntityEvents> {
     sprite: Sprite;
 
     position: Point;
-    colour?: ColorSource;
 
     private originalSize: number;
     private held = false;
@@ -50,7 +49,7 @@ export class Entity extends TypedEmitter<EntityEvents> {
         this.originalSize = opts.size || squareSize;
         this.setSize(this.originalSize);
 
-        this.sprite.tint = opts.colour || 0xffffff;
+        this.sprite.tint = opts.colour || "#ffffff";
 
         // Attach client control if necessary
         this.setControllable(opts.controllable || false);
@@ -86,6 +85,10 @@ export class Entity extends TypedEmitter<EntityEvents> {
         this.sprite.position.copyFrom(
             squareWorldPosition(x, y)
         );
+    }
+
+    setColour(colour: ColorSource) {
+        this.sprite.tint = colour;
     }
 
     setControllable(controllable: boolean) {

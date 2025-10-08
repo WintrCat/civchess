@@ -8,16 +8,27 @@ import { MoveHints } from "../utils/move-hints";
 
 interface PlayerOptions {
     client: InitialisedGameClient;
+    userId: string;
     position: Point;
     colour?: ColorSource;
+    health: number;
+    inventory?: string[]
     controllable?: boolean;
 }
 
 export class Player extends Entity {
+    readonly userId: string;
     readonly moveHints: MoveHints;
+
+    health: number;
+    inventory: string[];
 
     constructor(opts: PlayerOptions) {
         super({ ...opts, sprite: Sprite.from(pieceImages.wK) });
+
+        this.userId = opts.userId;
+        this.health = opts.health;
+        this.inventory = opts.inventory || [];
 
         this.moveHints = new MoveHints(
             this, this.getLegalMoves.bind(this)
