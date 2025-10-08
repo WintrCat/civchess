@@ -1,6 +1,8 @@
 import { World } from "./World";
 import { Piece } from "./Piece";
 
+export type ChunkPersistence = "persistent" | "runtime";
+
 // Coordinate Index -> Piece
 export type RuntimeChunk = Record<string, Piece>;
 

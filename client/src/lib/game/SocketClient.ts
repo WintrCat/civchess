@@ -66,7 +66,7 @@ export class SocketClient {
     }
 
     attachPacketHandler(handler: AnyPacketHandler) {
-        if (!this.gameClient.viewport) throw new Error(
+        if (!this.gameClient.isInitialised()) throw new Error(
             "cannot handle packets before client is initialised."
         );
 

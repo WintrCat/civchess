@@ -3,7 +3,9 @@ import { Types } from "mongoose";
 import { randomInt } from "es-toolkit";
 
 import { PieceType } from "shared/constants/PieceType";
-import { chunkSquareCount } from "shared/lib/world-chunks";
+import { coordinateIndex } from "shared/types/world/OnlineWorld";
+import { PlayerPiece } from "shared/types/world/pieces/Player";
+import { chunkSquareCount, getChunkCoordinates } from "shared/lib/world-chunks";
 import { SocketIdentity } from "@/types/SocketIdentity";
 import { getRedisClient } from "@/database/redis";
 import { Session } from "@/database/models/account";
@@ -12,6 +14,7 @@ import { worldExists } from "@/lib/worlds/fetch";
 import { getPublicProfile } from "@/lib/public-profile";
 import { getSocketServer } from "@/socket";
 import {
+    getChunkBroadcaster,
     getSurroundingChunks,
     getWorldChunkSize,
     setChunkSubscription,
@@ -113,13 +116,17 @@ export const playerJoinHandler = createPacketHandler({
         );
 
         // Put player piece on to spawn square
-        await setSquarePiece(worldCode, playerData.x, playerData.y, {
+        const playerPiece: PlayerPiece = {
             id: PieceType.PLAYER,
             userId: profile.userId,
             username: profile.name,
             colour: playerData.colour,
             health: 3
-        }, "runtime");
+        };
+
+        await setSquarePiece(worldCode,
+            playerData.x, playerData.y, playerPiece, "runtime"
+        );
 
         // Return a server information packet with playerlist
         const connectedSockets = await getSocketServer()
@@ -150,5 +157,20 @@ export const playerJoinHandler = createPacketHandler({
         sendPacket(socket, "playerJoin", profile,
             sender => sender.broadcast.to(worldCode)
         );
+
+        // Broadcast world chunk update to subscribers
+        const { chunkX, chunkY, relativeX, relativeY } = (
+            getChunkCoordinates(playerData.x, playerData.y)
+        );
+
+        sendPacket(socket, "worldChunkUpdate", {
+            x: chunkX,
+            y: chunkY,
+            runtimeChanges: {
+                [coordinateIndex(relativeX, relativeY)]: playerPiece
+            }
+        }, sender => getChunkBroadcaster(
+            sender, worldCode, chunkX, chunkY
+        ));
     }
 });

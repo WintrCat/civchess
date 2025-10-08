@@ -2,10 +2,12 @@ import { Point } from "pixi.js";
 
 import { PieceType } from "shared/constants/PieceType";
 import { PublicProfile } from "shared/types/PublicProfile";
-import { coordinateIndex } from "shared/types/world/OnlineWorld";
+import { ChunkPersistence, coordinateIndex } from "shared/types/world/OnlineWorld";
+import { getChunkCoordinates } from "shared/lib/world-chunks";
 import { PlayerPiece } from "shared/types/world/pieces/Player";
 import { Piece } from "shared/types/world/Piece";
 import { LocalChunk } from "./types/chunks";
+import { Entity } from "./entity/Entity";
 import { Player } from "./entity/Player";
 import { GameClient } from "./Client";
 
@@ -24,28 +26,79 @@ export class LocalWorld {
         this.client = client;
     }
 
+    // Manage chunks
+    setLocalChunk(chunkX: number, chunkY: number, chunk: LocalChunk) {
+        this.localChunks[chunkY] ??= [];
+        this.localChunks[chunkY][chunkX] = chunk;
+    }
+
+    getLocalChunk(chunkX: number, chunkY: number) {
+        return this.localChunks.at(chunkY)?.at(chunkX);
+    }
+
+    getSquareLocalChunk(squareX: number, squareY: number) {
+        const { chunkX, chunkY } = getChunkCoordinates(squareX, squareY);
+        return this.getLocalChunk(chunkX, chunkY);
+    }
+
+    // Manage squares
+    getLocalSquare(squareX: number, squareY: number) {
+        const { chunkX, chunkY, relativeX, relativeY } = (
+            getChunkCoordinates(squareX, squareY)
+        );
+
+        const chunk = this.getLocalChunk(chunkX, chunkY);
+
+        return chunk?.squares.at(relativeY)?.at(relativeX);
+    }
+
+    getLocalRuntimeSquare(squareX: number, squareY: number) {
+        const { chunkX, chunkY, relativeX, relativeY } = (
+            getChunkCoordinates(squareX, squareY)
+        );
+
+        const chunk = this.getLocalChunk(chunkX, chunkY);
+
+        return chunk?.runtimeSquares[coordinateIndex(relativeX, relativeY)];
+    }
+
+    setLocalSquare(
+        squareX: number,
+        squareY: number,
+        entity: Entity,
+        persistence: ChunkPersistence = "persistent"
+    ) {
+        if (persistence == "runtime") {
+            const { chunkX, chunkY, relativeX, relativeY } = (
+                getChunkCoordinates(squareX, squareY)
+            );
+
+            const chunk = this.getLocalChunk(chunkX, chunkY);
+            if (!chunk) return;
+
+            chunk.runtimeSquares[
+                coordinateIndex(relativeX, relativeY)
+            ] = entity;
+
+            return;
+        }
+
+        const square = this.getLocalSquare(squareX, squareY);
+        if (square) square.piece = entity;
+    }
+
+    // Utils
     isLocalPlayer(piece: Piece): piece is PlayerPiece {
         return piece.id == PieceType.PLAYER
             && piece.userId == this.localPlayer?.userId;
     }
 
-    setLocalChunk(x: number, y: number, localChunk: LocalChunk) {
-        this.localChunks[y] ??= [];
-        this.localChunks[y][x] = localChunk;
-    }
-
-    getLocalChunk(x: number, y: number) {
-        return this.localChunks.at(y)?.at(x);
-    }
-
-    getRuntimeSquare(chunk: LocalChunk, x: number, y: number) {
-        return chunk.runtimeSquares[coordinateIndex(x, y)];
-    }
-
-    pieceToEntity(position: Point, piece: Piece) {
+    pieceToEntity(x: number, y: number, piece: Piece) {
         if (!this.client.isInitialised()) throw new Error(
             "cannot create entities before client is initialised."
         );
+
+        const position = new Point(x, y);
 
         if (piece.id == PieceType.PLAYER) {
             return new Player({

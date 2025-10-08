@@ -36,50 +36,43 @@ export const worldChunkLoadHandler = createPacketHandler({
             runtimeSquares: {}
         };
 
-        for (const position in packet.runtimeChunk) {
-            const { x: relativeX, y: relativeY } = coordinateIndex(position);
+        localChunk.squares = packet.chunk.squares.map((row, relY) => (
+            row.map((square, relX) => {
+                const squareX = packet.x * chunkSquareCount + relX;
+                const squareY = packet.y * chunkSquareCount + relY;
 
-            const squarePosition = new Point(
-                packet.x * chunkSquareCount + relativeX,
-                packet.y * chunkSquareCount + relativeY
-            );
-
-            const piece = packet.runtimeChunk[position]!;
-
-            if (client.world.isLocalPlayer(piece)) {
-                localChunk.runtimeSquares[position] = (
-                    client.world.localPlayer!
+                drawSquare(
+                    client.viewport,
+                    new Point(squareX, squareY),
+                    square.type
                 );
 
-                continue;
-            }
-
-            const entity = client.world.pieceToEntity(squarePosition, piece);
-
-            localChunk.runtimeSquares[position] = entity;
-            entity.spawn();
-        }
-
-        packet.chunk.squares.forEach((row, relativeY) => {
-            row.forEach((square, relativeX) => {
-                const position = new Point(
-                    (packet.x * chunkSquareCount) + relativeX,
-                    (packet.y * chunkSquareCount) + relativeY 
+                const entity = square.piece && client.world.pieceToEntity(
+                    squareX, squareY, square.piece
                 );
-
-                drawSquare(client.viewport, position, square.type);
-
-                const entity = square.piece && client.world
-                    .pieceToEntity(position, square.piece);
-
-                localChunk.squares[relativeY] ??= [];
-                localChunk.squares[relativeY][relativeX] = {
-                    ...square, piece: entity
-                };
 
                 entity?.spawn();
-            });
-        });
+
+                return { ...square, piece: entity };
+            })
+        ));
+
+        localChunk.runtimeSquares = Object.fromEntries(
+            Object.entries(packet.runtimeChunk).map(([pos, piece]) => {
+                if (client.world.isLocalPlayer(piece))
+                    return [pos, client.world.localPlayer!];
+
+                const { x: relX, y: relY } = coordinateIndex(pos);
+
+                const entity = client.world.pieceToEntity(
+                    packet.x * chunkSquareCount + relX,
+                    packet.y * chunkSquareCount + relY,
+                    piece
+                );
+
+                return [pos, entity];
+            })
+        );
 
         client.world.setLocalChunk(packet.x, packet.y, localChunk);
     }

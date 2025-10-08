@@ -2,7 +2,11 @@ import { Socket } from "socket.io";
 
 import { Chunk } from "shared/types/world/Chunk";
 import { Piece } from "shared/types/world/Piece";
-import { coordinateIndex, RuntimeChunk } from "shared/types/world/OnlineWorld";
+import {
+    ChunkPersistence,
+    coordinateIndex,
+    RuntimeChunk
+} from "shared/types/world/OnlineWorld";
 import { getChunkCoordinates } from "shared/lib/world-chunks";
 import { getRedisClient } from "@/database/redis";
 import { SocketIdentity } from "@/types/SocketIdentity";
@@ -96,7 +100,7 @@ export async function setSquarePiece(
     squareX: number,
     squareY: number,
     piece: Piece | undefined,
-    persistence: "persistent" | "runtime" = "persistent"
+    persistence: ChunkPersistence = "persistent"
 ) {
     const { chunkX, chunkY, relativeX, relativeY } = (
         getChunkCoordinates(squareX, squareY)

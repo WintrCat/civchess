@@ -7,6 +7,7 @@ import { PlayerKickPacket } from "./clientbound/PlayerKickPacket";
 import { PlayerSpawnPacket } from "./clientbound/PlayerSpawnPacket";
 import { ServerInformationPacket } from "./clientbound/ServerInformationPacket";
 import { WorldChunkLoadPacket } from "./clientbound/WorldChunkLoadPacket";
+import { WorldChunkUpdatePacket } from "./clientbound/WorldChunkUpdatePacket";
 
 export interface ServerboundPacketTypeMap {
     playerJoin: PlayerJoinPacket;
@@ -20,6 +21,7 @@ export interface ClientboundPacketTypeMap {
     playerSpawn: PlayerSpawnPacket;
     serverInformation: ServerInformationPacket;
     worldChunkLoad: WorldChunkLoadPacket;
+    worldChunkUpdate: WorldChunkUpdatePacket;
 }
 
 export type ServerboundPacketType = keyof ServerboundPacketTypeMap;
