@@ -61,6 +61,7 @@ export class Entity extends TypedEmitter<EntityEvents> {
 
     spawn() {
         this.client.viewport.addChild(this.sprite);
+        return this;
     }
 
     despawn() {

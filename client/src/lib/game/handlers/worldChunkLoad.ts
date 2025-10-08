@@ -49,9 +49,7 @@ export const worldChunkLoadHandler = createPacketHandler({
 
                 const entity = square.piece && client.world.pieceToEntity(
                     squareX, squareY, square.piece
-                );
-
-                entity?.spawn();
+                ).spawn();
 
                 return { ...square, piece: entity };
             })
@@ -68,7 +66,7 @@ export const worldChunkLoadHandler = createPacketHandler({
                     packet.x * chunkSquareCount + relX,
                     packet.y * chunkSquareCount + relY,
                     piece
-                );
+                ).spawn();
 
                 return [pos, entity];
             })

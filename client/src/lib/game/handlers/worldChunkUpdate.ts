@@ -13,11 +13,12 @@ export const worldChunkUpdateHandler = createPacketHandler({
                 const squareX = packet.x * chunkSquareCount + relX;
                 const squareY = packet.y * chunkSquareCount + relY;
 
+                const entity = client.world.pieceToEntity(
+                    squareX, squareY, changes[relPosition]!
+                ).spawn();
+
                 client.world.setLocalSquare(
-                    squareX, squareY,
-                    client.world.pieceToEntity(
-                        squareX, squareY, changes[relPosition]!
-                    ),
+                    squareX, squareY, entity,
                     changes == packet.changes ? "persistent" : "runtime"
                 );
             }
