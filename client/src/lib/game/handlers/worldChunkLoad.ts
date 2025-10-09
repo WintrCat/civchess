@@ -31,6 +31,11 @@ function drawSquare(
 export const worldChunkLoadHandler = createPacketHandler({
     type: "worldChunkLoad",
     handle: (packet, client) => {
+        const toGlobalPos = (relX: number, relY: number) => ({
+            x: packet.x * chunkSquareCount + relX,
+            y: packet.y * chunkSquareCount + relY
+        });
+
         const localChunk: LocalChunk = {
             squares: [],
             runtimeSquares: {}
@@ -38,18 +43,13 @@ export const worldChunkLoadHandler = createPacketHandler({
 
         localChunk.squares = packet.chunk.squares.map((row, relY) => (
             row.map((square, relX) => {
-                const squareX = packet.x * chunkSquareCount + relX;
-                const squareY = packet.y * chunkSquareCount + relY;
+                const { x, y } = toGlobalPos(relX, relY);
 
-                drawSquare(
-                    client.viewport,
-                    new Point(squareX, squareY),
-                    square.type
-                );
+                drawSquare(client.viewport, new Point(x, y), square.type);
 
-                const entity = square.piece && client.world.pieceToEntity(
-                    squareX, squareY, square.piece
-                ).spawn();
+                const entity = square.piece && client.world
+                    .pieceToEntity(x, y, square.piece)
+                    .spawn();
 
                 return { ...square, piece: entity };
             })
@@ -61,14 +61,9 @@ export const worldChunkLoadHandler = createPacketHandler({
                     return [pos, client.world.localPlayer!];
 
                 const { x: relX, y: relY } = coordinateIndex(pos);
+                const { x, y } = toGlobalPos(relX, relY);
 
-                const entity = client.world.pieceToEntity(
-                    packet.x * chunkSquareCount + relX,
-                    packet.y * chunkSquareCount + relY,
-                    piece
-                ).spawn();
-
-                return [pos, entity];
+                return [pos, client.world.pieceToEntity(x, y, piece).spawn()];
             })
         );
 

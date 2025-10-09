@@ -6,10 +6,11 @@ import { ChunkPersistence, coordinateIndex } from "shared/types/world/OnlineWorl
 import { getChunkCoordinates } from "shared/lib/world-chunks";
 import { PlayerPiece } from "shared/types/world/pieces/Player";
 import { Piece } from "shared/types/world/Piece";
-import { LocalChunk } from "./types/chunks";
+import { LocalChunk, LocalSquare } from "./types/chunks";
 import { Entity } from "./entity/Entity";
 import { Player } from "./entity/Player";
 import { GameClient } from "./Client";
+import { Square } from "shared/types/world/Square";
 
 export class LocalWorld {
     client: GameClient;
@@ -65,26 +66,36 @@ export class LocalWorld {
     setLocalSquare(
         squareX: number,
         squareY: number,
-        entity: Entity,
-        persistence: ChunkPersistence = "persistent"
+        square: LocalSquare
     ) {
-        if (persistence == "runtime") {
-            const { chunkX, chunkY, relativeX, relativeY } = (
-                getChunkCoordinates(squareX, squareY)
-            );
+        const { chunkX, chunkY, relativeX, relativeY } = (
+            getChunkCoordinates(squareX, squareY)
+        );
 
-            const chunk = this.getLocalChunk(chunkX, chunkY);
-            if (!chunk) return;
+        const chunk = this.getLocalChunk(chunkX, chunkY);
+        if (!chunk) return;
 
-            chunk.runtimeSquares[
-                coordinateIndex(relativeX, relativeY)
-            ] = entity;
+        chunk.squares[relativeY] ??= [];
+        chunk.squares[relativeY][relativeX] = square;
+    }
 
-            return;
-        }
+    setLocalRuntimeSquare(
+        squareX: number,
+        squareY: number,
+        piece: Piece
+    ) {
+        const { chunkX, chunkY, relativeX, relativeY } = (
+            getChunkCoordinates(squareX, squareY)
+        );
 
-        const square = this.getLocalSquare(squareX, squareY);
-        if (square) square.piece = entity;
+        const chunk = this.getLocalChunk(chunkX, chunkY);
+        if (!chunk) return;
+
+        const entity = this.client.world.pieceToEntity(
+            squareX, squareY, piece
+        );
+
+        chunk.runtimeSquares[coordinateIndex(relativeX, relativeY)] = entity;
     }
 
     // Utils
