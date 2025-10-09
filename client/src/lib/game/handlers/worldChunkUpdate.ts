@@ -11,38 +11,19 @@ export const worldChunkUpdateHandler = createPacketHandler({
             y: packet.y * chunkSquareCount + relY
         });
 
-        for (const relPos in packet.changes) {
-            const { x: relX, y: relY } = coordinateIndex(relPos);
-            const { x, y } = toGlobalPos(relX, relY);
+        const changes = { ...packet.changes, ...packet.runtimeChanges };
 
-            const update = packet.changes[relPos]!;
-
-            const localSquare = client.world.getLocalSquare(x, y);
-            if (!localSquare) continue;
-
-            localSquare.piece?.despawn();
-
-            client.world.setLocalSquare(x, y, {
-                ...localSquare,
-                ...update,
-                piece: update.piece && client.world
-                    .pieceToEntity(x, y, update.piece)
-                    .spawn()
-            });
-
-            // CHANGE SQUARE TYPE IN ACTUAL SPRITE
-        }
-
-        for (const relPos in packet.runtimeChanges) {
-            const { x: relX, y: relY } = coordinateIndex(relPos);
+        for (const relPosIndex in changes) {
+            const { x: relX, y: relY } = coordinateIndex(relPosIndex);
             const { x, y } = toGlobalPos(relX, relY);
 
             const localSquare = client.world.getLocalSquare(x, y);
-            if (!localSquare) continue;
 
-            localSquare.piece = client.world
-                .pieceToEntity(x, y, packet.runtimeChanges[relPos]!)
-                .spawn();
+            const change = changes[relPosIndex]!;
+
+            localSquare?.update("id" in change
+                ? { piece: change } : change
+            );
         }
     }
 });
