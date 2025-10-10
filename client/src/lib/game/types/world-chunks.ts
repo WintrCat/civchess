@@ -2,6 +2,7 @@ import { Graphics } from "pixi.js";
 
 import { Chunk } from "shared/types/world/Chunk";
 import { SquareType } from "shared/constants/SquareType";
+import { Updates } from "shared/types/packets/clientbound/WorldChunkUpdatePacket";
 import { squareColours, squareSize } from "@/constants/squares";
 import { InitialisedGameClient } from "../Client";
 import { Entity } from "../entity/Entity";
@@ -52,15 +53,17 @@ export class LocalSquare {
         this.type = type;
     }
 
-    update(update: Partial<Square>) {
+    update(update: Updates<Square>) {
         if (update.type) this.type = update.type;
         
-        if (update.piece) {
+        if (update.piece !== undefined) {
             this.entity?.despawn();
 
-            this.entity = this.client.world
-                .pieceToEntity(this.x, this.y, update.piece)
-                .spawn();
+            this.entity = update.piece
+                ? this.client.world
+                    .pieceToEntity(this.x, this.y, update.piece)
+                    .spawn()
+                : undefined;
         }
     }
 }

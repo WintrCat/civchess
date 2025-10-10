@@ -1,7 +1,6 @@
 import { coordinateIndex } from "shared/types/world/OnlineWorld";
-
-import { createPacketHandler } from "../SocketClient";
 import { chunkSquareCount } from "shared/lib/world-chunks";
+import { createPacketHandler } from "../SocketClient";
 
 export const worldChunkUpdateHandler = createPacketHandler({
     type: "worldChunkUpdate",
@@ -19,10 +18,10 @@ export const worldChunkUpdateHandler = createPacketHandler({
 
             const localSquare = client.world.getLocalSquare(x, y);
 
-            const change = changes[relPosIndex]!;
+            const update = changes[relPosIndex];
 
-            localSquare?.update("id" in change
-                ? { piece: change } : change
+            localSquare?.update(!update || "id" in update
+                ? { piece: update } : changes
             );
         }
     }
