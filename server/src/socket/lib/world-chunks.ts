@@ -1,4 +1,4 @@
-import { Socket } from "socket.io";
+import { Server as SocketServer, Socket } from "socket.io";
 
 import { Chunk } from "shared/types/world/Chunk";
 import { Piece } from "shared/types/world/Piece";
@@ -87,11 +87,14 @@ export async function setChunkSubscription(
 }
 
 export function getChunkBroadcaster(
-    socket: Socket,
+    socket: Socket | SocketServer,
     worldCode: string,
     x: number,
-    y: number 
+    y: number
 ) {
+    if (socket instanceof SocketServer)
+        return socket.to(`${worldCode}:chunk-${x}-${y}`);
+
     return socket.broadcast.to(`${worldCode}:chunk-${x}-${y}`);
 }
 
