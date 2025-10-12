@@ -1,10 +1,11 @@
-import { Container, Graphics, Point } from "pixi.js";
+import { Container, Graphics, Point, Rectangle } from "pixi.js";
+import { findKey } from "es-toolkit";
 
 import { squareSize } from "@/constants/squares";
 import { Entity, EntityEvents } from "../entity/Entity";
 import { squareWorldPosition } from "./world-position";
 
-export class MoveHints {
+export class OldMoveHints {
     entity: Entity;
     squareGenerator: () => Point[];
 
@@ -119,5 +120,105 @@ export class MoveHints {
         }
 
         this.visible = true;
+    }
+}
+
+type SquareGenerator = () => Point[];
+
+export class MoveHints {
+    entity: Entity;
+    generateSquares: SquareGenerator;
+
+    private hintContainers: Container[] = [];
+    private activeHoverOutlines: Container[] = [];
+
+    private entityDragListener?: EntityEvents["drag"];
+    private entityDropListener?: EntityEvents["drop"];
+
+    constructor(
+        entity: Entity,
+        squareGenerator: SquareGenerator
+    ) {
+        this.entity = entity;
+        this.generateSquares = squareGenerator;
+    }
+
+    clear() {
+        for (const container of this.hintContainers)
+            container.destroy();
+
+        this.hintContainers = [];
+
+        if (this.entityDragListener)
+            this.entity.off("drag", this.entityDragListener);
+
+        if (this.entityDropListener)
+            this.entity.off("drop", this.entityDropListener);
+
+        this.entityDragListener = undefined;
+        this.entityDropListener = undefined;
+    }
+
+    render() {
+        console.log("rendered");
+
+        for (const square of this.generateSquares()) {
+            const container = new Container({
+                x: square.x * squareSize,
+                y: square.y * squareSize,
+                hitArea: new Rectangle(
+                    square.x * squareSize, square.y * squareSize,
+                    squareSize, squareSize
+                ),
+                eventMode: "static"
+            });
+
+            const center = squareWorldPosition(square.x, square.y);
+
+            container.addChild(new Graphics()
+                .circle(squareSize / 2, squareSize / 2, 0.15 * squareSize)
+                .fill("#ffffff25")
+            );
+
+            console.log(`${center.x}, ${center.y}`);
+
+            container.addChild(
+                new Graphics({ label: "hover", visible: false })
+                    .rect(0, 0, squareSize, squareSize)
+                    .stroke({
+                        width: 0.05 * squareSize,
+                        color: "#ffffff",
+                        alignment: 1
+                    })
+            );
+
+            this.hintContainers.push(container);
+            this.entity.client.viewport.addChild(container);
+        }
+
+        this.entityDragListener = point => {
+            const hoverOutline = this.hintContainers
+                .find(hint => hint.hitArea?.contains(point.x, point.y))
+                ?.getChildByLabel("hover");
+
+            for (const outline of this.activeHoverOutlines) {
+                outline.visible = false;
+            }
+
+            this.activeHoverOutlines = [];
+
+            if (hoverOutline) {
+                hoverOutline.visible = true;
+                this.activeHoverOutlines.push(hoverOutline);
+            }
+        };
+
+        this.entityDropListener = () => {
+            console.log("dropped");
+            this.clear();
+        }
+
+        this.entity.on("drag", this.entityDragListener);
+        this.entity.on("drop", this.entityDropListener);
     }
 }
