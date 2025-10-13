@@ -8,17 +8,17 @@ export interface UIHooks {
 }
 
 export class InterfaceClient {
-    private client: GameClient;
-    private hooks: UIHooks;
+    gameClient: GameClient;
+    hooks: UIHooks;
 
     constructor(client: GameClient, hooks?: UIHooks) {
-        this.client = client;
+        this.gameClient = client;
         this.hooks = hooks || {};
     }
 
     updatePlayerlist() {
         this.hooks.setPlayerlist?.(
-            Object.values(this.client.world.playerlist)
+            Object.values(this.gameClient.world.playerlist)
         );
     }
 }

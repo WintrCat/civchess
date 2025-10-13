@@ -1,19 +1,29 @@
-import { FederatedPointerEvent, ColorSource, Point, Sprite } from "pixi.js";
+import {
+    FederatedPointerEvent,
+    ColorSource,
+    Point,
+    Sprite,
+    Texture
+} from "pixi.js";
 
 import { squareSize } from "@/constants/squares";
 import { InitialisedGameClient } from "../Client";
 import { TypedEmitter } from "../utils/event-emitter";
-import { squareWorldPosition } from "../utils/world-position";
+import {
+    squareToWorldPosition,
+    worldToSquarePosition
+} from "../utils/world-position";
 
 export type EntityEvents = {
     hold: () => void;
     drag: (point: Point) => void;
-    drop: (from: Point, to: Point, cancel?: () => void) => void;
+    drop: (point: Point) => void;
+    move: (from: Point, to: Point, cancel: () => void) => void;
 };
 
 interface EntityOptions {
     client: InitialisedGameClient;
-    sprite: Sprite;
+    texture: Texture;
     position: Point;
     size?: number;
     colour?: ColorSource;
@@ -26,7 +36,7 @@ export class Entity extends TypedEmitter<EntityEvents> {
 
     position: Point;
 
-    private originalSize: number;
+    private readonly originalSize: number;
     private held = false;
 
     private dragListener?: (event: FederatedPointerEvent) => void;
@@ -34,42 +44,26 @@ export class Entity extends TypedEmitter<EntityEvents> {
     constructor(opts: EntityOptions) {
         super();
 
-        // References
         this.client = opts.client;
-        this.sprite = opts.sprite;
-
-        // Configure Sprite
-        this.sprite.eventMode = "static";
-        this.sprite.anchor = 0.5;
-        this.sprite.zIndex = 1;
-
         this.position = opts.position;
-        this.setPosition(opts.position.x, opts.position.y);
-
         this.originalSize = opts.size || squareSize;
-        this.setSize(this.originalSize);
 
-        this.sprite.tint = opts.colour || "#ffffff";
+        this.sprite = new Sprite({
+            texture: opts.texture,
+            anchor: 0.5,
+            zIndex: 1,
+            position: squareToWorldPosition(this.position),
+            width: this.originalSize,
+            height: this.originalSize,
+            tint: opts.colour || "#ffffff",
+            eventMode: "static"
+        });
 
-        // Attach client control if necessary
         this.setControllable(opts.controllable || false);
     }
 
     private setSize(size: number) {
         this.sprite.width = this.sprite.height = size;
-    }
-
-    spawn() {
-        this.client.viewport.addChild(this.sprite);
-        return this;
-    }
-
-    despawn() {
-        if (this.dragListener) this.client.viewport.off(
-            "pointermove", this.dragListener
-        );
-
-        this.client.viewport.removeChild(this.sprite);
     }
 
     get x() {
@@ -82,15 +76,25 @@ export class Entity extends TypedEmitter<EntityEvents> {
 
     setPosition(x: number, y: number) {
         this.position = new Point(x, y);
-        
-        this.sprite.position.copyFrom(
-            squareWorldPosition(x, y)
-        );
+        this.sprite.position = squareToWorldPosition(x, y);
     }
 
-    setColour(colour: ColorSource) {
-        this.sprite.tint = colour;
+    setColour(newColour: ColorSource) {
+        this.sprite.tint = newColour;
     }
+
+    spawn() {
+        this.client.viewport.addChild(this.sprite);
+        return this;
+    }
+
+    despawn() {
+        if (this.dragListener) this.client.viewport.off(
+            "pointermove", this.dragListener
+        );
+
+        this.sprite.destroy();
+    } 
 
     setControllable(controllable: boolean) {
         if (!controllable) {
@@ -105,17 +109,18 @@ export class Entity extends TypedEmitter<EntityEvents> {
 
         const viewport = this.client.viewport;
         
+        // When entity is held
         this.sprite.on("pointerdown", event => {
             this.held = true;
-
-            this.setSize(this.originalSize * 1.1);
             this.sprite.position = viewport.toWorld(event.global);
+            this.setSize(this.originalSize * 1.1);
 
-            this.client.viewport.plugins.pause("drag");
+            viewport.plugins.pause("drag");
 
             this.emit("hold");
         });
 
+        // When entity is dragged around
         this.dragListener = event => {
             if (!this.held) return;
 
@@ -125,30 +130,30 @@ export class Entity extends TypedEmitter<EntityEvents> {
             this.emit("drag", worldPosition);
         };
 
-        this.client.viewport.on("pointermove", this.dragListener);
+        viewport.on("pointermove", this.dragListener);
 
+        // When entity is dropped
         const dropEntity = () => {
             this.held = false;
-
             this.setSize(this.originalSize);
 
-            const newX = Math.floor(this.sprite.position.x / squareSize);
-            const newY = Math.floor(this.sprite.position.y / squareSize);
+            this.emit("drop", new Point(this.sprite.x, this.sprite.y));
 
-            let cancelled = false;
+            const fromSquare = this.position.clone();
 
-            if (this.position.x != newX || this.position.y != newY) {
-                this.emit("drop",
-                    new Point(this.position.x, this.position.y),
-                    new Point(newX, newY),
-                    () => cancelled = true
-                );
-            }
+            const toSquare = worldToSquarePosition(
+                this.sprite.x, this.sprite.y
+            );
 
-            if (cancelled) {
-                this.setPosition(this.position.x, this.position.y);
-            } else {
-                this.setPosition(newX, newY);
+            this.setPosition(toSquare.x, toSquare.y);
+            
+            if (!fromSquare.equals(toSquare)) {
+                this.emit("move", fromSquare, toSquare, () => {
+                    this.setPosition(fromSquare.x, fromSquare.y);
+
+                    // UPON MOVE CANCEL, PLAY SOUND
+                    console.log("move was cancelled!");
+                });
             }
 
             viewport.plugins.resume("drag");

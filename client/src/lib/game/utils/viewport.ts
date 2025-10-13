@@ -1,6 +1,6 @@
 import { chunkSize } from "@/constants/squares";
 import { InitialisedGameClient } from "../Client";
-import { squareChunkWorldPosition, squareWorldPosition } from "./world-position";
+import { squareChunkWorldPosition, squareToWorldPosition } from "./world-position";
 
 const renderDistance = chunkSize * (
     Number(import.meta.env.PUBLIC_RENDER_DISTANCE) || 2
@@ -38,6 +38,6 @@ export function moveViewportToSquare(
     squareY: number
 ) {
     client.viewport.moveCenter(
-        squareWorldPosition(squareX, squareY)
+        squareToWorldPosition(squareX, squareY)
     );
 }

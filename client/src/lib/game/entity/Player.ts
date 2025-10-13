@@ -1,4 +1,4 @@
-import { Point, ColorSource, Sprite } from "pixi.js";
+import { Point, ColorSource, Texture } from "pixi.js";
 
 import { chunkSquareCount } from "shared/lib/world-chunks";
 import { pieceImages } from "@/constants/utils";
@@ -24,7 +24,7 @@ export class Player extends Entity {
     inventory: string[];
 
     constructor(opts: PlayerOptions) {
-        super({ ...opts, sprite: Sprite.from(pieceImages.wK) });
+        super({ ...opts, texture: Texture.from(pieceImages.wK) });
 
         this.userId = opts.userId;
         this.health = opts.health;
@@ -33,17 +33,6 @@ export class Player extends Entity {
         this.moveHints = new MoveHints(
             this, this.getLegalMoves.bind(this)
         );
-
-        this.on("hold", this.onHold);
-        this.on("drop", this.onDrop);
-    }
-
-    private onHold() {
-        this.moveHints.render();
-    }
-
-    private onDrop(from: Point, to: Point) {
-        this.client.socket;
     }
 
     getLegalMoves() {

@@ -1,139 +1,26 @@
 import { Container, Graphics, Point, Rectangle } from "pixi.js";
-import { findKey } from "es-toolkit";
 
 import { squareSize } from "@/constants/squares";
 import { Entity, EntityEvents } from "../entity/Entity";
-import { squareWorldPosition } from "./world-position";
-
-export class OldMoveHints {
-    entity: Entity;
-    squareGenerator: () => Point[];
-
-    visible = false;
-
-    private hintContainers = new Set<Container>();
-
-    private entityDragListener?: EntityEvents["drag"];
-    private entityDropListener?: EntityEvents["drop"];
-
-    constructor(
-        entity: Entity,
-        squareGenerator: () => Point[]
-    ) {
-        this.entity = entity;
-        this.squareGenerator = squareGenerator;
-    }
-
-    clear() {
-        for (const container of this.hintContainers)
-            container.destroy();
-
-        this.hintContainers.clear();
-
-        if (this.entityDragListener)
-            this.entity.off("drag", this.entityDragListener);
-
-        if (this.entityDropListener)
-            this.entity.off("drop", this.entityDropListener);
-
-        this.entityDragListener = undefined;
-        this.entityDropListener = undefined;
-
-        this.visible = false;
-    }
-
-    render() {
-        this.clear();
-
-        const squares = this.squareGenerator();
-
-        // Remove hints when piece is dropped
-        const dropListener: EntityEvents["drop"] = (from, to, cancel) => {
-            this.clear();
-
-            if (!squares.some(square => square.equals(to))) cancel?.();
-        };
-
-        this.entityDropListener = dropListener;
-        this.entity.on("drop", dropListener);
-
-        // Generate move hint objects
-        for (const square of squares) {
-            const moveHintContainer = new Container();
-
-            const squareCorner = new Point(
-                square.x * squareSize,
-                square.y * squareSize
-            );
-            const squarePosition = squareWorldPosition(square.x, square.y);
-
-            // Square container with correct hover area
-            const moveHintSquare = new Graphics()
-                .rect(squareCorner.x, squareCorner.y, squareSize, squareSize)
-                .fill("#00000000");
-            moveHintSquare.eventMode = "static";
-            moveHintSquare.zIndex = 1;
-            moveHintContainer.addChild(moveHintSquare);
-
-            // Move Hint circle
-            moveHintContainer.addChild(new Graphics()
-                .circle(squarePosition.x, squarePosition.y, 0.15 * squareSize)
-                .fill("#ffffff25")
-            );
-
-            // Inset outline when square is hovered with piece
-            const hoverOutline = new Graphics()
-                .rect(
-                    squareCorner.x, squareCorner.y,
-                    squareSize, squareSize
-                )
-                .stroke({
-                    width: 0.05 * squareSize,
-                    color: "#ffffff",
-                    alignment: 1
-                });
-
-            // Outline hovered move hint squares
-            const dragListener: EntityEvents["drag"] = point => {
-                if (moveHintSquare.containsPoint(point)) {
-                    moveHintContainer.addChild(hoverOutline);
-                } else {
-                    moveHintContainer.removeChild(hoverOutline);
-                }
-            };
-
-            this.entityDragListener = dragListener;
-            this.entity.on("drag", dragListener);          
-
-            // Move when a hint is clicked
-            moveHintSquare.on("pointerdown", () => {
-                this.entity.setPosition(square.x, square.y);
-
-                this.entity.emit("drop",
-                    this.entity.position,
-                    new Point(square.x, square.y)
-                );
-            });
-            
-            this.entity.client.viewport.addChild(moveHintContainer);
-            this.hintContainers.add(moveHintContainer);
-        }
-
-        this.visible = true;
-    }
-}
 
 type SquareGenerator = () => Point[];
+
+type EntityListeners = {
+    [K in keyof EntityEvents]: EntityEvents[K][];
+};
 
 export class MoveHints {
     entity: Entity;
     generateSquares: SquareGenerator;
 
+    visible = false;
+
     private hintContainers: Container[] = [];
     private activeHoverOutlines: Container[] = [];
 
-    private entityDragListener?: EntityEvents["drag"];
-    private entityDropListener?: EntityEvents["drop"];
+    private entityListeners: EntityListeners = {
+        drag: [], drop: [], hold: [], move: []
+    };
 
     constructor(
         entity: Entity,
@@ -141,6 +28,10 @@ export class MoveHints {
     ) {
         this.entity = entity;
         this.generateSquares = squareGenerator;
+
+        entity.on("hold", () => {
+            this.render();
+        });
     }
 
     clear() {
@@ -149,18 +40,21 @@ export class MoveHints {
 
         this.hintContainers = [];
 
-        if (this.entityDragListener)
-            this.entity.off("drag", this.entityDragListener);
+        const listenerPairs = Object.entries(this.entityListeners);
 
-        if (this.entityDropListener)
-            this.entity.off("drop", this.entityDropListener);
+        for (const [event, listeners] of listenerPairs) {
+            for (const listener of listeners) {
+                this.entity.off(event as keyof EntityEvents, listener);
+            }
+        }
 
-        this.entityDragListener = undefined;
-        this.entityDropListener = undefined;
+        this.visible = false;
     }
 
     render() {
         console.log("rendered");
+
+        if (this.visible) this.clear();
 
         for (const square of this.generateSquares()) {
             const container = new Container({
@@ -173,14 +67,10 @@ export class MoveHints {
                 eventMode: "static"
             });
 
-            const center = squareWorldPosition(square.x, square.y);
-
             container.addChild(new Graphics()
                 .circle(squareSize / 2, squareSize / 2, 0.15 * squareSize)
                 .fill("#ffffff25")
             );
-
-            console.log(`${center.x}, ${center.y}`);
 
             container.addChild(
                 new Graphics({ label: "hover", visible: false })
@@ -196,7 +86,8 @@ export class MoveHints {
             this.entity.client.viewport.addChild(container);
         }
 
-        this.entityDragListener = point => {
+        // When entity is dragged over hints
+        const entityDragListener: EntityEvents["drag"] = point => {
             const hoverOutline = this.hintContainers
                 .find(hint => hint.hitArea?.contains(point.x, point.y))
                 ?.getChildByLabel("hover");
@@ -213,12 +104,18 @@ export class MoveHints {
             }
         };
 
-        this.entityDropListener = () => {
+        this.entityListeners.drag.push(entityDragListener);
+        this.entity.on("drag", entityDragListener);
+
+        // When entity is dropped
+        const entityDropListener: EntityEvents["drop"] = () => {
             console.log("dropped");
             this.clear();
-        }
+        };
 
-        this.entity.on("drag", this.entityDragListener);
-        this.entity.on("drop", this.entityDropListener);
+        this.entityListeners.drop.push(entityDropListener);
+        this.entity.on("drop", entityDropListener);
+
+        this.visible = true;
     }
 }
