@@ -5,22 +5,19 @@ import { Entity, EntityEvents } from "../entity/Entity";
 
 type SquareGenerator = () => Point[];
 
-type EntityListeners = {
-    [K in keyof EntityEvents]: EntityEvents[K][];
-};
-
 export class MoveHints {
     entity: Entity;
     generateSquares: SquareGenerator;
 
     visible = false;
 
+    private alreadyDropped = false;
+
+    private squares: Point[] = [];
     private hintContainers: Container[] = [];
     private activeHoverOutlines: Container[] = [];
 
-    private entityListeners: EntityListeners = {
-        drag: [], drop: [], hold: [], move: []
-    };
+    private entityListeners: Partial<EntityEvents> = {};
 
     constructor(
         entity: Entity,
@@ -28,42 +25,94 @@ export class MoveHints {
     ) {
         this.entity = entity;
         this.generateSquares = squareGenerator;
+    
+        // Show when entity is held
+        this.entityListeners.hold = () => {
+            if (!this.visible) this.show();
+        };
 
-        entity.on("hold", () => {
-            this.render();
-        });
+        this.entity.on("hold", this.entityListeners.hold);
+
+        // Hide when entity dropped and was put down since hints shown
+        this.entityListeners.drop = () => {
+            if (!this.alreadyDropped) {
+                this.alreadyDropped = true;
+                return;
+            }
+
+            if (this.visible) {
+                this.hide();
+                this.alreadyDropped = false;
+            }
+        };
+
+        this.entity.on("drop", this.entityListeners.drop);
+
+        // When entity is dropped on another square
+        this.entityListeners.move = (from, to, cancel) => {
+            this.hide();
+
+            if (!this.squares.some(square => square.equals(to)))
+                cancel?.();
+
+            this.alreadyDropped = false;
+        };
+
+        this.entity.on("move", this.entityListeners.move);
+
+        // When entity is dragged over hints
+        this.entityListeners.drag = point => {
+            const hoverOutline = this.hintContainers.find(hint => {
+                const localPoint = hint.toLocal(
+                    point, this.entity.client.viewport
+                );
+
+                return hint.hitArea?.contains(localPoint.x, localPoint.y);
+            })?.getChildByLabel("hover");
+
+            for (const outline of this.activeHoverOutlines) {
+                outline.visible = false;
+            }
+
+            this.activeHoverOutlines = [];
+
+            if (hoverOutline) {
+                hoverOutline.visible = true;
+                this.activeHoverOutlines.push(hoverOutline);
+            }
+        };
+
+        this.entity.on("drag", this.entityListeners.drag);
     }
 
-    clear() {
+    detach() {
+        this.hide();
+
+        for (const event in this.entityListeners) {
+            const eventType = event as keyof EntityEvents;
+            this.entity.off(eventType, this.entityListeners[eventType]!);
+        }
+    }
+
+    hide() {
         for (const container of this.hintContainers)
             container.destroy();
 
         this.hintContainers = [];
 
-        const listenerPairs = Object.entries(this.entityListeners);
-
-        for (const [event, listeners] of listenerPairs) {
-            for (const listener of listeners) {
-                this.entity.off(event as keyof EntityEvents, listener);
-            }
-        }
-
         this.visible = false;
     }
 
-    render() {
-        console.log("rendered");
+    show() {
+        if (this.visible) this.hide();
 
-        if (this.visible) this.clear();
+        this.squares = this.generateSquares();
 
-        for (const square of this.generateSquares()) {
+        for (const square of this.squares) {
             const container = new Container({
                 x: square.x * squareSize,
                 y: square.y * squareSize,
-                hitArea: new Rectangle(
-                    square.x * squareSize, square.y * squareSize,
-                    squareSize, squareSize
-                ),
+                hitArea: new Rectangle(0, 0, squareSize, squareSize),
                 eventMode: "static"
             });
 
@@ -82,39 +131,21 @@ export class MoveHints {
                     })
             );
 
+            container.on("pointerdown", () => {
+                this.entity.emit("drop", new Point(
+                    square.x * squareSize,
+                    square.y * squareSize
+                ));
+
+                this.entity.emit("move", this.entity.position, square);
+
+                this.entity.setPosition(square.x, square.y);
+                this.hide();
+            });
+
             this.hintContainers.push(container);
             this.entity.client.viewport.addChild(container);
         }
-
-        // When entity is dragged over hints
-        const entityDragListener: EntityEvents["drag"] = point => {
-            const hoverOutline = this.hintContainers
-                .find(hint => hint.hitArea?.contains(point.x, point.y))
-                ?.getChildByLabel("hover");
-
-            for (const outline of this.activeHoverOutlines) {
-                outline.visible = false;
-            }
-
-            this.activeHoverOutlines = [];
-
-            if (hoverOutline) {
-                hoverOutline.visible = true;
-                this.activeHoverOutlines.push(hoverOutline);
-            }
-        };
-
-        this.entityListeners.drag.push(entityDragListener);
-        this.entity.on("drag", entityDragListener);
-
-        // When entity is dropped
-        const entityDropListener: EntityEvents["drop"] = () => {
-            console.log("dropped");
-            this.clear();
-        };
-
-        this.entityListeners.drop.push(entityDropListener);
-        this.entity.on("drop", entityDropListener);
 
         this.visible = true;
     }

@@ -18,7 +18,7 @@ export type EntityEvents = {
     hold: () => void;
     drag: (point: Point) => void;
     drop: (point: Point) => void;
-    move: (from: Point, to: Point, cancel: () => void) => void;
+    move: (from: Point, to: Point, cancel?: () => void) => void;
 };
 
 interface EntityOptions {
@@ -94,7 +94,7 @@ export class Entity extends TypedEmitter<EntityEvents> {
         );
 
         this.sprite.destroy();
-    } 
+    }
 
     setControllable(controllable: boolean) {
         if (!controllable) {
@@ -134,6 +134,8 @@ export class Entity extends TypedEmitter<EntityEvents> {
 
         // When entity is dropped
         const dropEntity = () => {
+            if (!this.held) return;
+
             this.held = false;
             this.setSize(this.originalSize);
 
