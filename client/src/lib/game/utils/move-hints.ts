@@ -1,4 +1,10 @@
-import { Container, Graphics, Point, Rectangle } from "pixi.js";
+import {
+    Container,
+    FederatedPointerEvent,
+    Graphics,
+    Point,
+    Rectangle
+} from "pixi.js";
 
 import { squareSize } from "@/constants/squares";
 import { Entity, EntityEvents } from "../entity/Entity";
@@ -18,6 +24,7 @@ export class MoveHints {
     private activeHoverOutlines: Container[] = [];
 
     private entityListeners: Partial<EntityEvents> = {};
+    private viewportClickListener?: (event: FederatedPointerEvent) => void;
 
     constructor(
         entity: Entity,
@@ -77,7 +84,7 @@ export class MoveHints {
         this.entity.on("drag", this.entityListeners.drag);
 
         // Hide hints when anywhere else is clicked
-        viewport.on("click", event => {
+        this.viewportClickListener = event => {
             const worldPosition = viewport.toWorld(event.global);
 
             if (this.getHoveredHint(worldPosition)) return;
@@ -87,7 +94,9 @@ export class MoveHints {
             )) return;
 
             this.hide();
-        });
+        };
+
+        viewport.on("click", this.viewportClickListener);
     }
 
     private getHoveredHint(mouseWorldPoint: Point) {
@@ -108,6 +117,10 @@ export class MoveHints {
             const eventType = event as keyof EntityEvents;
             this.entity.off(eventType, this.entityListeners[eventType]!);
         }
+
+        this.entity.client.viewport.off("click",
+            this.viewportClickListener
+        );
     }
 
     hide() {
