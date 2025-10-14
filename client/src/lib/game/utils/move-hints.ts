@@ -25,6 +25,8 @@ export class MoveHints {
     ) {
         this.entity = entity;
         this.generateSquares = squareGenerator;
+
+        const viewport = this.entity.client.viewport;
     
         // Show when entity is held
         this.entityListeners.hold = () => {
@@ -40,10 +42,7 @@ export class MoveHints {
                 return;
             }
 
-            if (this.visible) {
-                this.hide();
-                this.alreadyDropped = false;
-            }
+            if (this.visible) this.hide();
         };
 
         this.entity.on("drop", this.entityListeners.drop);
@@ -54,21 +53,14 @@ export class MoveHints {
 
             if (!this.squares.some(square => square.equals(to)))
                 cancel?.();
-
-            this.alreadyDropped = false;
         };
 
         this.entity.on("move", this.entityListeners.move);
 
         // When entity is dragged over hints
         this.entityListeners.drag = point => {
-            const hoverOutline = this.hintContainers.find(hint => {
-                const localPoint = hint.toLocal(
-                    point, this.entity.client.viewport
-                );
-
-                return hint.hitArea?.contains(localPoint.x, localPoint.y);
-            })?.getChildByLabel("hover");
+            const hoverOutline = this.getHoveredHint(point)
+                ?.getChildByLabel("hover");
 
             for (const outline of this.activeHoverOutlines) {
                 outline.visible = false;
@@ -83,6 +75,30 @@ export class MoveHints {
         };
 
         this.entity.on("drag", this.entityListeners.drag);
+
+        // Hide hints when anywhere else is clicked
+        viewport.on("click", event => {
+            const worldPosition = viewport.toWorld(event.global);
+
+            if (this.getHoveredHint(worldPosition)) return;
+
+            if (this.entity.sprite.containsPoint(
+                this.entity.sprite.toLocal(worldPosition, viewport)
+            )) return;
+
+            this.hide();
+        });
+    }
+
+    private getHoveredHint(mouseWorldPoint: Point) {
+        return this.hintContainers.find(hint => {
+            const localPoint = hint.toLocal(
+                mouseWorldPoint,
+                this.entity.client.viewport
+            );
+
+            return hint.hitArea?.contains(localPoint.x, localPoint.y);
+        });
     }
 
     detach() {
@@ -100,6 +116,7 @@ export class MoveHints {
 
         this.hintContainers = [];
 
+        this.alreadyDropped = false;
         this.visible = false;
     }
 
