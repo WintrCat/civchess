@@ -33,6 +33,13 @@ export class Player extends Entity {
         this.moveHints = new MoveHints(
             this, this.getLegalMoves.bind(this)
         );
+
+        this.on("move", (from, to, cancel) => {
+            if (!this.moveHints.squares.some(square => square.equals(to)))
+                return cancel?.();
+
+            console.log("eligible for move packet");
+        });
     }
 
     getLegalMoves() {

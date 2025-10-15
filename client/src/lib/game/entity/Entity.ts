@@ -18,7 +18,7 @@ export type EntityEvents = {
     hold: () => void;
     drag: (point: Point) => void;
     drop: (point: Point) => void;
-    move: (from: Point, to: Point, cancel?: () => void) => void;
+    move: (from: Point, to: Point, cancel: () => void) => void;
 };
 
 interface EntityOptions {
@@ -74,9 +74,14 @@ export class Entity extends TypedEmitter<EntityEvents> {
         return this.position.y;
     }
 
-    setPosition(x: number, y: number) {
-        this.position = new Point(x, y);
-        this.sprite.position = squareToWorldPosition(x, y);
+    setPosition(point: Point, cancellation = false) {
+        this.position = point;
+        this.sprite.position = squareToWorldPosition(point.x, point.y);
+
+        if (cancellation) {
+            // PLAY A CANCELLATION SOUND OR SOMETHING
+            console.log("position set for a move cancellation!");
+        }
     }
 
     setColour(newColour: ColorSource) {
@@ -147,15 +152,12 @@ export class Entity extends TypedEmitter<EntityEvents> {
                 this.sprite.x, this.sprite.y
             );
 
-            this.setPosition(toSquare.x, toSquare.y);
+            this.setPosition(toSquare);
             
             if (!fromSquare.equals(toSquare)) {
-                this.emit("move", fromSquare, toSquare, () => {
-                    this.setPosition(fromSquare.x, fromSquare.y);
-
-                    // UPON MOVE CANCEL, PLAY SOUND
-                    console.log("move was cancelled!");
-                });
+                this.emit("move", fromSquare, toSquare,
+                    () => this.setPosition(fromSquare, true)
+                );
             }
 
             viewport.plugins.resume("drag");

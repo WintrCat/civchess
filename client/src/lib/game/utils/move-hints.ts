@@ -16,10 +16,10 @@ export class MoveHints {
     generateSquares: SquareGenerator;
 
     visible = false;
+    squares: Point[] = [];
 
     private alreadyDropped = false;
 
-    private squares: Point[] = [];
     private hintContainers: Container[] = [];
     private activeHoverOutlines: Container[] = [];
 
@@ -55,12 +55,7 @@ export class MoveHints {
         this.entity.on("drop", this.entityListeners.drop);
 
         // When entity is dropped on another square
-        this.entityListeners.move = (from, to, cancel) => {
-            this.hide();
-
-            if (!this.squares.some(square => square.equals(to)))
-                cancel?.();
-        };
+        this.entityListeners.move = () => this.hide();
 
         this.entity.on("move", this.entityListeners.move);
 
@@ -167,9 +162,14 @@ export class MoveHints {
                     square.y * squareSize
                 ));
 
-                this.entity.emit("move", this.entity.position, square);
+                const fromPosition = this.entity.position.clone();
 
-                this.entity.setPosition(square.x, square.y);
+                this.entity.setPosition(square);
+
+                this.entity.emit("move", fromPosition, square,
+                    () => this.entity.setPosition(fromPosition, true)
+                );
+                
                 this.hide();
             });
 
