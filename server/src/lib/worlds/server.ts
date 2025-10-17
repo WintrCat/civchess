@@ -16,6 +16,10 @@ export function playerCountKey(worldCode: string) {
     return `${worldCode}:socket-count`;
 }
 
+export function worldChunkSizeKey(worldCode: string) {
+    return `${worldCode}:world-chunk-size`;
+}
+
 /**
  * @description Will throw an error if the world is already online,
  * or if the given world code doesn't exist.
@@ -61,6 +65,7 @@ export async function shutdownWorld(worldCode: string) {
     // Delete world's Redis keys
     await getRedisClient().del(worldCode);
     await getRedisClient().del(playerCountKey(worldCode));
+    await getRedisClient().del(worldChunkSizeKey(worldCode));
 
     return true;
 }

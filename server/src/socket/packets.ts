@@ -40,8 +40,13 @@ export function attachPacketHandlers(
             try {
                 await middleware?.(socket, handler.type, packet);
                 await handler.handle(packet, socket);
-            } catch {
-                kickPlayer(socket, "Illegal packet.");
+            } catch (err) {
+                console.log("Failed to handle packet:");
+                console.log(err);
+
+                kickPlayer(socket, err instanceof Error
+                    ? err.message : "Illegal packet."
+                );
             }
         });
     }

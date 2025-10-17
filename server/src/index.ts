@@ -30,7 +30,7 @@ async function main() {
 
     // Connect databases
     await connectDatabase();
-    connectRedisClient();
+    await connectRedisClient();
 
     // Create servers
     const app = express();

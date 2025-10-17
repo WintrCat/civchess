@@ -2,7 +2,7 @@ import { omit } from "es-toolkit";
 
 import { Chunk } from "shared/types/world/Chunk";
 import { chunkSquareCount, getChunkCoordinates } from "shared/lib/world-chunks";
-import { getChunk } from "./world-chunks";
+import { getChunk } from "./chunks";
 
 interface SearchNode {
     x: number;

@@ -1,5 +1,4 @@
-import { coordinateIndex } from "shared/types/world/OnlineWorld";
-import { chunkSquareCount } from "shared/lib/world-chunks";
+import { coordinateIndex, chunkSquareCount } from "shared/lib/world-chunks";
 import { LocalSquare } from "../types/world-chunks";
 import { createPacketHandler } from "../SocketClient";
 

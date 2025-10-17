@@ -2,7 +2,7 @@ import { Point } from "pixi.js";
 
 import { PieceType } from "shared/constants/PieceType";
 import { PublicProfile } from "shared/types/PublicProfile";
-import { getChunkCoordinates } from "shared/lib/world-chunks";
+import { coordinateIndex, getChunkCoordinates } from "shared/lib/world-chunks";
 import { PlayerPiece } from "shared/types/world/pieces/Player";
 import { Piece } from "shared/types/world/Piece";
 import { LocalChunk } from "./types/world-chunks";
@@ -12,8 +12,9 @@ import { GameClient } from "./Client";
 export class LocalWorld {
     client: GameClient;
 
+    // Coordinate Index -> Local Chunk 
+    localChunks: Record<string, LocalChunk> = {};
     chunkSize?: number;
-    localChunks: LocalChunk[][] = [];
 
     // User ID -> Public Profile
     playerlist: Record<string, PublicProfile> = {};
@@ -24,13 +25,20 @@ export class LocalWorld {
     }
 
     // Manage chunks
-    setLocalChunk(chunkX: number, chunkY: number, chunk: LocalChunk) {
-        this.localChunks[chunkY] ??= [];
-        this.localChunks[chunkY][chunkX] = chunk;
+    setLocalChunk(
+        chunkX: number,
+        chunkY: number,
+        chunk: LocalChunk | undefined
+    ) {
+        if (chunk) {
+            this.localChunks[coordinateIndex(chunkX, chunkY)] = chunk;
+        } else {
+            delete this.localChunks[coordinateIndex(chunkX, chunkY)];
+        }
     }
 
     getLocalChunk(chunkX: number, chunkY: number) {
-        return this.localChunks.at(chunkY)?.at(chunkX);
+        return this.localChunks[coordinateIndex(chunkX, chunkY)];
     }
 
     getSquareLocalChunk(squareX: number, squareY: number) {

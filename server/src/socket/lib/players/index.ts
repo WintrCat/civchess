@@ -28,6 +28,21 @@ export async function getPlayers(worldCode: string) {
     );
 }
 
+export async function setPlayerPosition(
+    worldCode: string,
+    userId: string,
+    x: number,
+    y: number
+) {
+    await getRedisClient().json.set(
+        worldCode, `$.players.${userId}.x`, x 
+    );
+
+    await getRedisClient().json.set(
+        worldCode, `$.players.${userId}.y`, y 
+    );
+}
+
 export function kickPlayer(
     socket: ManageableSocket | BroadcastOperator<{}, {}>,
     reason: string,

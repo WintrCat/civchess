@@ -1,9 +1,10 @@
 import { Socket, Server as SocketServer } from "socket.io";
 
-import { coordinateIndex } from "shared/types/world/OnlineWorld";
+import { coordinateIndex } from "shared/lib/world-chunks";
 import { getChunkCoordinates } from "shared/lib/world-chunks";
 import { isIdentified } from "@/types/SocketIdentity";
-import { setSquarePiece, getChunkBroadcaster } from "./lib/world-chunks";
+import { setSquarePiece } from "./lib/chunks/squares";
+import { getChunkBroadcaster } from "./lib/chunks/subscribers";
 import { getPlayer } from "./lib/players";
 import { decrementPlayerCount } from "./lib/players/count";
 import { sendPacket } from "./packets";

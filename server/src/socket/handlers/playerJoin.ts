@@ -3,7 +3,7 @@ import { Types } from "mongoose";
 import { randomInt } from "es-toolkit";
 
 import { PieceType } from "shared/constants/PieceType";
-import { coordinateIndex } from "shared/types/world/OnlineWorld";
+import { coordinateIndex } from "shared/lib/world-chunks";
 import { PlayerPiece } from "shared/types/world/pieces/Player";
 import { chunkSquareCount, getChunkCoordinates } from "shared/lib/world-chunks";
 import { SocketIdentity } from "@/types/SocketIdentity";
@@ -13,13 +13,12 @@ import { isWorldOnline } from "@/lib/worlds/server";
 import { worldExists } from "@/lib/worlds/fetch";
 import { getPublicProfile } from "@/lib/public-profile";
 import { getSocketServer } from "@/socket";
+import { getSurroundingChunks, getWorldChunkSize, } from "../lib/chunks";
+import { setSquarePiece } from "../lib/chunks/squares";
 import {
-    getChunkBroadcaster,
-    getSurroundingChunks,
-    getWorldChunkSize,
     setChunkSubscription,
-    setSquarePiece
-} from "../lib/world-chunks";
+    getChunkBroadcaster
+} from "../lib/chunks/subscribers";
 import { findNearestEmptySquare } from "../lib/empty-square";
 import { getPlayer, kickPlayer } from "../lib/players";
 import { isWhitelistActive, isPlayerWhitelisted } from "../lib/players/whitelist";

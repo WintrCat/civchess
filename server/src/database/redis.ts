@@ -1,8 +1,11 @@
+import { readFileSync } from "fs";
 import { Redis } from "ioredis";
 
-type ObjectValue = string | number | boolean | object | null;
+type ObjectValue = string | number | boolean | object;
 
 class ExtendedRedis extends Redis {
+    private moveScript?: string;
+
     private async getNumericalResponse(
         command: string,
         key: string,
@@ -12,6 +15,18 @@ class ExtendedRedis extends Redis {
         if (!Array.isArray(response)) return 0;
 
         return Number(response.at(0)) || 0;
+    }
+
+    async loadScripts() {
+        const scriptsFolder = "server/src/database/scripts";
+
+        this.moveScript = String(
+            await this.script("LOAD", readFileSync(
+                `${scriptsFolder}/move.lua`, "utf-8"
+            ))
+        );
+
+        return this;
     }
 
     json = {
@@ -61,51 +76,37 @@ class ExtendedRedis extends Redis {
             return await this.getNumericalResponse("json.arrlen", key, path);
         },
 
-        push: async <Val extends ObjectValue>(
-            key: string,
-            path: string,
-            value: Val,
-            defaultArray?: Val[]
-        ) => {
-            if (defaultArray)
-                await this.json.set(key, path, defaultArray, "NX");
+        move: async (key: string, path: string, newPath: string) => {
+            if (!this.moveScript) return;
 
-            await this.call(
-                "json.arrappend", key, path, JSON.stringify(value)
+            await this.evalsha(this.moveScript,
+                1, key, path, newPath
             );
-        },
-
-        remove: async (key: string, path: string, value: ObjectValue) => {
-            const indexResponse = await this.call(
-                "json.arrindex", key, path, JSON.stringify(value)
-            );
-            if (!Array.isArray(indexResponse)) return false;
-
-            const index = indexResponse.at(0);
-            if (typeof index != "number") return false;
-
-            await this.call("json.arrpop", key, path, index);
-
-            return true;
         }
     };
 }
 
 let instance: ExtendedRedis | null = null;
 
-export function connectRedisClient() {
+export async function connectRedisClient() {
     if (!process.env.REDIS_DATABASE_URI)
         return console.log("redis database uri not specified.");
 
     const parsedURI = new URL(process.env.REDIS_DATABASE_URI);
 
-    return instance = new ExtendedRedis({
+    const connection = new ExtendedRedis({
         host: parsedURI.hostname,
         port: Number(parsedURI.port)
-    }).on("error", err => {
+    });
+
+    connection.on("error", err => {
         console.log("failed to connect to redis database:");
         console.log(err);
     });
+
+    await connection.loadScripts();
+
+    return instance = connection;
 }
 
 export function getRedisClient() {
