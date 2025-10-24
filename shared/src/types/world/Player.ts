@@ -5,7 +5,8 @@ export const playerSchema = z.object({
     x: z.int(),
     y: z.int(),
     colour: z.string(),
-    inventory: z.string().array()
+    inventory: z.string().array(),
+    health: z.int(),
 });
 
 export type Player = z.infer<typeof playerSchema>;

@@ -1,5 +1,6 @@
 import { coordinateIndex, chunkSquareCount } from "shared/lib/world-chunks";
-import { LocalSquare } from "../types/world-chunks";
+import { LocalChunk } from "../world/LocalChunk";
+import { LocalSquare } from "../world/LocalSquare";
 import { createPacketHandler } from "../SocketClient";
 
 export const worldChunkLoadHandler = createPacketHandler({
@@ -23,12 +24,14 @@ export const worldChunkLoadHandler = createPacketHandler({
                         : client.world.pieceToEntity(x, y, runtimePiece)
                 );
 
-                return new LocalSquare(client, x, y, square.type,
-                    (persistentEntity || runtimeEntity)?.spawn()
-                );
+                const entity = (persistentEntity || runtimeEntity)?.spawn();
+
+                return new LocalSquare(client, x, y, square.type, entity);
             })
         ));
 
-        client.world.setLocalChunk(packet.x, packet.y, { squares });
+        client.world.setLocalChunk(packet.x, packet.y,
+            new LocalChunk(client.world, squares)
+        );
     }
 });

@@ -5,9 +5,9 @@ import { PublicProfile } from "shared/types/PublicProfile";
 import { coordinateIndex, getChunkCoordinates } from "shared/lib/world-chunks";
 import { PlayerPiece } from "shared/types/world/pieces/Player";
 import { Piece } from "shared/types/world/Piece";
-import { LocalChunk } from "./types/world-chunks";
-import { Player } from "./entity/Player";
-import { GameClient } from "./Client";
+import { GameClient } from "../Client";
+import { LocalChunk } from "./LocalChunk";
+import { Player } from "../entity/Player";
 
 export class LocalWorld {
     client: GameClient;
@@ -30,10 +30,13 @@ export class LocalWorld {
         chunkY: number,
         chunk: LocalChunk | undefined
     ) {
+        const coordIndex = coordinateIndex(chunkX, chunkY);
+
         if (chunk) {
-            this.localChunks[coordinateIndex(chunkX, chunkY)] = chunk;
+            this.localChunks[coordIndex] = chunk;
         } else {
-            delete this.localChunks[coordinateIndex(chunkX, chunkY)];
+            this.localChunks[coordIndex]?.unload();
+            delete this.localChunks[coordIndex];
         }
     }
 

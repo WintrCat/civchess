@@ -13,6 +13,7 @@ import {
     squareToWorldPosition,
     worldToSquarePosition
 } from "../utils/world-position";
+import { Layer } from "../constants/Layer";
 
 export type EntityEvents = {
     hold: () => void;
@@ -51,7 +52,7 @@ export class Entity extends TypedEmitter<EntityEvents> {
         this.sprite = new Sprite({
             texture: opts.texture,
             anchor: 0.5,
-            zIndex: 1,
+            zIndex: Layer.ENTITIES,
             position: squareToWorldPosition(this.position),
             width: this.originalSize,
             height: this.originalSize,
@@ -90,6 +91,7 @@ export class Entity extends TypedEmitter<EntityEvents> {
 
     spawn() {
         this.client.viewport.addChild(this.sprite);
+        
         return this;
     }
 

@@ -27,7 +27,7 @@ export function createSocketServer(httpServer: HTTPServer) {
     });
 
     server.on("connect", socket => {
-        attachPacketHandlers(socket, handlers, packetMiddleware);
+        attachPacketHandlers(socket, server, handlers, packetMiddleware);
 
         socket.on("disconnect", () => (
             handleDisconnect(server, socket)

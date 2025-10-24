@@ -1,4 +1,4 @@
-import { Socket } from "socket.io";
+import { Socket, Server as SocketServer } from "socket.io";
 
 import {
     ServerboundPacketType,
@@ -16,7 +16,8 @@ interface PacketHandler<Type extends ServerboundPacketType> {
     type: Type,
     handle: (
         packet: ServerboundPacketTypeMap[Type],
-        socket: Socket
+        socket: Socket,
+        server: SocketServer
     ) => void | Promise<void>
 };
 
@@ -32,6 +33,7 @@ export function createPacketHandler<Type extends ServerboundPacketType>(
 
 export function attachPacketHandlers(
     socket: Socket,
+    server: SocketServer,
     handlers: AnyPacketHandler[],
     middleware?: PacketMiddleware
 ) {
@@ -39,7 +41,7 @@ export function attachPacketHandlers(
         socket.on(handler.type, async packet => {
             try {
                 await middleware?.(socket, handler.type, packet);
-                await handler.handle(packet, socket);
+                await handler.handle(packet, socket, server);
             } catch (err) {
                 console.log("Failed to handle packet:");
                 console.log(err);
@@ -59,7 +61,7 @@ export function sendPacket<
     socket: Receiver,
     type: Type,
     packet: ClientboundPacketTypeMap[Type],
-    configureSender = (socket: Receiver): EmittableSocket => socket
+    configureSender = (): EmittableSocket => socket
 ) {
-    configureSender(socket).emit(type, packet);
+    configureSender().emit(type, packet);
 }

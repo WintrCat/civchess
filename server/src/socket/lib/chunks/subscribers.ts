@@ -1,5 +1,14 @@
 import { Socket, Server as SocketServer } from "socket.io";
+
 import { SocketIdentity } from "@/types/SocketIdentity";
+
+export function chunkSubscriptionRoom(
+    worldCode: string,
+    x: number,
+    y: number
+) {
+    return `${worldCode}:chunk-${x}-${y}`;
+}
 
 export async function setChunkSubscription(
     socket: Socket,
@@ -7,8 +16,8 @@ export async function setChunkSubscription(
     y: number,
     subscribed: boolean
 ) {
-    const identity = socket.data as SocketIdentity;
-    const subRoom = `${identity.worldCode}:chunk-${x}-${y}`;
+    const id = socket.data as SocketIdentity;
+    const subRoom = chunkSubscriptionRoom(id.worldCode, x, y);
 
     if (subscribed) {
         await socket.join(subRoom);
@@ -23,8 +32,10 @@ export function getChunkBroadcaster(
     x: number,
     y: number
 ) {
-    if (socket instanceof SocketServer)
-        return socket.to(`${worldCode}:chunk-${x}-${y}`);
+    const subRoom = chunkSubscriptionRoom(worldCode, x, y);
 
-    return socket.broadcast.to(`${worldCode}:chunk-${x}-${y}`);
+    if (socket instanceof SocketServer)
+        return socket.to(subRoom);
+
+    return socket.broadcast.to(subRoom);
 }

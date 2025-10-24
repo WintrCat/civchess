@@ -1,7 +1,14 @@
 import { Point, ColorSource, Texture } from "pixi.js";
+import { difference } from "es-toolkit";
 
-import { chunkSquareCount } from "shared/lib/world-chunks";
+import {
+    chunkSquareCount,
+    coordinateIndex,
+    getChunkCoordinates,
+    getSurroundingPositions
+} from "shared/lib/world-chunks";
 import { pieceImages } from "@/constants/utils";
+import { renderDistance } from "@/constants/squares";
 import { MoveHints } from "../utils/move-hints";
 import { clampViewportAroundSquare } from "../utils/viewport";
 import { InitialisedGameClient } from "../Client";
@@ -47,40 +54,51 @@ export class Player extends Entity {
             if (this.client.world.localPlayer?.userId == this.userId) {
                 clampViewportAroundSquare(this.client, to.x, to.y);
 
-                // Move the local player piece client side, doesn't necessarily need to be
-                // after player move packet is sent and piece move packet is relayed
-                // Delete runtime chunk entry for current pos and make one for new pos
-                // Runtime chunks not connected to entity so don't worry
+                // Move entity to new local square
+                const fromSquare = this.client.world
+                    .getLocalSquare(from.x, from.y);
 
-                // Unload chunks that you do not need.
-                // Will need to diff chunks client side for this.
-                // Technically you can just pick() the localChunks
+                const toSquare = this.client.world.getLocalSquare(to.x, to.y);
+
+                if (toSquare) {
+                    this.client.world
+                        .getLocalSquare(from.x, from.y)
+                        ?.moveEntity(toSquare);
+                } else {
+                    fromSquare?.update({ piece: null });
+                }
+
+                // Unload chunks that are no longer in render distance
+                const { chunkX, chunkY } = getChunkCoordinates(to.x, to.y);
+
+                const requiredChunks = getSurroundingPositions(
+                    chunkX, chunkY, {
+                        radius: renderDistance,
+                        max: this.client.world.chunkSize,
+                        includeCenter: true
+                    }
+                ).map(pos => coordinateIndex(pos.x, pos.y)).toArray();
+
+                const unneededChunks = difference(
+                    Object.keys(this.client.world.localChunks),
+                    requiredChunks
+                );
+
+                for (const coordIndex of unneededChunks) {
+                    const { x, y } = coordinateIndex(coordIndex);
+                    this.client.world.setLocalChunk(x, y, undefined);
+                }
             }
         });
     }
 
     getLegalMoves() {
-        const legalMoves: Point[] = [];
+        const { x, y } = this.position;
 
-        const worldSquareSize = this.client.world.chunkSize
-            ? this.client.world.chunkSize * chunkSquareCount
-            : Infinity;
-
-        const bounds = {
-            startX: Math.max(0, this.position.x - 1),
-            startY: Math.max(0, this.position.y - 1),
-            endX: Math.min(worldSquareSize - 1, this.position.x + 1),
-            endY: Math.min(worldSquareSize - 1, this.position.y + 1)
-        };
-
-        for (let y = bounds.startY; y <= bounds.endY; y++) {
-            for (let x = bounds.startX; x <= bounds.endX; x++) {
-                if (x == this.position.x && y == this.position.y) continue;
-
-                legalMoves.push(new Point(x, y));
-            }
-        }
-
-        return legalMoves;
+        return getSurroundingPositions(x, y, {
+            max: this.client.world.chunkSize
+                ? this.client.world.chunkSize * chunkSquareCount
+                : Infinity
+        }).map(({ x, y }) => new Point(x, y));
     }
 }

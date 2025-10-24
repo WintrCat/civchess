@@ -1,32 +1,28 @@
 import { RuntimeChunk } from "shared/types/world/OnlineWorld";
 import { Chunk } from "shared/types/world/Chunk";
-import { coordinateIndex, getChunkCoordinates } from "shared/lib/world-chunks";
+import {
+    coordinateIndex,
+    getChunkCoordinates,
+    getSurroundingBounds
+} from "shared/lib/world-chunks";
 import { getRedisClient } from "@/database/redis";
 import { worldChunkSizeKey } from "@/lib/worlds/server";
 
-function getRenderDistance() {
+export function getRenderDistance() {
     return Number(process.env.PUBLIC_RENDER_DISTANCE) || 2;
 }
 
 async function getSurroundingChunkBounds(
-    worldCode: string,
     squareX: number,
     squareY: number,
-    respectWorldSize = true
+    worldCode?: string
 ) {
-    const renderDistance = getRenderDistance();
-    const worldSize = respectWorldSize
-        ? await getWorldChunkSize(worldCode)
-        : Infinity;
-
     const { chunkX, chunkY } = getChunkCoordinates(squareX, squareY);
 
-    return {
-        startX: Math.max(0, chunkX - renderDistance),
-        startY: Math.max(0, chunkY - renderDistance),
-        endX: Math.min(worldSize - 1, chunkX + renderDistance),
-        endY: Math.min(worldSize - 1, chunkY + renderDistance)
-    };
+    return getSurroundingBounds(chunkX, chunkY, {
+        radius: getRenderDistance(),
+        max: worldCode ? await getWorldChunkSize(worldCode) : Infinity
+    });
 }
 
 export async function getWorldChunkSize(worldCode: string) {
@@ -76,12 +72,12 @@ export async function* getSurroundingChunks(
         previousSquareY: number
     }
 ) {
-    const bounds = await getSurroundingChunkBounds(
-        worldCode, squareX, squareY
+    const previousBounds = diff && await getSurroundingChunkBounds(
+        diff.previousSquareX, diff.previousSquareY
     );
 
-    const previousBounds = diff && await getSurroundingChunkBounds(
-        worldCode, diff.previousSquareX, diff.previousSquareY
+    const bounds = await getSurroundingChunkBounds(
+        squareX, squareY, worldCode
     );
 
     for (let y = bounds.startY; y <= bounds.endY; y++) {

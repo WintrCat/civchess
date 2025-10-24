@@ -1,16 +1,11 @@
-import { Graphics } from "pixi.js";
+import { Graphics, Point } from "pixi.js";
 
-import { Chunk } from "shared/types/world/Chunk";
+import { Square } from "shared/types/world/Square";
 import { SquareType } from "shared/constants/SquareType";
 import { Updates } from "shared/types/packets/clientbound/WorldChunkUpdatePacket";
 import { squareColours, squareSize } from "@/constants/squares";
 import { InitialisedGameClient } from "../Client";
 import { Entity } from "../entity/Entity";
-import { Square } from "shared/types/world/Square";
-
-export type LocalChunk = Omit<Chunk, "squares"> & {
-    squares: LocalSquare[][];
-};
 
 export class LocalSquare {
     client: InitialisedGameClient;
@@ -65,5 +60,15 @@ export class LocalSquare {
                     .spawn()
                 : undefined;
         }
+    }
+
+    moveEntity(toSquare: LocalSquare, animate = false) {
+        if (!this.entity) return;
+
+        this.entity.setPosition(new Point(toSquare.x, toSquare.y));
+        // ALLOW OPTION TO ANIMATE AROUND ABOUT HERE
+
+        toSquare.entity = this.entity;
+        this.entity = undefined;
     }
 }

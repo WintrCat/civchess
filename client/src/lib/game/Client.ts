@@ -4,7 +4,7 @@ import { Viewport } from "pixi-viewport";
 import { pieceImages } from "@/constants/utils";
 import { InterfaceClient, UIHooks } from "./InterfaceClient";
 import { SocketClient } from "./SocketClient";
-import { LocalWorld } from "./LocalWorld";
+import { LocalWorld } from "./world/LocalWorld";
 
 export class GameClient {
     container: HTMLDivElement;
@@ -48,6 +48,7 @@ export class GameClient {
             .clampZoom({ maxScale: 3, minScale: 1 });
 
         viewport.eventMode = "static";
+        viewport.sortableChildren = true;
         viewport.scale = 2;
 
         this.app.renderer.on("resize", (width, height) => {
@@ -71,7 +72,9 @@ export class GameClient {
     }
 
     joinWorld(worldCode: string, sessionToken: string) {
-        this.socket.sendPacket("playerJoin", { worldCode, sessionToken });
+        this.socket.sendPacket("playerJoin", {
+            worldCode, sessionToken
+        });
     }
 }
 

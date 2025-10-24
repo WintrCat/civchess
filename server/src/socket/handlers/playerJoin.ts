@@ -2,9 +2,8 @@ import { Socket } from "socket.io";
 import { Types } from "mongoose";
 import { randomInt } from "es-toolkit";
 
-import { PieceType } from "shared/constants/PieceType";
 import { coordinateIndex } from "shared/lib/world-chunks";
-import { PlayerPiece } from "shared/types/world/pieces/Player";
+import { toPlayerPiece } from "shared/types/world/pieces/Player";
 import { chunkSquareCount, getChunkCoordinates } from "shared/lib/world-chunks";
 import { SocketIdentity } from "@/types/SocketIdentity";
 import { getRedisClient } from "@/database/redis";
@@ -96,6 +95,7 @@ export const playerJoinHandler = createPacketHandler({
             x: randomInt(0, worldChunkSize * chunkSquareCount),
             y: randomInt(0, worldChunkSize * chunkSquareCount),
             colour: "#" + randomInt(0, 0xffffff).toString(16),
+            health: 3,
             inventory: []
         };
 
@@ -114,14 +114,7 @@ export const playerJoinHandler = createPacketHandler({
             `$.players.${profile.userId}`, playerData
         );
 
-        // Put player piece on to spawn square
-        const playerPiece: PlayerPiece = {
-            id: PieceType.PLAYER,
-            userId: profile.userId,
-            username: profile.name,
-            colour: playerData.colour,
-            health: 3
-        };
+        const playerPiece = toPlayerPiece(playerData, profile.name);
 
         await setSquarePiece(worldCode,
             playerData.x, playerData.y, playerPiece, "runtime"
@@ -154,7 +147,7 @@ export const playerJoinHandler = createPacketHandler({
 
         // Broadcast join to others
         sendPacket(socket, "playerJoin", profile,
-            sender => sender.broadcast.to(worldCode)
+            () => socket.broadcast.to(worldCode)
         );
 
         // Broadcast world chunk update to subscribers
@@ -168,8 +161,8 @@ export const playerJoinHandler = createPacketHandler({
             runtimeChanges: {
                 [coordinateIndex(relativeX, relativeY)]: playerPiece
             }
-        }, sender => getChunkBroadcaster(
-            sender, worldCode, chunkX, chunkY
+        }, () => getChunkBroadcaster(
+            socket, worldCode, chunkX, chunkY
         ));
     }
 });

@@ -1,6 +1,7 @@
 import z from "zod";
 
 import { PieceType } from "@/constants/PieceType";
+import { Player } from "../Player";
 
 export const playerPieceSchema = z.object({
     id: z.literal(PieceType.PLAYER),
@@ -12,3 +13,11 @@ export const playerPieceSchema = z.object({
 });
 
 export type PlayerPiece = z.infer<typeof playerPieceSchema>;
+
+export function toPlayerPiece(player: Player, username: string) {
+    return playerPieceSchema.safeParse({
+        ...player,
+        id: PieceType.PLAYER,
+        username: username
+    }).data!;
+}

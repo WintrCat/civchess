@@ -6,6 +6,10 @@ import { chunkSquareCount } from "shared/lib/world-chunks";
 export const squareSize = 80;
 export const chunkSize = squareSize * chunkSquareCount;
 
+export const renderDistance = (
+    Number(import.meta.env.PUBLIC_RENDER_DISTANCE) || 2
+);
+
 export const biomeNames = {
     [SquareType.GRASSLAND]: "Grassland",
     [SquareType.DESERT]: "Desert",

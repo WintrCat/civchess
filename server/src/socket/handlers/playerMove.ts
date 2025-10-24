@@ -1,9 +1,22 @@
-import { getChunkCoordinates } from "shared/lib/world-chunks";
+import { toPlayerPiece } from "shared/types/world/pieces/Player";
+import {
+    coordinateIndex,
+    getChunkCoordinates,
+    getSurroundingPositions
+} from "shared/lib/world-chunks";
 import { getLegalKingMoves } from "shared/lib/legal-moves";
 import { SocketIdentity } from "@/types/SocketIdentity";
-import { getSurroundingChunks, getWorldChunkSize } from "../lib/chunks";
+import {
+    getRenderDistance,
+    getSurroundingChunks,
+    getWorldChunkSize
+} from "../lib/chunks";
 import { moveSquarePiece } from "../lib/chunks/squares";
-import { getChunkBroadcaster } from "../lib/chunks/subscribers";
+import {
+    chunkSubscriptionRoom,
+    getChunkBroadcaster,
+    setChunkSubscription
+} from "../lib/chunks/subscribers";
 import { getPlayer, setPlayerPosition } from "../lib/players";
 import { createPacketHandler, sendPacket } from "../packets";
 
@@ -16,8 +29,10 @@ export const playerMoveHandler = createPacketHandler({
         const player = await getPlayer(id.worldCode, id.profile.userId);
         if (!player) throw new Error();
 
-        const legalMoves = getLegalKingMoves(player.x, player.y,
-            await getWorldChunkSize(id.worldCode)
+        const worldChunkSize = await getWorldChunkSize(id.worldCode);
+
+        const legalMoves = getLegalKingMoves(
+            player.x, player.y, worldChunkSize
         );
 
         if (!legalMoves.has(packet.x, packet.y))
@@ -34,7 +49,13 @@ export const playerMoveHandler = createPacketHandler({
         "runtime");
 
         // Broadcast move packet to chunk subscribers
-        const { chunkX, chunkY } = getChunkCoordinates(packet.x, packet.y);
+        const { chunkX: oldChunkX, chunkY: oldChunkY } = (
+            getChunkCoordinates(player.x, player.y)
+        );
+
+        const { chunkX, chunkY, relativeX, relativeY } = (
+            getChunkCoordinates(packet.x, packet.y)
+        );
 
         sendPacket(socket, "pieceMove", {
             layer: "runtime",
@@ -42,25 +63,46 @@ export const playerMoveHandler = createPacketHandler({
             fromY: player.y,
             toX: packet.x,
             toY: packet.y
-        }, sender => getChunkBroadcaster(
-            sender, id.worldCode, chunkX, chunkY
+        }, () => getChunkBroadcaster(
+            socket, id.worldCode, oldChunkX, oldChunkY
         ));
 
-        // Load any chunks that are now in render distance after move
-        const {
-            chunkX: oldChunkX,
-            chunkY: oldChunkY
-        } = getChunkCoordinates(player.x, player.y);
+        // Broadcast to those where the player is entering their view
+        const newWatchers = getChunkBroadcaster(
+            socket, id.worldCode, chunkX, chunkY
+        ).except(
+            chunkSubscriptionRoom(id.worldCode, oldChunkX, oldChunkY)
+        );
+
+        sendPacket(newWatchers, "worldChunkUpdate", {
+            x: chunkX,
+            y: chunkY,
+            runtimeChanges: {
+                [coordinateIndex(relativeX, relativeY)]: toPlayerPiece(
+                    player, id.profile.name
+                )
+            }
+        });
 
         if (oldChunkX != chunkX || oldChunkY != chunkY) {
-            const newChunks = await getSurroundingChunks(
+            getSurroundingPositions(player.x, player.y, {
+                includeCenter: true,
+                radius: getRenderDistance(),
+                max: worldChunkSize
+            }).forEach(chunk => setChunkSubscription(
+                socket, chunk.x, chunk.y, false
+            ));
+
+            // Load and subscribe to chunks that are now within view
+            const newChunks = getSurroundingChunks(
                 id.worldCode, packet.x, packet.y, {
                     previousSquareX: player.x,
                     previousSquareY: player.y
                 }
             );
-
+            
             for await (const chunkData of newChunks) {
+                setChunkSubscription(socket, chunkData.x, chunkData.y, true);
                 sendPacket(socket, "worldChunkLoad", chunkData);
             }
         }

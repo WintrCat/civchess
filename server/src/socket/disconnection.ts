@@ -21,7 +21,7 @@ export async function handleDisconnect(
 
     sendPacket(server, "playerLeave", {
         userId: identity.profile.userId
-    }, sender => sender.to(identity.worldCode));
+    }, () => server.to(identity.worldCode));
 
     // Remove player piece from runtime chunks
     const player = await getPlayer(
@@ -44,7 +44,7 @@ export async function handleDisconnect(
         runtimeChanges: {
             [coordinateIndex(relativeX, relativeY)]: null
         }
-    }, sender => getChunkBroadcaster(
-        sender, identity.worldCode, chunkX, chunkY
+    }, () => getChunkBroadcaster(
+        server, identity.worldCode, chunkX, chunkY
     ));
 }

@@ -8,8 +8,9 @@ import {
 
 import { squareSize } from "@/constants/squares";
 import { Entity, EntityEvents } from "../entity/Entity";
+import { Layer } from "../constants/Layer";
 
-type SquareGenerator = () => Point[];
+type SquareGenerator = () => Iterable<Point>;
 
 export class MoveHints {
     entity: Entity;
@@ -32,8 +33,6 @@ export class MoveHints {
     ) {
         this.entity = entity;
         this.generateSquares = squareGenerator;
-
-        const viewport = this.entity.client.viewport;
     
         // Show when entity is held
         this.entityListeners.hold = () => {
@@ -77,21 +76,6 @@ export class MoveHints {
         };
 
         this.entity.on("drag", this.entityListeners.drag);
-
-        // Hide hints when anywhere else is clicked
-        this.viewportClickListener = event => {
-            const worldPosition = viewport.toWorld(event.global);
-
-            if (this.getHoveredHint(worldPosition)) return;
-
-            if (this.entity.sprite.containsPoint(
-                this.entity.sprite.toLocal(worldPosition, viewport)
-            )) return;
-
-            this.hide();
-        };
-
-        viewport.on("click", this.viewportClickListener);
     }
 
     private getHoveredHint(mouseWorldPoint: Point) {
@@ -112,15 +96,15 @@ export class MoveHints {
             const eventType = event as keyof EntityEvents;
             this.entity.off(eventType, this.entityListeners[eventType]!);
         }
-
-        this.entity.client.viewport.off("click",
-            this.viewportClickListener
-        );
     }
 
     hide() {
         for (const container of this.hintContainers)
             container.destroy();
+
+        this.entity.client.viewport.off("click",
+            this.viewportClickListener
+        );
 
         this.hintContainers = [];
 
@@ -131,12 +115,17 @@ export class MoveHints {
     show() {
         if (this.visible) this.hide();
 
-        this.squares = this.generateSquares();
+        const viewport = this.entity.client.viewport;
 
-        for (const square of this.squares) {
+        this.squares = [];
+
+        for (const square of this.generateSquares()) {
+            this.squares.push(square);
+
             const container = new Container({
                 x: square.x * squareSize,
                 y: square.y * squareSize,
+                zIndex: Layer.MOVE_HINTS,
                 hitArea: new Rectangle(0, 0, squareSize, squareSize),
                 eventMode: "static"
             });
@@ -174,8 +163,23 @@ export class MoveHints {
             });
 
             this.hintContainers.push(container);
-            this.entity.client.viewport.addChild(container);
+            viewport.addChild(container);
         }
+
+        // Hide hints when anywhere else is clicked
+        this.viewportClickListener = event => {
+            const worldPosition = viewport.toWorld(event.global);
+
+            if (this.getHoveredHint(worldPosition)) return;
+
+            if (this.entity.sprite.containsPoint(
+                this.entity.sprite.toLocal(worldPosition, viewport)
+            )) return;
+
+            this.hide();
+        };
+
+        viewport.on("click", this.viewportClickListener);
 
         this.visible = true;
     }
