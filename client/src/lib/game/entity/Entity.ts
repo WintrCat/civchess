@@ -32,7 +32,7 @@ interface EntityOptions {
     controllable?: boolean;
 }
 
-export interface EntityMoveOptions {
+interface EntityMoveOptions {
     cancellation?: boolean,
     animate?: boolean
 }
