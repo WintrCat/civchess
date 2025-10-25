@@ -1,5 +1,6 @@
 import { Application, Assets } from "pixi.js";
 import { Viewport } from "pixi-viewport";
+import { Actions } from "pixi-actions";
 
 import { pieceImages } from "@/constants/utils";
 import { InterfaceClient, UIHooks } from "./InterfaceClient";
@@ -36,6 +37,8 @@ export class GameClient {
             preference: "webgpu"
         });
 
+        this.app.ticker.add(tick => Actions.tick(tick.deltaTime / 60));
+
         const viewport = new Viewport({
             screenWidth: this.app.renderer.width,
             screenHeight: this.app.renderer.height,
@@ -56,13 +59,13 @@ export class GameClient {
             viewport.screenHeight = height;
         });
 
+        this.app.stage.addChild(viewport);
+        this.container.appendChild(this.app.canvas);
+
         this.viewport = viewport;
 
         for (const pieceImage of Object.values(pieceImages))
             await Assets.load(pieceImage);
-
-        this.app.stage.addChild(viewport);
-        this.container.appendChild(this.app.canvas);
 
         return this as InitialisedGameClient;
     }

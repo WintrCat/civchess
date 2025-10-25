@@ -145,6 +145,7 @@ export class MoveHints {
                     })
             );
 
+            // When a move hint is clicked
             container.on("pointerdown", () => {
                 this.entity.emit("drop", new Point(
                     square.x * squareSize,
@@ -153,10 +154,12 @@ export class MoveHints {
 
                 const fromPosition = this.entity.position.clone();
 
-                this.entity.setPosition(square);
+                this.entity.setPosition(square, { animate: true });
 
                 this.entity.emit("move", fromPosition, square,
-                    () => this.entity.setPosition(fromPosition, true)
+                    () => this.entity.setPosition(fromPosition, {
+                        cancellation: true
+                    })
                 );
                 
                 this.hide();

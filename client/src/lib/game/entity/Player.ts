@@ -60,13 +60,7 @@ export class Player extends Entity {
 
                 const toSquare = this.client.world.getLocalSquare(to.x, to.y);
 
-                if (toSquare) {
-                    this.client.world
-                        .getLocalSquare(from.x, from.y)
-                        ?.moveEntity(toSquare);
-                } else {
-                    fromSquare?.update({ piece: null });
-                }
+                if (toSquare) fromSquare?.moveEntity(toSquare);
 
                 // Unload chunks that are no longer in render distance
                 const { chunkX, chunkY } = getChunkCoordinates(to.x, to.y);

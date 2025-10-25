@@ -1,4 +1,4 @@
-import { Graphics, Point } from "pixi.js";
+import { Graphics } from "pixi.js";
 
 import { Square } from "shared/types/world/Square";
 import { SquareType } from "shared/constants/SquareType";
@@ -62,11 +62,8 @@ export class LocalSquare {
         }
     }
 
-    moveEntity(toSquare: LocalSquare, animate = false) {
+    moveEntity(toSquare: LocalSquare) {
         if (!this.entity) return;
-
-        this.entity.setPosition(new Point(toSquare.x, toSquare.y));
-        // ALLOW OPTION TO ANIMATE AROUND ABOUT HERE
 
         toSquare.entity = this.entity;
         this.entity = undefined;

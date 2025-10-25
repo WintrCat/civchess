@@ -5,6 +5,7 @@ import {
     Sprite,
     Texture
 } from "pixi.js";
+import { Actions, Interpolations } from "pixi-actions";
 
 import { squareSize } from "@/constants/squares";
 import { InitialisedGameClient } from "../Client";
@@ -29,6 +30,11 @@ interface EntityOptions {
     size?: number;
     colour?: ColorSource;
     controllable?: boolean;
+}
+
+export interface EntityMoveOptions {
+    cancellation?: boolean,
+    animate?: boolean
 }
 
 export class Entity extends TypedEmitter<EntityEvents> {
@@ -57,7 +63,7 @@ export class Entity extends TypedEmitter<EntityEvents> {
             width: this.originalSize,
             height: this.originalSize,
             tint: opts.colour || "#ffffff",
-            eventMode: "static"
+            eventMode: "dynamic"
         });
 
         this.setControllable(opts.controllable || false);
@@ -75,13 +81,26 @@ export class Entity extends TypedEmitter<EntityEvents> {
         return this.position.y;
     }
 
-    setPosition(point: Point, cancellation = false) {
+    setPosition(point: Point, opts?: EntityMoveOptions) {
         this.position = point;
-        this.sprite.position = squareToWorldPosition(point.x, point.y);
 
-        if (cancellation) {
+        if (opts?.cancellation) {
             // PLAY A CANCELLATION SOUND OR SOMETHING
             console.log("position set for a move cancellation!");
+        }
+
+        const worldPos = squareToWorldPosition(point.x, point.y);
+
+        if (opts?.animate) {
+            Actions.moveTo(
+                this.sprite,
+                worldPos.x,
+                worldPos.y,
+                0.06,
+                Interpolations.linear
+            ).play();
+        } else {
+            this.sprite.position = worldPos;
         }
     }
 
@@ -111,16 +130,22 @@ export class Entity extends TypedEmitter<EntityEvents> {
                 "pointermove", this.dragListener
             );
 
+            this.sprite.cursor = "default";
+
             return;
         }
+
+        this.sprite.cursor = "grab";
 
         const viewport = this.client.viewport;
         
         // When entity is held
         this.sprite.on("pointerdown", event => {
             this.held = true;
+
             this.sprite.position = viewport.toWorld(event.global);
             this.setSize(this.originalSize * 1.1);
+            this.sprite.cursor = "grabbing";
 
             viewport.plugins.pause("drag");
 
@@ -145,6 +170,7 @@ export class Entity extends TypedEmitter<EntityEvents> {
 
             this.held = false;
             this.setSize(this.originalSize);
+            this.sprite.cursor = "grab";
 
             this.emit("drop", new Point(this.sprite.x, this.sprite.y));
 
@@ -158,7 +184,7 @@ export class Entity extends TypedEmitter<EntityEvents> {
             
             if (!fromSquare.equals(toSquare)) {
                 this.emit("move", fromSquare, toSquare,
-                    () => this.setPosition(fromSquare, true)
+                    () => this.setPosition(fromSquare, { cancellation: true })
                 );
             }
 
