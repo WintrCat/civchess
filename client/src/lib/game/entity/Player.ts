@@ -2,11 +2,11 @@ import { Point, ColorSource, Texture } from "pixi.js";
 import { difference } from "es-toolkit";
 
 import {
-    chunkSquareCount,
     coordinateIndex,
     getChunkCoordinates,
     getSurroundingPositions
 } from "shared/lib/world-chunks";
+import { getLegalKingMoves } from "shared/lib/legal-moves";
 import { pieceImages } from "@/constants/utils";
 import { renderDistance } from "@/constants/squares";
 import { MoveHints } from "../utils/move-hints";
@@ -49,9 +49,12 @@ export class Player extends Entity {
             this.client.socket.sendPacket("playerMove", {
                 x: to.x,
                 y: to.y
-            });
+            }, response => {
+                if (!response.success) return cancel();
 
-            if (this.client.world.localPlayer?.userId == this.userId) {
+                if (this.client.world.localPlayer?.userId != this.userId)
+                    return;
+
                 clampViewportAroundSquare(this.client, to.x, to.y);
 
                 // Move entity to new local square
@@ -82,17 +85,15 @@ export class Player extends Entity {
                     const { x, y } = coordinateIndex(coordIndex);
                     this.client.world.setLocalChunk(x, y, undefined);
                 }
-            }
+            });
         });
     }
 
     getLegalMoves() {
         const { x, y } = this.position;
 
-        return getSurroundingPositions(x, y, {
-            max: this.client.world.chunkSize
-                ? this.client.world.chunkSize * chunkSquareCount
-                : Infinity
-        }).map(({ x, y }) => new Point(x, y));
+        return getLegalKingMoves(x, y, this.client.world.chunkSize)
+            .values()
+            .map(({ x, y }) => new Point(x, y));
     }
 }

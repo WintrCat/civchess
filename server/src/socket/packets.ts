@@ -1,10 +1,11 @@
-import { Socket, Server as SocketServer } from "socket.io";
+import { Socket } from "socket.io";
 
 import {
     ServerboundPacketType,
     ServerboundPacketTypeMap,
     ClientboundPacketType,
-    ClientboundPacketTypeMap
+    ClientboundPacketTypeMap,
+    PacketAcknowledger
 } from "shared/types/packets/PacketType";
 import { kickPlayer } from "./lib/players";
 import { PacketMiddleware } from "./middleware";
@@ -12,12 +13,14 @@ import { PacketMiddleware } from "./middleware";
 type EmittableSocket = Pick<Socket, "emit">;
 
 // Packet handlers
-interface PacketHandler<Type extends ServerboundPacketType> {
+interface PacketHandler<
+    Type extends ServerboundPacketType = ServerboundPacketType
+> {
     type: Type,
     handle: (
         packet: ServerboundPacketTypeMap[Type],
         socket: Socket,
-        server: SocketServer
+        acknowledge: PacketAcknowledger<Type>
     ) => void | Promise<void>
 };
 
@@ -33,15 +36,17 @@ export function createPacketHandler<Type extends ServerboundPacketType>(
 
 export function attachPacketHandlers(
     socket: Socket,
-    server: SocketServer,
     handlers: AnyPacketHandler[],
     middleware?: PacketMiddleware
 ) {
     for (const handler of handlers) {
-        socket.on(handler.type, async packet => {
+        socket.on(handler.type, async (packet, acknowledge) => {
             try {
                 await middleware?.(socket, handler.type, packet);
-                await handler.handle(packet, socket, server);
+
+                await (handler as PacketHandler).handle(
+                    packet, socket, acknowledge
+                );
             } catch (err) {
                 console.log("Failed to handle packet:");
                 console.log(err);

@@ -1,3 +1,4 @@
+import { SquareType } from "shared/constants/SquareType";
 import { toPlayerPiece } from "shared/types/world/pieces/Player";
 import {
     coordinateIndex,
@@ -6,23 +7,30 @@ import {
 } from "shared/lib/world-chunks";
 import { getLegalKingMoves } from "shared/lib/legal-moves";
 import { SocketIdentity } from "@/types/SocketIdentity";
+import { getRedisClient } from "@/database/redis";
 import {
     getRenderDistance,
     getSurroundingChunks,
     getWorldChunkSize
 } from "../lib/chunks";
-import { moveSquarePiece } from "../lib/chunks/squares";
+import { getSquare, moveSquarePiece } from "../lib/chunks/squares";
 import {
     chunkSubscriptionRoom,
     getChunkBroadcaster,
     setChunkSubscription
 } from "../lib/chunks/subscribers";
-import { getPlayer, setPlayerPosition } from "../lib/players";
+import { getPlayer, updatePlayer } from "../lib/players";
 import { createPacketHandler, sendPacket } from "../packets";
+
+const moveCooldowns: Record<SquareType, number> = {
+    [SquareType.GRASSLAND]: 800,
+    [SquareType.DESERT]: 1200,
+    [SquareType.OCEAN]: 2000
+};
 
 export const playerMoveHandler = createPacketHandler({
     type: "playerMove",
-    handle: async (packet, socket) => {
+    handle: async (packet, socket, acknowledge) => {
         const id = socket.data as SocketIdentity;
 
         // Validate that coordinates are legal for player
@@ -38,10 +46,37 @@ export const playerMoveHandler = createPacketHandler({
         if (!legalMoves.has(packet.x, packet.y))
             throw new Error("Illegal player movement.");
 
-        // Update player data and move piece in runtime chunk
-        await setPlayerPosition(id.worldCode,
-            player.userId, packet.x, packet.y
+        // Validate player movement cooldown
+        if (Date.now() < (player.moveCooldownExpiresAt || 0))
+            return acknowledge({ success: false });
+
+        // Extend movement cooldown
+        const toSquare = await getSquare(id.worldCode, packet.x, packet.y);
+        if (!toSquare) return acknowledge({ success: false });
+
+        // Update player location, cooldown, and move piece to square
+        const playerUpdate = getRedisClient().asPipeline();
+
+        await updatePlayer(
+            id.worldCode,
+            player.userId, "moveCooldownExpiresAt",
+            Date.now() + moveCooldowns[toSquare.type],
+            playerUpdate
+        )
+
+        await updatePlayer(
+            id.worldCode,
+            player.userId, "x", packet.x,
+            playerUpdate
         );
+
+        await updatePlayer(
+            id.worldCode,
+            player.userId, "y", packet.y,
+            playerUpdate
+        );
+
+        await playerUpdate.exec();
 
         await moveSquarePiece(id.worldCode,
             player.x, player.y,

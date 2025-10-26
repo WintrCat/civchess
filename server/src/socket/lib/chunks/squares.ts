@@ -1,4 +1,5 @@
 import { ChunkLayer } from "shared/types/world/OnlineWorld";
+import { Square } from "shared/types/world/Square";
 import { Piece } from "shared/types/world/Piece";
 import { getChunkCoordinates, coordinateIndex } from "shared/lib/world-chunks";
 import { getRedisClient } from "@/database/redis";
@@ -27,6 +28,20 @@ async function getPiecePath(
 
     return `$.chunks[${chunkY}][${chunkX}]`
         + `.squares[${relativeY}][${relativeX}].piece`;
+}
+
+export async function getSquare(
+    worldCode: string,
+    squareX: number,
+    squareY: number
+) {
+    const { chunkX, chunkY, relativeX, relativeY } = (
+        getChunkCoordinates(squareX, squareY)
+    );
+
+    return await getRedisClient().json.get<Square>(worldCode,
+        `$.chunks[${chunkY}][${chunkX}].squares[${relativeY}][${relativeX}]`
+    );
 }
 
 export async function setSquarePiece(

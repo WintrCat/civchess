@@ -8,14 +8,24 @@ interface Coordinate {
 class LegalMoveSet {
     private items: Set<string>;
 
-    constructor(moves: Coordinate[]) {
-        this.items = new Set(moves.map(
-            move => coordinateIndex(move.x, move.y)
-        ));
+    constructor(moves?: Coordinate[]) {
+        this.items = new Set(
+            moves?.map(move => coordinateIndex(move.x, move.y))
+        );
+    }
+
+    add(x: number, y: number) {
+        this.items.add(coordinateIndex(x, y));
     }
 
     has(x: number, y: number) {
         return this.items.has(coordinateIndex(x, y));
+    }
+
+    values() {
+        return this.items.values().map(
+            coordIndex => coordinateIndex(coordIndex)
+        );
     }
 }
 
@@ -24,7 +34,7 @@ export function getLegalKingMoves(
     originY: number,
     worldChunkSize?: number
 ) {
-    const legalMoves: Coordinate[] = [];
+    const legalMoves = new LegalMoveSet();
 
     const worldSquareSize = worldChunkSize
         ? worldChunkSize * chunkSquareCount
@@ -41,9 +51,9 @@ export function getLegalKingMoves(
         for (let x = coords.startX; x <= coords.endX; x++) {
             if (x == originX && y == originY) continue;
 
-            legalMoves.push({ x, y });
+            legalMoves.add(x, y);
         }
     }
 
-    return new LegalMoveSet(legalMoves);
+    return legalMoves;
 }

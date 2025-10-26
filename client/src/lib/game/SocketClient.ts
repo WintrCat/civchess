@@ -4,7 +4,8 @@ import {
     ServerboundPacketType,
     ServerboundPacketTypeMap,
     ClientboundPacketType,
-    ClientboundPacketTypeMap
+    ClientboundPacketTypeMap,
+    PacketAcknowledger
 } from "shared/types/packets/PacketType";
 import { GameClient, InitialisedGameClient } from "./Client";
 
@@ -35,9 +36,10 @@ export class SocketClient {
 
     sendPacket<Type extends ServerboundPacketType>(
         type: Type,
-        packet: ServerboundPacketTypeMap[Type]
+        packet: ServerboundPacketTypeMap[Type],
+        acknowledgement?: PacketAcknowledger<Type>
     ) {
-        this.rawSocket.emit(type, packet);
+        this.rawSocket.emit(type, packet, acknowledgement);
     }
 
     on<Type extends ClientboundPacketType>(

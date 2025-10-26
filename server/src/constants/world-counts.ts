@@ -2,7 +2,7 @@ import { maxBy } from "es-toolkit";
 
 import { UserRole } from "shared/constants/UserRole";
 
-const defaultMaximumWorldCount = 10;
+const defaultMaximumWorldCount = 1;
 
 const maximumWorldCounts: Record<UserRole, number> = {
     [UserRole.ADMIN]: Infinity,

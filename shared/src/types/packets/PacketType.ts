@@ -1,5 +1,5 @@
 import { PlayerJoinPacket } from "./serverbound/PlayerJoinPacket";
-import { PlayerMovePacket } from "./serverbound/PlayerMovePacket";
+import { PlayerMoveAck, PlayerMovePacket } from "./serverbound/PlayerMovePacket";
 
 import { PublicProfile } from "../PublicProfile";
 import { PlayerLeavePacket } from "./clientbound/PlayerLeavePacket";
@@ -26,3 +26,13 @@ export interface ClientboundPacketTypeMap {
 
 export type ServerboundPacketType = keyof ServerboundPacketTypeMap;
 export type ClientboundPacketType = keyof ClientboundPacketTypeMap;
+
+interface PacketAcknowledgements {
+    playerMove: PlayerMoveAck;
+}
+
+export type PacketAcknowledger<T extends ServerboundPacketType> = (
+    T extends keyof PacketAcknowledgements
+        ? (response: PacketAcknowledgements[T]) => void
+        : undefined
+);

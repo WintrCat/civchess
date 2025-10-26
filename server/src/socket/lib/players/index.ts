@@ -3,7 +3,7 @@ import { BroadcastOperator, RemoteSocket, Socket } from "socket.io";
 import { World } from "shared/types/world/World";
 import { Player } from "shared/types/world/Player";
 import { SocketIdentity } from "@/types/SocketIdentity";
-import { getRedisClient } from "@/database/redis";
+import { ExtendedCommander, getRedisClient, ObjectValue } from "@/database/redis";
 import { sendPacket } from "@/socket/packets";
 
 type ManageableSocket = Socket | RemoteSocket<{}, {}>;
@@ -28,18 +28,15 @@ export async function getPlayers(worldCode: string) {
     );
 }
 
-export async function setPlayerPosition(
+export async function updatePlayer(
     worldCode: string,
     userId: string,
-    x: number,
-    y: number
+    path: keyof Player,
+    value: ObjectValue,
+    commander?: ExtendedCommander
 ) {
-    await getRedisClient().json.set(
-        worldCode, `$.players.${userId}.x`, x 
-    );
-
-    await getRedisClient().json.set(
-        worldCode, `$.players.${userId}.y`, y 
+    await (commander || getRedisClient()).json.set(
+        worldCode, `$.players.${userId}.${path}`, value 
     );
 }
 

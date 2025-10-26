@@ -1,7 +1,7 @@
 import { readFileSync } from "fs";
 import { Redis } from "ioredis";
 
-type ObjectValue = string | number | boolean | object;
+export type ObjectValue = string | number | boolean | object;
 
 class ExtendedRedis extends Redis {
     private moveScript?: string;
@@ -25,8 +25,6 @@ class ExtendedRedis extends Redis {
                 `${scriptsFolder}/move.lua`, "utf-8"
             ))
         );
-
-        return this;
     }
 
     json = {
@@ -84,7 +82,13 @@ class ExtendedRedis extends Redis {
             );
         }
     };
+
+    asPipeline() {
+        return { ...this.multi(), json: this.json };
+    }
 }
+
+export type ExtendedCommander = Pick<ExtendedRedis, "json">;
 
 let instance: ExtendedRedis | null = null;
 
