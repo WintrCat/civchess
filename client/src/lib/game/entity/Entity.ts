@@ -84,6 +84,8 @@ export class Entity extends TypedEmitter<EntityEvents> {
     setPosition(point: Point, opts?: EntityMoveOptions) {
         this.position = point;
 
+        Actions.clear(this.sprite);
+
         if (opts?.cancellation) {
             // PLAY A CANCELLATION SOUND OR SOMETHING
             console.log("position set for a move cancellation!");

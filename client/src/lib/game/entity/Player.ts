@@ -1,4 +1,4 @@
-import { Point, ColorSource, Texture } from "pixi.js";
+import { Point, ColorSource, Texture, Graphics } from "pixi.js";
 import { difference } from "es-toolkit";
 
 import {
@@ -8,11 +8,12 @@ import {
 } from "shared/lib/world-chunks";
 import { getLegalKingMoves } from "shared/lib/legal-moves";
 import { pieceImages } from "@/constants/utils";
-import { renderDistance } from "@/constants/squares";
+import { renderDistance, squareSize } from "@/constants/squares";
+import { Layer } from "../constants/Layer";
 import { MoveHints } from "../utils/move-hints";
 import { clampViewportAroundSquare } from "../utils/viewport";
 import { InitialisedGameClient } from "../Client";
-import { Entity } from "./Entity";
+import { Entity, EntityEvents } from "./Entity";
 
 interface PlayerOptions {
     client: InitialisedGameClient;
@@ -24,12 +25,27 @@ interface PlayerOptions {
     controllable?: boolean;
 }
 
+interface MoveCooldown {
+    beginsAt?: number;
+    expiresAt?: number;
+    graphics: Graphics;
+}
+
 export class Player extends Entity {
     readonly userId: string;
     readonly moveHints: MoveHints;
 
+    ticker: () => void;
+
     health: number;
     inventory: string[];
+
+    moveCooldown: MoveCooldown = {
+        graphics: new Graphics({
+            zIndex: Layer.HOLOGRAMS,
+            eventMode: "none"
+        })
+    };
 
     constructor(opts: PlayerOptions) {
         super({ ...opts, texture: Texture.from(pieceImages.wK) });
@@ -42,50 +58,82 @@ export class Player extends Entity {
             this, this.getLegalMoves.bind(this)
         );
 
-        this.on("move", (from, to, cancel) => {
-            if (!this.moveHints.squares.some(square => square.equals(to)))
-                return cancel();
+        this.on("move", this.onEntityMove);
 
-            this.client.socket.sendPacket("playerMove", {
-                x: to.x,
-                y: to.y
-            }, response => {
-                if (!response.success) return cancel();
+        const mc = this.moveCooldown;
 
-                if (this.client.world.localPlayer?.userId != this.userId)
-                    return;
+        this.client.viewport.addChild(mc.graphics);
 
-                clampViewportAroundSquare(this.client, to.x, to.y);
+        this.ticker = () => {
+            mc.graphics.clear();
 
-                // Move entity to new local square
-                const fromSquare = this.client.world
-                    .getLocalSquare(from.x, from.y);
+            if (!mc.beginsAt || !mc.expiresAt) return;
+            if (Date.now() >= mc.expiresAt) return;
 
-                const toSquare = this.client.world.getLocalSquare(to.x, to.y);
+            const remainingPercent = Math.abs(mc.expiresAt - Date.now())
+                / Math.abs(mc.expiresAt - mc.beginsAt);
 
-                if (toSquare) fromSquare?.moveEntity(toSquare);
+            mc.graphics.rect(
+                (this.sprite.x - (squareSize / 2)) - (squareSize / 16),
+                this.sprite.y - (squareSize / 2) - (squareSize / 4),
+                remainingPercent * (squareSize + squareSize / 8),
+                squareSize / 10
+            ).fill("#ff2d2d8f");
+        };
 
-                // Unload chunks that are no longer in render distance
-                const { chunkX, chunkY } = getChunkCoordinates(to.x, to.y);
+        this.client.app.ticker.add(this.ticker);
+    }
 
-                const requiredChunks = getSurroundingPositions(
-                    chunkX, chunkY, {
-                        radius: renderDistance,
-                        max: this.client.world.chunkSize,
-                        includeCenter: true
-                    }
-                ).map(pos => coordinateIndex(pos.x, pos.y)).toArray();
+    private onEntityMove: EntityEvents["move"] = (from, to, cancel) => {
+        if (!this.moveHints.squares.some(square => square.equals(to)))
+            return cancel();
 
-                const unneededChunks = difference(
-                    Object.keys(this.client.world.localChunks),
-                    requiredChunks
-                );
+        if (Date.now() < (this.moveCooldown.expiresAt || 0))
+            return cancel();
 
-                for (const coordIndex of unneededChunks) {
-                    const { x, y } = coordinateIndex(coordIndex);
-                    this.client.world.setLocalChunk(x, y, undefined);
+        this.client.socket.sendPacket("playerMove", {
+            x: to.x,
+            y: to.y
+        }, response => {
+            if (!response.success) return cancel();
+
+            if (this.client.world.localPlayer?.userId != this.userId)
+                return;
+
+            clampViewportAroundSquare(this.client, to.x, to.y);
+
+            // Move entity to new local square
+            const fromSquare = this.client.world
+                .getLocalSquare(from.x, from.y);
+
+            const toSquare = this.client.world.getLocalSquare(to.x, to.y);
+
+            if (toSquare) fromSquare?.moveEntity(toSquare);
+
+            // Unload chunks that are no longer in render distance
+            const { chunkX, chunkY } = getChunkCoordinates(to.x, to.y);
+
+            const requiredChunks = getSurroundingPositions(
+                chunkX, chunkY, {
+                    radius: renderDistance,
+                    max: this.client.world.chunkSize,
+                    includeCenter: true
                 }
-            });
+            ).map(pos => coordinateIndex(pos.x, pos.y)).toArray();
+
+            const unneededChunks = difference(
+                Object.keys(this.client.world.localChunks),
+                requiredChunks
+            );
+
+            for (const coordIndex of unneededChunks) {
+                const { x, y } = coordinateIndex(coordIndex);
+                this.client.world.setLocalChunk(x, y, undefined);
+            }
+
+            // Load cooldown into player entity
+            this.moveCooldown.beginsAt = Date.now();
+            this.moveCooldown.expiresAt = response.cooldownExpiresAt || 0;
         });
     }
 
@@ -95,5 +143,12 @@ export class Player extends Entity {
         return getLegalKingMoves(x, y, this.client.world.chunkSize)
             .values()
             .map(({ x, y }) => new Point(x, y));
+    }
+
+    despawn() {
+        super.despawn();
+
+        this.moveCooldown.graphics.destroy();
+        this.client.app.ticker.remove(this.ticker);
     }
 }

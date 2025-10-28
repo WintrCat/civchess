@@ -57,10 +57,12 @@ export const playerMoveHandler = createPacketHandler({
         // Update player location, cooldown, and move piece to square
         const playerUpdate = getRedisClient().asPipeline();
 
+        const cooldownExpiresAt = Date.now() + moveCooldowns[toSquare.type];
+
         await updatePlayer(
             id.worldCode,
             player.userId, "moveCooldownExpiresAt",
-            Date.now() + moveCooldowns[toSquare.type],
+            cooldownExpiresAt,
             playerUpdate
         )
 
@@ -119,6 +121,7 @@ export const playerMoveHandler = createPacketHandler({
             }
         });
 
+        // Load and subscribe to chunks that are now within view
         if (oldChunkX != chunkX || oldChunkY != chunkY) {
             getSurroundingPositions(player.x, player.y, {
                 includeCenter: true,
@@ -128,7 +131,6 @@ export const playerMoveHandler = createPacketHandler({
                 socket, chunk.x, chunk.y, false
             ));
 
-            // Load and subscribe to chunks that are now within view
             const newChunks = getSurroundingChunks(
                 id.worldCode, packet.x, packet.y, {
                     previousSquareX: player.x,
@@ -141,5 +143,8 @@ export const playerMoveHandler = createPacketHandler({
                 sendPacket(socket, "worldChunkLoad", chunkData);
             }
         }
+
+        // Return movement response to client
+        acknowledge({ success: true, cooldownExpiresAt });
     }
 });

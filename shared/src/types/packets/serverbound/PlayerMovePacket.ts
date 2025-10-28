@@ -5,4 +5,5 @@ export interface PlayerMovePacket {
 
 export interface PlayerMoveAck {
     success: boolean;
+    cooldownExpiresAt?: number;
 }
