@@ -20,7 +20,7 @@ interface PlayerOptions {
     userId: string;
     position: Point;
     colour?: ColorSource;
-    health: number;
+    health?: number;
     inventory?: string[]
     controllable?: boolean;
 }
@@ -31,13 +31,16 @@ interface MoveCooldown {
     graphics: Graphics;
 }
 
+// Subject to provision by server
+const maxHealth = 3;
+
 export class Player extends Entity {
     readonly userId: string;
     readonly moveHints: MoveHints;
 
-    ticker: () => void;
+    private ticker: () => void;
 
-    health: number;
+    health?: number;
     inventory: string[];
 
     moveCooldown: MoveCooldown = {
@@ -46,6 +49,11 @@ export class Player extends Entity {
             eventMode: "none"
         })
     };
+
+    healthbar = new Graphics({
+        zIndex: Layer.HOLOGRAMS,
+        eventMode: "none"
+    });
 
     constructor(opts: PlayerOptions) {
         super({ ...opts, texture: Texture.from(pieceImages.wK) });
@@ -62,9 +70,30 @@ export class Player extends Entity {
 
         const mc = this.moveCooldown;
 
+        this.client.viewport.addChild(this.healthbar);
         this.client.viewport.addChild(mc.graphics);
 
         this.ticker = () => {
+            // Draw healthbar if not full health
+            this.healthbar.clear();
+
+            if (this.health != undefined && this.health < maxHealth) {
+                const x = this.sprite.x - (squareSize / 2 + squareSize / 16);
+                const y = this.sprite.y - (squareSize / 2 + squareSize / 4);
+                const width = squareSize + squareSize / 8;
+
+                this.healthbar.rect(
+                    x, y, width, squareSize / 8
+                ).fill("#2b2b2bad");
+
+                this.healthbar.rect(
+                    x, y,
+                    (this.health / maxHealth) * width,
+                    squareSize / 8
+                ).fill("#70ff53ad");
+            }
+
+            // Draw cooldown
             mc.graphics.clear();
 
             if (!mc.beginsAt || !mc.expiresAt) return;
@@ -91,14 +120,18 @@ export class Player extends Entity {
         if (Date.now() < (this.moveCooldown.expiresAt || 0))
             return cancel();
 
+        if (this.client.world.localPlayer != this) return;
+
         this.client.socket.sendPacket("playerMove", {
             x: to.x,
             y: to.y
         }, response => {
-            if (!response.success) return cancel();
+            if (response.cooldownExpiresAt) {
+                this.moveCooldown.beginsAt = Date.now();
+                this.moveCooldown.expiresAt = response.cooldownExpiresAt;
+            }
 
-            if (this.client.world.localPlayer?.userId != this.userId)
-                return;
+            if (!response.success) return cancel();
 
             clampViewportAroundSquare(this.client, to.x, to.y);
 
@@ -130,11 +163,16 @@ export class Player extends Entity {
                 const { x, y } = coordinateIndex(coordIndex);
                 this.client.world.setLocalChunk(x, y, undefined);
             }
-
-            // Load cooldown into player entity
-            this.moveCooldown.beginsAt = Date.now();
-            this.moveCooldown.expiresAt = response.cooldownExpiresAt || 0;
         });
+    }
+
+    despawn() {
+        super.despawn();
+
+        this.healthbar.destroy();
+        this.moveCooldown.graphics.destroy();
+
+        this.client.app.ticker.remove(this.ticker);
     }
 
     getLegalMoves() {
@@ -143,12 +181,5 @@ export class Player extends Entity {
         return getLegalKingMoves(x, y, this.client.world.chunkSize)
             .values()
             .map(({ x, y }) => new Point(x, y));
-    }
-
-    despawn() {
-        super.despawn();
-
-        this.moveCooldown.graphics.destroy();
-        this.client.app.ticker.remove(this.ticker);
     }
 }

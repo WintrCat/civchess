@@ -8,8 +8,7 @@ export const playerPieceSchema = z.object({
 
     userId: z.string(),
     username: z.string(),
-    colour: z.string(),
-    health: z.int()
+    colour: z.string()
 });
 
 export type PlayerPiece = z.infer<typeof playerPieceSchema>;

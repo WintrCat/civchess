@@ -24,7 +24,7 @@ export const serverInformationHandler = createPacketHandler({
             userId: packet.localPlayer.userId,
             colour: packet.localPlayer.colour,
             position: new Point(packet.localPlayer.x, packet.localPlayer.y),
-            health: 3,
+            health: packet.localPlayer.health,
             inventory: packet.localPlayer.inventory,
             controllable: true
         });

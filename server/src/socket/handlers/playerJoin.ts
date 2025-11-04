@@ -124,13 +124,13 @@ export const playerJoinHandler = createPacketHandler({
         const connectedSockets = await getSocketServer()
             .in(worldCode).fetchSockets();
 
-        sendPacket(socket, "serverInformation", {
+        sendPacket("serverInformation", {
             localPlayer: playerData,
             players: connectedSockets.map(
                 socket => (socket.data as SocketIdentity).profile
             ),
             worldChunkSize: worldChunkSize
-        });
+        }, socket);
 
         // Subscribe player to and send surrounding chunks
         const surroundingChunks = getSurroundingChunks(
@@ -142,12 +142,12 @@ export const playerJoinHandler = createPacketHandler({
                 chunkData.x, chunkData.y, true
             );
 
-            sendPacket(socket, "worldChunkLoad", chunkData);
+            sendPacket("worldChunkLoad", chunkData, socket);
         }
 
         // Broadcast join to others
-        sendPacket(socket, "playerJoin", profile,
-            () => socket.broadcast.to(worldCode)
+        sendPacket("playerJoin", profile,
+            socket.broadcast.to(worldCode)
         );
 
         // Broadcast world chunk update to subscribers
@@ -155,13 +155,13 @@ export const playerJoinHandler = createPacketHandler({
             getChunkCoordinates(playerData.x, playerData.y)
         );
 
-        sendPacket(socket, "worldChunkUpdate", {
+        sendPacket("worldChunkUpdate", {
             x: chunkX,
             y: chunkY,
             runtimeChanges: {
                 [coordinateIndex(relativeX, relativeY)]: playerPiece
             }
-        }, () => getChunkBroadcaster(
+        }, getChunkBroadcaster(
             socket, worldCode, chunkX, chunkY
         ));
     }

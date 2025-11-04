@@ -4,13 +4,15 @@ import { SocketOrUserId, getUserId } from "@/socket/lib/players";
 
 type Whitelist = NonNullable<World["whitelistedPlayers"]>;
 
+const whitelistPath = "$.whitelistedPlayers";
+
 export async function whitelistPlayer(
     worldCode: string,
     socketOrUserId: SocketOrUserId
 ) {
     await getRedisClient().json.set(
         worldCode,
-        `$.whitelistedPlayers.${getUserId(socketOrUserId)}`,
+        `${whitelistPath}.${getUserId(socketOrUserId)}`,
         true
     );
 }
@@ -21,25 +23,23 @@ export async function unwhitelistPlayer(
 ) {
     await getRedisClient().json.delete(
         worldCode,
-        `$.whitelistedPlayers.${getUserId(socketOrUserId)}`
+        `${whitelistPath}.${getUserId(socketOrUserId)}`
     );
 }
 
 export async function getWhitelist(worldCode: string) {
     const whitelist = await getRedisClient().json
-        .get<Whitelist>(worldCode, "$.whitelistedPlayers");
+        .get<Whitelist>(worldCode, whitelistPath);
 
     return whitelist && Object.keys(whitelist);
 }
 
 export async function isWhitelistActive(worldCode: string) {
-    return await getRedisClient().json.exists(
-        worldCode, "$.whitelistedPlayers"
-    );
+    return await getRedisClient().json
+        .exists(worldCode, whitelistPath);
 }
 
 export async function isPlayerWhitelisted(worldCode: string, userId: string) {
-    return await getRedisClient().json.exists(
-        worldCode, `$.whitelistedPlayers.${userId}`
-    );
+    return await getRedisClient().json
+        .exists(worldCode, `${whitelistPath}.${userId}`);
 }

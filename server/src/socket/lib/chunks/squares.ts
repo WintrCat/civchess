@@ -4,7 +4,7 @@ import { Piece } from "shared/types/world/Piece";
 import { getChunkCoordinates, coordinateIndex } from "shared/lib/world-chunks";
 import { getRedisClient } from "@/database/redis";
 
-async function getPiecePath(
+export async function getSquarePath(
     worldCode: string,
     squareX: number,
     squareY: number,
@@ -27,20 +27,29 @@ async function getPiecePath(
     }
 
     return `$.chunks[${chunkY}][${chunkX}]`
-        + `.squares[${relativeY}][${relativeX}].piece`;
+        + `.squares[${relativeY}][${relativeX}]`;
 }
 
-export async function getSquare(
+async function getPiecePath(
     worldCode: string,
     squareX: number,
-    squareY: number
+    squareY: number,
+    layer: ChunkLayer = "persistent"
 ) {
-    const { chunkX, chunkY, relativeX, relativeY } = (
-        getChunkCoordinates(squareX, squareY)
-    );
+    return await getSquarePath(worldCode, squareX, squareY, layer)
+        + (layer == "persistent" ? ".piece" : "");
+}
 
-    return await getRedisClient().json.get<Square>(worldCode,
-        `$.chunks[${chunkY}][${chunkX}].squares[${relativeY}][${relativeX}]`
+export async function getSquare<L extends ChunkLayer = "persistent">(
+    worldCode: string,
+    squareX: number,
+    squareY: number,
+    layer?: L
+) {
+    type ReturnedSquare = L extends "persistent" ? Square : Piece;
+
+    return await getRedisClient().json.get<ReturnedSquare>(worldCode,
+        await getSquarePath(worldCode, squareX, squareY, layer)
     );
 }
 

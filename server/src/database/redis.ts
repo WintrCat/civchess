@@ -1,5 +1,5 @@
 import { readFileSync } from "fs";
-import { Redis } from "ioredis";
+import { Redis, RedisValue } from "ioredis";
 
 export type ObjectValue = string | number | boolean | object;
 
@@ -8,13 +8,17 @@ class ExtendedRedis extends Redis {
 
     private async getNumericalResponse(
         command: string,
-        key: string,
-        path: string
+        ...args: RedisValue[]
     ) {
-        const response = await this.call(command, key, path);
-        if (!Array.isArray(response)) return 0;
+        let response = await this.call(command, ...args);
 
-        return Number(response.at(0)) || 0;
+        if (typeof response == "string") try {
+            response = JSON.parse(String(response));
+        } catch {}
+
+        if (!Array.isArray(response)) return NaN;
+
+        return Number(response.at(0));
     }
 
     async loadScripts() {
@@ -39,9 +43,9 @@ class ExtendedRedis extends Redis {
             ] as const;
 
             if (modifier) {
-                this.call(...args, modifier);
+                await this.call(...args, modifier);
             } else {
-                this.call(...args);
+                await this.call(...args);
             }
         },
 
@@ -49,15 +53,21 @@ class ExtendedRedis extends Redis {
             key: string, path: string
         ): Promise<Val | null> => {
             try {
-                const getResponse = await this.call("json.get", key, path);
+                const response = await this.call("json.get", key, path);
 
-                const matches = JSON.parse(String(getResponse));
+                const matches = JSON.parse(String(response));
                 if (!Array.isArray(matches)) return null;
 
                 return matches.at(0) || null;
             } catch {
                 return null;
             }
+        },
+
+        incr: async (key: string, path: string, amount: number) => {
+            return await this.getNumericalResponse(
+                "json.numincrby", key, path, amount
+            );
         },
 
         delete: async (key: string, path: string) => {
@@ -83,12 +93,10 @@ class ExtendedRedis extends Redis {
         }
     };
 
-    asPipeline() {
+    createPipeline() {
         return { ...this.multi(), json: this.json };
     }
 }
-
-export type ExtendedCommander = Pick<ExtendedRedis, "json">;
 
 let instance: ExtendedRedis | null = null;
 

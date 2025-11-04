@@ -19,9 +19,9 @@ export async function handleDisconnect(
     // Decrement player count and notify others of leave
     await decrementPlayerCount(identity.worldCode);
 
-    sendPacket(server, "playerLeave", {
+    sendPacket("playerLeave", {
         userId: identity.profile.userId
-    }, () => server.to(identity.worldCode));
+    }, server.to(identity.worldCode));
 
     // Remove player piece from runtime chunks
     const player = await getPlayer(
@@ -38,13 +38,13 @@ export async function handleDisconnect(
         getChunkCoordinates(player.x, player.y)
     );
 
-    sendPacket(server, "worldChunkUpdate", {
+    sendPacket("worldChunkUpdate", {
         x: chunkX,
         y: chunkY,
         runtimeChanges: {
             [coordinateIndex(relativeX, relativeY)]: null
         }
-    }, () => getChunkBroadcaster(
+    }, getChunkBroadcaster(
         server, identity.worldCode, chunkX, chunkY
     ));
 }

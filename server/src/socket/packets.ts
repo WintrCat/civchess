@@ -59,14 +59,10 @@ export function attachPacketHandlers(
     }
 }
 
-export function sendPacket<
-    Type extends ClientboundPacketType,
-    Receiver extends EmittableSocket
->(
-    socket: Receiver,
+export function sendPacket<Type extends ClientboundPacketType>(
     type: Type,
     packet: ClientboundPacketTypeMap[Type],
-    configureSender = (): EmittableSocket => socket
+    socket: EmittableSocket
 ) {
-    configureSender().emit(type, packet);
+    socket.emit(type, packet);
 }

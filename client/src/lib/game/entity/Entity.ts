@@ -33,8 +33,10 @@ interface EntityOptions {
 }
 
 interface EntityMoveOptions {
-    cancellation?: boolean,
-    animate?: boolean
+    cancellation?: boolean;
+    animate?: boolean;
+    animationDuration?: number;
+    visualOnly?: boolean;
 }
 
 export class Entity extends TypedEmitter<EntityEvents> {
@@ -81,8 +83,8 @@ export class Entity extends TypedEmitter<EntityEvents> {
         return this.position.y;
     }
 
-    setPosition(point: Point, opts?: EntityMoveOptions) {
-        this.position = point;
+    async setPosition(point: Point, opts?: EntityMoveOptions) {
+        if (!opts?.visualOnly) this.position = point;
 
         Actions.clear(this.sprite);
 
@@ -94,13 +96,24 @@ export class Entity extends TypedEmitter<EntityEvents> {
         const worldPos = squareToWorldPosition(point.x, point.y);
 
         if (opts?.animate) {
-            Actions.moveTo(
-                this.sprite,
-                worldPos.x,
-                worldPos.y,
-                0.06,
-                Interpolations.linear
-            ).play();
+            return new Promise<void>(res => {
+                const animation = Actions.moveTo(
+                    this.sprite,
+                    worldPos.x,
+                    worldPos.y,
+                    opts.animationDuration || 0.06,
+                    Interpolations.linear
+                ).play();
+
+                const animationTicker = () => {
+                    if (!animation.done) return;
+
+                    this.client.app.ticker.remove(animationTicker);
+                    res();
+                };
+
+                this.client.app.ticker.add(animationTicker);
+            });
         } else {
             this.sprite.position = worldPos;
         }
