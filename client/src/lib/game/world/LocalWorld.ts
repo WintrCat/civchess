@@ -78,8 +78,7 @@ export class LocalWorld {
                 client: this.client,
                 position: position,
                 userId: piece.userId,
-                colour: piece.colour,
-                health: piece.health
+                colour: piece.colour
             });
         }
     

@@ -5,9 +5,9 @@ import { PublicProfile } from "shared/types/PublicProfile";
 import { authClient } from "@/lib/auth";
 import { GameClient } from "@/lib/game/Client";
 import handlers from "@/lib/game/handlers";
+import ProfileAvatar from "@/components/ProfileAvatar";
 
 import styles from "./index.module.css";
-import ProfileAvatar from "@/components/ProfileAvatar";
 
 function Play() {
     const { worldCode } = useParams();
@@ -17,12 +17,15 @@ function Play() {
 
     const [ playerlist, setPlayerlist ] = useState<PublicProfile[]>([]);
 
+    const [ health, setHealth ] = useState(0);
+
     async function joinWorld() {
         if (!wrapperRef.current) return;
         if (!ticket || !worldCode) return;
 
         const gameClient = await new GameClient(wrapperRef.current, {
-            setPlayerlist
+            setPlayerlist,
+            setHealth
         }).init();
 
         gameClient.socket.attachPacketHandlers(handlers);
@@ -36,7 +39,7 @@ function Play() {
     return <>
         <div className={styles.wrapper} ref={wrapperRef} />
 
-        <div className={styles.serverPanel}>
+        <div className={`${styles.guiPanel} ${styles.serverPanel}`}>
             <span>
                 Connected to <b>{worldCode}</b>
             </span>
@@ -49,6 +52,10 @@ function Play() {
 
                 <span>{profile.name}</span>
             </span>)}
+        </div>
+
+        <div className={`${styles.guiPanel} ${styles.playerHud}`}>
+            Health: {health}
         </div>
     </>;
 }

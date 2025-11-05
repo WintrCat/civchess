@@ -107,11 +107,9 @@ export const playerMoveHandler = createPacketHandler({
 
             await playerUpdate.exec();
 
-            sendPacket("playerUpdate", {
-                x: packet.x,
-                y: packet.y,
-                health: newHealth
-            }, getPlayerSocket(toRuntimeSquare.userId));
+            sendPacket("playerHealth", { newHealth },
+                getPlayerSocket(toRuntimeSquare.userId)
+            );
 
             sendPacket("pieceMove", {
                 ...movement,

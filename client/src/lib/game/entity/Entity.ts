@@ -32,6 +32,8 @@ interface EntityOptions {
     controllable?: boolean;
 }
 
+export type SubEntityOptions = Omit<EntityOptions, "texture">;
+
 interface EntityMoveOptions {
     cancellation?: boolean;
     animate?: boolean;

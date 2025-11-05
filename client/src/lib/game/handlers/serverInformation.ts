@@ -12,11 +12,18 @@ export const serverInformationHandler = createPacketHandler({
     handle: (packet, client) => {
         client.world.chunkSize = packet.worldChunkSize;
 
+        // Load connected players list
         client.world.playerlist = Object.fromEntries(
             packet.players.map(profile => [profile.userId, profile])
         );
 
         client.ui.updatePlayerlist();
+
+        // Load local player data
+        client.health = packet.localPlayer.health;
+        client.ui.updateHealthbar();
+
+        client.inventory = packet.localPlayer.inventory;
 
         // Spawn local player entity
         const localPlayerEntity = new Player({
@@ -24,8 +31,6 @@ export const serverInformationHandler = createPacketHandler({
             userId: packet.localPlayer.userId,
             colour: packet.localPlayer.colour,
             position: new Point(packet.localPlayer.x, packet.localPlayer.y),
-            health: packet.localPlayer.health,
-            inventory: packet.localPlayer.inventory,
             controllable: true
         });
         client.world.localPlayer = localPlayerEntity;

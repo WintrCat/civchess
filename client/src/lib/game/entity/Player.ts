@@ -13,15 +13,13 @@ import { Layer } from "../constants/Layer";
 import { MoveHints } from "../utils/move-hints";
 import { clampViewportAroundSquare } from "../utils/viewport";
 import { InitialisedGameClient } from "../Client";
-import { Entity, EntityEvents } from "./Entity";
+import { Entity, EntityEvents, SubEntityOptions } from "./Entity";
 
-interface PlayerOptions {
+interface PlayerOptions extends SubEntityOptions {
     client: InitialisedGameClient;
     userId: string;
     position: Point;
     colour?: ColorSource;
-    health?: number;
-    inventory?: string[]
     controllable?: boolean;
 }
 
@@ -31,17 +29,10 @@ interface MoveCooldown {
     graphics: Graphics;
 }
 
-// Subject to provision by server
-const maxHealth = 3;
-
 export class Player extends Entity {
-    readonly userId: string;
-    readonly moveHints: MoveHints;
+    userId: string;
 
-    private ticker: () => void;
-
-    health?: number;
-    inventory: string[];
+    moveHints: MoveHints;
 
     moveCooldown: MoveCooldown = {
         graphics: new Graphics({
@@ -50,17 +41,12 @@ export class Player extends Entity {
         })
     };
 
-    healthbar = new Graphics({
-        zIndex: Layer.HOLOGRAMS,
-        eventMode: "none"
-    });
+    private ticker: () => void;
 
     constructor(opts: PlayerOptions) {
         super({ ...opts, texture: Texture.from(pieceImages.wK) });
 
         this.userId = opts.userId;
-        this.health = opts.health;
-        this.inventory = opts.inventory || [];
 
         this.moveHints = new MoveHints(
             this, this.getLegalMoves.bind(this)
@@ -69,31 +55,10 @@ export class Player extends Entity {
         this.on("move", this.onEntityMove);
 
         const mc = this.moveCooldown;
-
-        this.client.viewport.addChild(this.healthbar);
         this.client.viewport.addChild(mc.graphics);
 
         this.ticker = () => {
-            // Draw healthbar if not full health
-            this.healthbar.clear();
-
-            if (this.health != undefined && this.health < maxHealth) {
-                const x = this.sprite.x - (squareSize / 2 + squareSize / 16);
-                const y = this.sprite.y - (squareSize / 2 + squareSize / 4);
-                const width = squareSize + squareSize / 8;
-
-                this.healthbar.rect(
-                    x, y, width, squareSize / 8
-                ).fill("#2b2b2bad");
-
-                this.healthbar.rect(
-                    x, y,
-                    (this.health / maxHealth) * width,
-                    squareSize / 8
-                ).fill("#70ff53ad");
-            }
-
-            // Draw cooldown
+            // Draw cooldown bar if bounds are set
             mc.graphics.clear();
 
             if (!mc.beginsAt || !mc.expiresAt) return;
@@ -169,9 +134,7 @@ export class Player extends Entity {
     despawn() {
         super.despawn();
 
-        this.healthbar.destroy();
         this.moveCooldown.graphics.destroy();
-
         this.client.app.ticker.remove(this.ticker);
     }
 

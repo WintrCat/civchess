@@ -10,11 +10,15 @@ import { LocalWorld } from "./world/LocalWorld";
 export class GameClient {
     container: HTMLDivElement;
     app: Application;
+
     viewport?: Viewport;
     socket: SocketClient;
     ui: InterfaceClient;
 
     world = new LocalWorld(this);
+
+    health?: number;
+    inventory: string[] = [];
 
     constructor(container: HTMLDivElement, uiHooks?: UIHooks) {
         if (!import.meta.env.PUBLIC_ORIGIN)
@@ -37,7 +41,9 @@ export class GameClient {
             preference: "webgpu"
         });
 
-        this.app.ticker.add(tick => Actions.tick(tick.deltaTime / 60));
+        this.app.ticker.add(tick => Actions.tick(
+            tick.deltaTime / tick.FPS
+        ));
 
         const viewport = new Viewport({
             screenWidth: this.app.renderer.width,

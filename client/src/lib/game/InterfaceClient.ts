@@ -5,6 +5,7 @@ import { GameClient } from "./Client";
 
 export interface UIHooks {
     setPlayerlist?: Dispatch<SetStateAction<PublicProfile[]>>;
+    setHealth?: Dispatch<SetStateAction<number>>;
 }
 
 export class InterfaceClient {
@@ -20,5 +21,11 @@ export class InterfaceClient {
         this.hooks.setPlayerlist?.(
             Object.values(this.gameClient.world.playerlist)
         );
+    }
+
+    updateHealthbar() {
+        if (this.gameClient.health == undefined) return;
+        
+        this.hooks.setHealth?.(this.gameClient.health);
     }
 }
