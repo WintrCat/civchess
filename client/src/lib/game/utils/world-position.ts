@@ -1,7 +1,7 @@
 import { Point } from "pixi.js";
 
 import { getChunkCoordinates } from "shared/lib/world-chunks";
-import { squareSize, chunkSize } from "@/constants/squares";
+import { squareSize, chunkSize } from "../constants/squares";
 
 /**
  * @description Coordinates are for center of given square

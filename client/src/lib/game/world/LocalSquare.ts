@@ -3,7 +3,7 @@ import { Graphics } from "pixi.js";
 import { Square } from "shared/types/world/Square";
 import { SquareType } from "shared/constants/SquareType";
 import { Updates } from "shared/types/packets/clientbound/WorldChunkUpdatePacket";
-import { squareColours, squareSize } from "@/constants/squares";
+import { squareColours, squareSize } from "../constants/squares";
 import { InitialisedGameClient } from "../Client";
 import { Entity } from "../entity/Entity";
 

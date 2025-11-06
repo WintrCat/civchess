@@ -7,13 +7,13 @@ import {
 } from "pixi.js";
 import { Actions, Interpolations } from "pixi-actions";
 
-import { squareSize } from "@/constants/squares";
 import { InitialisedGameClient } from "../Client";
 import { TypedEmitter } from "../utils/event-emitter";
 import {
     squareToWorldPosition,
     worldToSquarePosition
 } from "../utils/world-position";
+import { squareSize } from "../constants/squares";
 import { Layer } from "../constants/Layer";
 
 export type EntityEvents = {

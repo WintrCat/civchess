@@ -8,7 +8,7 @@ import {
 } from "shared/lib/world-chunks";
 import { getLegalKingMoves } from "shared/lib/legal-moves";
 import { pieceImages } from "@/constants/utils";
-import { renderDistance, squareSize } from "@/constants/squares";
+import { renderDistance, squareSize } from "../constants/squares";
 import { Layer } from "../constants/Layer";
 import { MoveHints } from "../utils/move-hints";
 import { clampViewportAroundSquare } from "../utils/viewport";

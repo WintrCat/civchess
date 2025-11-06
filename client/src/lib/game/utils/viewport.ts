@@ -1,4 +1,4 @@
-import { chunkSize, renderDistance } from "@/constants/squares";
+import { chunkSize, renderDistance } from "../constants/squares";
 import { InitialisedGameClient } from "../Client";
 import { squareChunkWorldPosition, squareToWorldPosition } from "./world-position";
 
