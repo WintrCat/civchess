@@ -91,21 +91,13 @@ export const playerMoveHandler = createPacketHandler({
         );
 
         if (toRuntimeSquare?.id == PieceType.PLAYER) {
-            const newHealth = await playerUpdate.json.incr(
+            await playerUpdate.exec();
+
+            const newHealth = await getRedisClient().json.incr(
                 id.worldCode,
                 `${getPlayerPath(toRuntimeSquare.userId)}.health`,
                 -1
             );
-
-            const runtimeSquarePath = await getSquarePath(
-                id.worldCode, packet.x, packet.y, "runtime"
-            );
-
-            await playerUpdate.json.incr(
-                id.worldCode, `${runtimeSquarePath}.health`, -1
-            );
-
-            await playerUpdate.exec();
 
             sendPacket("playerHealth", { newHealth },
                 getPlayerSocket(toRuntimeSquare.userId)

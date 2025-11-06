@@ -1,5 +1,6 @@
 import { readFileSync } from "fs";
 import { Redis, RedisValue } from "ioredis";
+import { mapValues } from "es-toolkit";
 
 export type ObjectValue = string | number | boolean | object;
 
@@ -94,7 +95,14 @@ class ExtendedRedis extends Redis {
     };
 
     createPipeline() {
-        return { ...this.multi(), json: this.json };
+        const multi = this.multi();
+
+        const boundJson = mapValues(
+            this.json,
+            val => val.bind(multi)
+        ) as typeof this.json;
+
+        return { ...multi, json: boundJson };
     }
 }
 
