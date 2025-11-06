@@ -113,7 +113,7 @@ export const playerMoveHandler = createPacketHandler({
 
             sendPacket("pieceMove", {
                 ...movement,
-                ephemeral: true
+                attack: true
             }, socket.broadcast.to(fromChunkRoom));
 
             return acknowledge({ success: false, cooldownExpiresAt });

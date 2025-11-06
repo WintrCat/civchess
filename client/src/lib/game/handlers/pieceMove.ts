@@ -15,7 +15,7 @@ export const pieceMoveHandler = createPacketHandler({
         );
         if (!toSquare) return fromSquare.update({ piece: null });
 
-        if (packet.ephemeral) {
+        if (packet.attack) {
             await fromSquare.entity?.setPosition(
                 new Point(packet.toX, packet.toY),
                 { animate: true, visualOnly: true, animationDuration: 0.1 }

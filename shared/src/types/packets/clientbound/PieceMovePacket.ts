@@ -3,5 +3,5 @@ export interface PieceMovePacket {
     fromY: number;
     toX: number;
     toY: number;
-    ephemeral?: boolean;
+    attack?: boolean;
 }
