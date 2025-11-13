@@ -65,6 +65,8 @@ export class LocalSquare {
     moveEntity(toSquare: LocalSquare) {
         if (!this.entity) return;
 
+        toSquare.entity?.despawn();
+
         toSquare.entity = this.entity;
         this.entity = undefined;
     }

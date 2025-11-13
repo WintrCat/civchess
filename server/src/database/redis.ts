@@ -114,19 +114,19 @@ export async function connectRedisClient() {
 
     const parsedURI = new URL(process.env.REDIS_DATABASE_URI);
 
-    const connection = new ExtendedRedis({
+    const client = new ExtendedRedis({
         host: parsedURI.hostname,
         port: Number(parsedURI.port)
     });
 
-    connection.on("error", err => {
+    client.on("error", err => {
         console.log("failed to connect to redis database:");
         console.log(err);
     });
 
-    await connection.loadScripts();
+    await client.loadScripts();
 
-    return instance = connection;
+    return instance = client;
 }
 
 export function getRedisClient() {

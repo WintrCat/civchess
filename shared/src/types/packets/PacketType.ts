@@ -13,6 +13,7 @@ import { PieceMovePacket } from "./clientbound/PieceMovePacket";
 export interface ServerboundPacketTypeMap {
     playerJoin: PlayerJoinPacket;
     playerMove: PlayerMovePacket;
+    playerRespawn: {};
 }
 
 export interface ClientboundPacketTypeMap {

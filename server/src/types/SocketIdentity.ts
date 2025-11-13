@@ -7,6 +7,7 @@ export interface SocketIdentity {
     sessionExpiresAt: number; // Unix timestamp
     worldCode: string;
     profile: PublicProfile;
+    dead?: boolean;
 }
 
 export function isIdentified(

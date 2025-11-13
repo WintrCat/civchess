@@ -37,3 +37,10 @@
     top: 0;
     left: 0;
 }
+
+.deathModal {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    text-align: center;
+}

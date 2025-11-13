@@ -11,6 +11,8 @@ type ManageableSocket = Socket | RemoteSocket<{}, {}>;
 
 export type SocketOrUserId = ManageableSocket | string;
 
+export const playerDeathEvent = "playerDeath";
+
 export function getUserId(socketOrUserId: SocketOrUserId) {
     return typeof socketOrUserId == "string"
         ? socketOrUserId
@@ -33,8 +35,9 @@ export async function getPlayers(worldCode: string) {
     );
 }
 
-export function getPlayerSocket(userId: string) {
-    return getSocketServer().in(userId);
+export async function getPlayerSocket(userId: string) {
+    const userIdRoom = await getSocketServer().in(userId).fetchSockets();
+    return userIdRoom.at(0);
 }
 
 export function kickPlayer(
@@ -51,4 +54,8 @@ export function kickPlayer(
     } else {
         socket.disconnect();
     }
+}
+
+export function emitPlayerDeath(userId: string) {
+    getSocketServer().serverSideEmit(playerDeathEvent, userId);
 }

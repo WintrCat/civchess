@@ -3,6 +3,8 @@ import { Server as SocketServer } from "socket.io";
 import { createAdapter } from "@socket.io/redis-adapter";
 
 import { getRedisClient } from "@/database/redis";
+import { SocketIdentity } from "@/types/SocketIdentity";
+import { playerDeathEvent } from "./lib/players";
 import { packetMiddleware } from "./middleware";
 import { attachPacketHandlers } from "./packets";
 import { handleDisconnect } from "./disconnection";
@@ -10,7 +12,7 @@ import handlers from "./handlers";
 
 let instance: SocketServer | null = null;
 
-export function createSocketServer(httpServer: HTTPServer) {
+export async function createSocketServer(httpServer: HTTPServer) {
     const server = new SocketServer(httpServer, {
         path: "/api/socket",
         transports: ["websocket"],
@@ -29,9 +31,14 @@ export function createSocketServer(httpServer: HTTPServer) {
     server.on("connect", socket => {
         attachPacketHandlers(socket, handlers, packetMiddleware);
 
-        socket.on("disconnect", () => (
-            handleDisconnect(server, socket)
-        ));
+        socket.on("disconnect", () => handleDisconnect(server, socket));
+    });
+
+    server.on(playerDeathEvent, async (userId: string) => {
+        const socket = (await server.local.in(userId).fetchSockets()).at(0);
+        if (!socket) return;
+
+        (socket.data as SocketIdentity).dead = true;
     });
 
     return instance = server;

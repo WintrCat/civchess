@@ -5,7 +5,7 @@ import { GameClient } from "./Client";
 
 export interface UIHooks {
     setPlayerlist?: Dispatch<SetStateAction<PublicProfile[]>>;
-    setHealth?: Dispatch<SetStateAction<number>>;
+    setHealth?: Dispatch<SetStateAction<number | undefined>>;
 }
 
 export class InterfaceClient {

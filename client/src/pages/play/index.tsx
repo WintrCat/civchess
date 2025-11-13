@@ -1,11 +1,12 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router";
+import { Button, Modal } from "@mantine/core";
 
 import { PublicProfile } from "shared/types/PublicProfile";
+import ProfileAvatar from "@/components/ProfileAvatar";
 import { authClient } from "@/lib/auth";
 import { GameClient } from "@/lib/game/Client";
 import handlers from "@/lib/game/handlers";
-import ProfileAvatar from "@/components/ProfileAvatar";
 
 import styles from "./index.module.css";
 
@@ -17,7 +18,7 @@ function Play() {
 
     const [ playerlist, setPlayerlist ] = useState<PublicProfile[]>([]);
 
-    const [ health, setHealth ] = useState(0);
+    const [ health, setHealth ] = useState<number>();
 
     async function joinWorld() {
         if (!wrapperRef.current) return;
@@ -57,6 +58,28 @@ function Play() {
         <div className={`${styles.guiPanel} ${styles.playerHud}`}>
             Health: {health}
         </div>
+
+        <Modal
+            classNames={{ body: styles.deathModal }}
+            opened={health != undefined && health <= 0}
+            onClose={() => {}}
+            withCloseButton={false}
+            title="You died!"
+            centered
+            styles={{
+                title: { textAlign: "center", width: "100%" }
+            }}
+        >
+            <Button>
+                Respawn
+            </Button>
+
+            <a href="/lobby" style={{ textDecoration: "none" }}>
+                <Button color="red" fullWidth>
+                    Leave world
+                </Button>
+            </a>
+        </Modal>
     </>;
 }
 

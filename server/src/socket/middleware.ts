@@ -20,7 +20,14 @@ export const packetMiddleware: PacketMiddleware = async (
     }
     
     const identity = socket.data;
+
+    if (
+        identity.dead
+        && type != "playerJoin"
+        && type != "playerRespawn"
+    ) throw new Error();
     
+    // Check if it is time to inspect session token
     if (Date.now() < identity.sessionExpiresAt) return;
 
     const session = await Session.exists({

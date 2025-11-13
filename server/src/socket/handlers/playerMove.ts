@@ -15,13 +15,18 @@ import {
     getSurroundingChunks,
     getWorldChunkSize
 } from "../lib/chunks";
-import { getSquare, getSquarePath, moveSquarePiece } from "../lib/chunks/squares";
+import { getSquare, moveSquarePiece } from "../lib/chunks/squares";
 import {
     chunkSubscriptionRoom,
     getChunkBroadcaster,
     setChunkSubscription
 } from "../lib/chunks/subscribers";
-import { getPlayer, getPlayerPath, getPlayerSocket } from "../lib/players";
+import {
+    emitPlayerDeath,
+    getPlayer,
+    getPlayerPath,
+    getPlayerSocket
+} from "../lib/players";
 import { createPacketHandler, sendPacket } from "../packets";
 
 const moveCooldowns: Record<SquareType, number> = {
@@ -48,13 +53,14 @@ export const playerMoveHandler = createPacketHandler({
         if (!legalMoves.has(packet.x, packet.y))
             throw new Error("Illegal player movement.");
 
-        // Validate and refresh player movement cooldown
+        // Validate move cooldown
         if (Date.now() < (player.moveCooldownExpiresAt || 0))
             return acknowledge({ success: false });
 
         const playerUpdate = getRedisClient().createPipeline();
         const playerPath = getPlayerPath(player.userId);
 
+        // Refresh move cooldown based on player's biome
         const toSquare = await getSquare(id.worldCode, packet.x, packet.y);
         if (!toSquare) return acknowledge({ success: false });
         
@@ -91,24 +97,28 @@ export const playerMoveHandler = createPacketHandler({
         );
 
         if (toRuntimeSquare?.id == PieceType.PLAYER) {
-            await playerUpdate.exec();
-
             const newHealth = await getRedisClient().json.incr(
                 id.worldCode,
                 `${getPlayerPath(toRuntimeSquare.userId)}.health`,
                 -1
             );
 
-            sendPacket("playerHealth", { newHealth },
-                getPlayerSocket(toRuntimeSquare.userId)
-            );
+            const victimSocket = await getPlayerSocket(toRuntimeSquare.userId);
+            if (!victimSocket) return acknowledge({ success: false });
 
-            sendPacket("pieceMove", {
-                ...movement,
-                attack: true
-            }, socket.broadcast.to(fromChunkRoom));
+            sendPacket("playerHealth", { newHealth }, victimSocket);
 
-            return acknowledge({ success: false, cooldownExpiresAt });
+            if (newHealth > 0) {
+                await playerUpdate.exec();
+                
+                sendPacket("pieceMove", { ...movement, attack: true },
+                    socket.broadcast.to(fromChunkRoom)
+                );
+
+                return acknowledge({ success: false, cooldownExpiresAt });
+            } else {
+                emitPlayerDeath(toRuntimeSquare.userId);
+            }
         }
 
         // Update player location and move piece to square
