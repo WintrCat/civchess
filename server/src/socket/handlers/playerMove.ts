@@ -2,16 +2,12 @@ import { SquareType } from "shared/constants/SquareType";
 import { PieceType } from "shared/constants/PieceType";
 import { PieceMovePacket } from "shared/types/packets/clientbound/PieceMovePacket";
 import { toPlayerPiece } from "shared/types/world/pieces/Player";
-import {
-    coordinateIndex,
-    getChunkCoordinates,
-    getSurroundingPositions
-} from "shared/lib/world-chunks";
+import { coordinateIndex, getChunkCoordinates } from "shared/lib/world-chunks";
 import { getLegalKingMoves } from "shared/lib/legal-moves";
 import { SocketIdentity } from "@/types/SocketIdentity";
 import { getRedisClient } from "@/database/redis";
 import {
-    getRenderDistance,
+    getSurroundingChunkPoints,
     getSurroundingChunks,
     getWorldChunkSize
 } from "../lib/chunks";
@@ -57,7 +53,7 @@ export const playerMoveHandler = createPacketHandler({
         if (Date.now() < (player.moveCooldownExpiresAt || 0))
             return acknowledge({ success: false });
 
-        const playerUpdate = getRedisClient().createPipeline();
+        const playerUpdate = getRedisClient().createTransaction();
         const playerPath = getPlayerPath(player.userId);
 
         // Refresh move cooldown based on player's biome
@@ -97,7 +93,7 @@ export const playerMoveHandler = createPacketHandler({
         );
 
         if (toRuntimeSquare?.id == PieceType.PLAYER) {
-            const newHealth = await getRedisClient().json.incr(
+            const newHealth = await playerUpdate.json.incr(
                 id.worldCode,
                 `${getPlayerPath(toRuntimeSquare.userId)}.health`,
                 -1
@@ -123,13 +119,11 @@ export const playerMoveHandler = createPacketHandler({
 
         // Update player location and move piece to square
         await playerUpdate.json.set(id.worldCode,
-            `${playerPath}.x`,
-            packet.x
+            `${playerPath}.x`, packet.x
         );
 
         await playerUpdate.json.set(id.worldCode,
-            `${playerPath}.y`,
-            packet.y
+            `${playerPath}.y`, packet.y
         );
 
         await playerUpdate.exec();
@@ -157,33 +151,39 @@ export const playerMoveHandler = createPacketHandler({
             socket, id.worldCode, chunkX, chunkY
         ).except(fromChunkRoom));
 
-        // Load and subscribe to chunks that are now within view
+        // Diff chunks and load new ones, discarding old ones
         if (fromChunkX != chunkX || fromChunkY != chunkY) {
-            getSurroundingPositions(player.x, player.y, {
-                includeCenter: true,
-                radius: getRenderDistance(),
-                max: worldChunkSize
-            }).forEach(chunk => setChunkSubscription(
-                socket, chunk.x, chunk.y, false
-            ));
-
-            const newChunks = getSurroundingChunks(
-                id.worldCode, packet.x, packet.y, {
-                    previousSquareX: player.x,
-                    previousSquareY: player.y
+            const discardedChunks = getSurroundingChunkPoints({
+                chunkX: fromChunkX,
+                chunkY: fromChunkY,
+                worldChunkSize: worldChunkSize,
+                worldCode: id.worldCode,
+                differenceFrom: {
+                    prevChunkX: chunkX,
+                    prevChunkY: chunkY
                 }
-            );
-            
-            for await (const chunkData of newChunks) {
-                await setChunkSubscription(
-                    socket, chunkData.x, chunkData.y, true
+            });
+
+            for (const discardedChunk of discardedChunks)
+                setChunkSubscription(socket,
+                    discardedChunk.x, discardedChunk.y, false
                 );
 
+            const newChunks = getSurroundingChunks({
+                chunkX, chunkY, worldChunkSize,
+                worldCode: id.worldCode,
+                differenceFrom: {
+                    prevChunkX: fromChunkX,
+                    prevChunkY: fromChunkY
+                }
+            });
+            
+            for await (const chunkData of newChunks) {
+                setChunkSubscription(socket, chunkData.x, chunkData.y, true);
                 sendPacket("worldChunkLoad", chunkData, socket);
             }
         }
 
-        // Return movement response to client
         acknowledge({ success: true, cooldownExpiresAt });
     }
 });

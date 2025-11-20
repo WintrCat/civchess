@@ -4,6 +4,7 @@ import { PlayerMoveAck, PlayerMovePacket } from "./serverbound/PlayerMovePacket"
 import { ServerInformationPacket } from "./clientbound/ServerInformationPacket";
 import { WorldChunkLoadPacket } from "./clientbound/WorldChunkLoadPacket";
 import { WorldChunkUpdatePacket } from "./clientbound/WorldChunkUpdatePacket";
+import { Player } from "../world/Player";
 import { PublicProfile } from "../PublicProfile";
 import { PlayerLeavePacket } from "./clientbound/PlayerLeavePacket";
 import { PlayerKickPacket } from "./clientbound/PlayerKickPacket";
@@ -22,6 +23,7 @@ export interface ClientboundPacketTypeMap {
     worldChunkLoad: WorldChunkLoadPacket;
     worldChunkUpdate: WorldChunkUpdatePacket;
 
+    playerInformation: Player;
     playerJoin: PublicProfile;
     playerLeave: PlayerLeavePacket;
     playerKick: PlayerKickPacket;

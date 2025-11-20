@@ -9,10 +9,10 @@ import { chunkSquareCount } from "shared/lib/world-chunks";
 export function generateWorld(options: WorldOptions): World {
     const chunks: Chunk[][] = [];
 
-    for (let y = 0; y < 8; y++) {
+    for (let y = 0; y < 3; y++) {
         const row: Chunk[] = [];
 
-        for (let x = 0; x < 8; x++) {
+        for (let x = 0; x < 3; x++) {
             row.push(generateChunk(options, x, y));
         }
         

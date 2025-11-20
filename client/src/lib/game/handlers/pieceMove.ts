@@ -13,7 +13,7 @@ export const pieceMoveHandler = createPacketHandler({
         const toSquare = client.world.getLocalSquare(
             packet.toX, packet.toY
         );
-        if (!toSquare) return fromSquare.update({ piece: null });
+        if (!toSquare) return fromSquare.setEntity(undefined);
 
         if (packet.attack) {
             await fromSquare.entity?.setPosition(

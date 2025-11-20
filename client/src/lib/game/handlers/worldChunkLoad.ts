@@ -24,9 +24,14 @@ export const worldChunkLoadHandler = createPacketHandler({
                         : client.world.pieceToEntity(x, y, runtimePiece)
                 );
 
-                const entity = (persistentEntity || runtimeEntity)?.spawn();
+                const finalEntity = persistentEntity || runtimeEntity;
 
-                return new LocalSquare(client, x, y, square.type, entity);
+                if (finalEntity != client.world.localPlayer)
+                    finalEntity?.spawn();
+
+                return new LocalSquare(client,
+                    x, y, square.type, finalEntity
+                );
             })
         ));
 

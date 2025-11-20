@@ -6,25 +6,35 @@ import { pieceImages } from "@/constants/utils";
 import { InterfaceClient, UIHooks } from "./InterfaceClient";
 import { SocketClient } from "./SocketClient";
 import { LocalWorld } from "./world/LocalWorld";
+import { clampViewportAroundSquare } from "./utils/viewport";
+import { AuthInfer } from "../auth";
+
+interface GameClientOptions {
+    container: HTMLElement;
+    account: AuthInfer;
+    uiHooks?: UIHooks;
+}
 
 export class GameClient {
-    container: HTMLDivElement;
+    container: HTMLElement;
     app: Application;
 
     viewport?: Viewport;
     socket: SocketClient;
     ui: InterfaceClient;
 
+    account: AuthInfer;
+
     world = new LocalWorld(this);
 
     health?: number;
     inventory: string[] = [];
 
-    constructor(container: HTMLDivElement, uiHooks?: UIHooks) {
+    constructor(opts: GameClientOptions) {
         if (!import.meta.env.PUBLIC_ORIGIN)
             throw new Error("backend origin not specified.");
 
-        this.container = container;
+        this.container = opts.container;
         this.app = new Application();
 
         this.socket = new SocketClient(this,
@@ -32,7 +42,9 @@ export class GameClient {
             { path: "/api/socket", transports: ["websocket"] }
         );
 
-        this.ui = new InterfaceClient(this, uiHooks);
+        this.ui = new InterfaceClient(this, opts.uiHooks);
+
+        this.account = opts.account;
     }
 
     async init() {
@@ -60,30 +72,45 @@ export class GameClient {
         viewport.sortableChildren = true;
         viewport.scale = 2;
 
-        this.app.renderer.on("resize", (width, height) => {
-            viewport.screenWidth = width;
-            viewport.screenHeight = height;
-        });
+        this.viewport = viewport;
 
         this.app.stage.addChild(viewport);
         this.container.appendChild(this.app.canvas);
 
-        this.viewport = viewport;
+        const initialisedClient = this as InitialisedGameClient;
+
+        this.app.renderer.on("resize", (width, height) => {
+            viewport.screenWidth = width;
+            viewport.screenHeight = height;
+
+            if (!this.world.localPlayer) return;
+            
+            clampViewportAroundSquare(initialisedClient,
+                this.world.localPlayer.x,
+                this.world.localPlayer.y
+            );
+        });
 
         for (const pieceImage of Object.values(pieceImages))
             await Assets.load(pieceImage);
 
-        return this as InitialisedGameClient;
+        return initialisedClient;
     }
 
     isInitialised(): this is InitialisedGameClient {
         return !!this.viewport;
     }
 
-    joinWorld(worldCode: string, sessionToken: string) {
+    joinWorld(worldCode: string) {
         this.socket.sendPacket("playerJoin", {
-            worldCode, sessionToken
+            worldCode: worldCode,
+            sessionToken: this.account.session.token
         });
+    }
+
+    respawnPlayer() {
+        this.world.clearLocalChunks();
+        this.socket.sendPacket("playerRespawn", {});
     }
 }
 

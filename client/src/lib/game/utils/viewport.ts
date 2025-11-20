@@ -9,6 +9,9 @@ export function clampViewportAroundSquare(
     squareX: number,
     squareY: number
 ) {
+    console.log(`chunk size: ${client.world.chunkSize}`);
+    console.log(`clamping around: ${squareX}, ${squareY}`);
+
     const chunkPosition = squareChunkWorldPosition(squareX, squareY);
 
     const minCoord = (coord: number) => Math.max(0, coord - renderDistancePx);
@@ -21,6 +24,13 @@ export function clampViewportAroundSquare(
     client.viewport.worldWidth = client.viewport.worldHeight = Math.abs(
         maxCoord(chunkPosition.x) - minCoord(chunkPosition.x)
     );
+
+    console.log({
+        left: minCoord(chunkPosition.x),
+        right: maxCoord(chunkPosition.x),
+        top: minCoord(chunkPosition.y),
+        bottom: maxCoord(chunkPosition.y)
+    });
 
     client.viewport.clamp({
         left: minCoord(chunkPosition.x),

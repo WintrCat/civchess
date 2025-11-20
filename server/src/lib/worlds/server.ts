@@ -6,18 +6,18 @@ import { fetchWorld, toBaseWorld } from "./fetch";
 import { getSocketServer } from "@/socket";
 import { kickPlayer } from "@/socket/lib/players";
 
-export async function isWorldOnline(worldCode: string) {
-    const matchCount = await getRedisClient().exists(worldCode);
-
-    return matchCount > 0;
-}
-
 export function playerCountKey(worldCode: string) {
     return `${worldCode}:socket-count`;
 }
 
 export function worldChunkSizeKey(worldCode: string) {
     return `${worldCode}:world-chunk-size`;
+}
+
+export async function isWorldOnline(worldCode: string) {
+    const matchCount = await getRedisClient().exists(worldCode);
+
+    return matchCount > 0;
 }
 
 /**

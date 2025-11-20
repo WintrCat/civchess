@@ -4,7 +4,7 @@ import { createAdapter } from "@socket.io/redis-adapter";
 
 import { getRedisClient } from "@/database/redis";
 import { SocketIdentity } from "@/types/SocketIdentity";
-import { playerDeathEvent } from "./lib/players";
+import { getPlayerSocket, playerDeathEvent } from "./lib/players";
 import { packetMiddleware } from "./middleware";
 import { attachPacketHandlers } from "./packets";
 import { handleDisconnect } from "./disconnection";
@@ -35,7 +35,7 @@ export async function createSocketServer(httpServer: HTTPServer) {
     });
 
     server.on(playerDeathEvent, async (userId: string) => {
-        const socket = (await server.local.in(userId).fetchSockets()).at(0);
+        const socket = await getPlayerSocket(userId, true);
         if (!socket) return;
 
         (socket.data as SocketIdentity).dead = true;
@@ -45,8 +45,9 @@ export async function createSocketServer(httpServer: HTTPServer) {
 }
 
 export function getSocketServer() {
-    if (!instance)
-        throw new Error("socket server referenced before creation.");
+    if (!instance) throw new Error(
+        "socket server referenced before creation."
+    );
 
     return instance;
 }

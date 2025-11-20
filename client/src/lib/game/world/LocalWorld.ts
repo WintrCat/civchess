@@ -3,10 +3,10 @@ import { Point } from "pixi.js";
 import { PieceType } from "shared/constants/PieceType";
 import { PublicProfile } from "shared/types/PublicProfile";
 import { coordinateIndex, getChunkCoordinates } from "shared/lib/world-chunks";
-import { PlayerPiece } from "shared/types/world/pieces/Player";
 import { Piece } from "shared/types/world/Piece";
 import { GameClient } from "../Client";
 import { LocalChunk } from "./LocalChunk";
+import { Entity } from "../entity/Entity";
 import { Player } from "../entity/Player";
 
 export class LocalWorld {
@@ -40,6 +40,13 @@ export class LocalWorld {
         }
     }
 
+    clearLocalChunks() {
+        for (const coordIndex in this.localChunks)
+            this.localChunks[coordIndex]?.unload();
+
+        this.localChunks = {};
+    }
+
     getLocalChunk(chunkX: number, chunkY: number) {
         return this.localChunks[coordinateIndex(chunkX, chunkY)];
     }
@@ -61,12 +68,15 @@ export class LocalWorld {
     }
 
     // Utils
-    isLocalPlayer(piece: Piece): piece is PlayerPiece {
-        return piece.id == PieceType.PLAYER
-            && piece.userId == this.localPlayer?.userId;
+    isLocalPlayer<T extends Piece | Entity>(piece: T): piece is T {
+        const userId = this.client.account.user.id;
+
+        return piece instanceof Entity
+            ? (piece instanceof Player && piece.userId == userId)
+            : (piece.id == PieceType.PLAYER && piece.userId == userId);
     }
 
-    pieceToEntity(x: number, y: number, piece: Piece) {
+    pieceToEntity(x: number, y: number, piece: Piece): Entity {
         if (!this.client.isInitialised()) throw new Error(
             "cannot create entities before client is initialised."
         );

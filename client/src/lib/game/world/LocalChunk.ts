@@ -27,5 +27,8 @@ export class LocalChunk implements Chunk {
 
     unload() {
         this.container.destroy();
+
+        for (const square of this.squares.flat())
+            square.entity?.despawn();
     }
 }

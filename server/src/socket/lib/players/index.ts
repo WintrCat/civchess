@@ -35,8 +35,11 @@ export async function getPlayers(worldCode: string) {
     );
 }
 
-export async function getPlayerSocket(userId: string) {
-    const userIdRoom = await getSocketServer().in(userId).fetchSockets();
+export async function getPlayerSocket(userId: string, local = false) {
+    const server = getSocketServer();
+    const operator = local ? server.local : server;
+
+    const userIdRoom = await operator.in(userId).fetchSockets();
     return userIdRoom.at(0);
 }
 
@@ -56,6 +59,12 @@ export function kickPlayer(
     }
 }
 
-export function emitPlayerDeath(userId: string) {
-    getSocketServer().serverSideEmit(playerDeathEvent, userId);
+export async function emitPlayerDeath(userId: string) {
+    const localSocket = await getPlayerSocket(userId, true);
+
+    if (localSocket) {
+        (localSocket.data as SocketIdentity).dead = true;
+    } else {
+        getSocketServer().serverSideEmit(playerDeathEvent, userId);
+    }
 }

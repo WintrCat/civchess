@@ -5,23 +5,32 @@ import { createPacketHandler } from "../SocketClient";
 export const worldChunkUpdateHandler = createPacketHandler({
     type: "worldChunkUpdate",
     handle: (packet, client) => {
-        const toGlobalPos = (relX: number, relY: number) => ({
-            x: packet.x * chunkSquareCount + relX,
-            y: packet.y * chunkSquareCount + relY
-        });
-
-        const changes = { ...packet.changes, ...packet.runtimeChanges };
-
-        for (const relPosIndex in changes) {
+        const toGlobalPos = (relPosIndex: string) => {
             const { x: relX, y: relY } = coordinateIndex(relPosIndex);
-            const { x, y } = toGlobalPos(relX, relY);
+
+            return {
+                x: packet.x * chunkSquareCount + relX,
+                y: packet.y * chunkSquareCount + relY
+            }
+        };
+
+        for (const relPosIndex in packet.changes) {
+            const { x, y } = toGlobalPos(relPosIndex);
 
             const localSquare = client.world.getLocalSquare(x, y);
+            if (!localSquare) continue;
 
-            const update = changes[relPosIndex];
+            const update = packet.changes[relPosIndex]!;
 
-            localSquare?.update(!update || "id" in update
-                ? { piece: update } : changes
+            if (update.type) localSquare.type = update.type;
+            if (update.piece) localSquare.setPiece(update.piece);
+        }
+
+        for (const relPosIndex in packet.runtimeChanges) {
+            const { x, y } = toGlobalPos(relPosIndex);
+
+            client.world.getLocalSquare(x, y)?.setPiece(
+                packet.runtimeChanges[relPosIndex]!
             );
         }
     }

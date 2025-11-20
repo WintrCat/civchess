@@ -1,8 +1,7 @@
 import { Graphics } from "pixi.js";
 
-import { Square } from "shared/types/world/Square";
+import { Piece } from "shared/types/world/Piece";
 import { SquareType } from "shared/constants/SquareType";
-import { Updates } from "shared/types/packets/clientbound/WorldChunkUpdatePacket";
 import { squareColours, squareSize } from "../constants/squares";
 import { InitialisedGameClient } from "../Client";
 import { Entity } from "../entity/Entity";
@@ -15,11 +14,11 @@ export class LocalSquare {
     readonly y: number;
     readonly shade: "light" | "dark";
 
+    entity?: Entity;
+
     set type(type: SquareType) {
         this.graphics.fill(squareColours[type][this.shade]);
     }
-
-    entity?: Entity;
 
     constructor(
         client: InitialisedGameClient,
@@ -48,26 +47,22 @@ export class LocalSquare {
         this.type = type;
     }
 
-    update(update: Updates<Square>) {
-        if (update.type) this.type = update.type;
-        
-        if (update.piece !== undefined) {
-            this.entity?.despawn();
+    setEntity(entity: Entity | undefined) {
+        this.entity?.despawn();
+        this.entity = entity;
+    }
 
-            this.entity = update.piece
-                ? this.client.world
-                    .pieceToEntity(this.x, this.y, update.piece)
-                    .spawn()
-                : undefined;
-        }
+    setPiece(piece: Piece) {
+        this.setEntity(this.client.world
+            .pieceToEntity(this.x, this.y, piece)
+            .spawn()
+        );
     }
 
     moveEntity(toSquare: LocalSquare) {
         if (!this.entity) return;
 
-        toSquare.entity?.despawn();
-
-        toSquare.entity = this.entity;
+        toSquare.setEntity(this.entity);
         this.entity = undefined;
     }
 }

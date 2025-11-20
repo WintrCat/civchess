@@ -1,0 +1,1 @@
+export const maxPlayerHealth = 3;

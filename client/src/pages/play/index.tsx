@@ -15,22 +15,26 @@ function Play() {
     const { data: ticket } = authClient.useSession();
 
     const wrapperRef = useRef<HTMLDivElement>(null);
+    
+    const [ gameClient, setGameClient ] = useState<GameClient>();
 
     const [ playerlist, setPlayerlist ] = useState<PublicProfile[]>([]);
-
     const [ health, setHealth ] = useState<number>();
 
     async function joinWorld() {
         if (!wrapperRef.current) return;
         if (!ticket || !worldCode) return;
 
-        const gameClient = await new GameClient(wrapperRef.current, {
-            setPlayerlist,
-            setHealth
+        const gameClient = await new GameClient({
+            container: wrapperRef.current,
+            account: ticket,
+            uiHooks: { setPlayerlist, setHealth }
         }).init();
 
+        setGameClient(gameClient);
+
         gameClient.socket.attachPacketHandlers(handlers);
-        gameClient.joinWorld(worldCode, ticket.session.token);
+        gameClient.joinWorld(worldCode);
     }
 
     useEffect(() => {
@@ -70,7 +74,7 @@ function Play() {
                 title: { textAlign: "center", width: "100%" }
             }}
         >
-            <Button>
+            <Button onClick={() => gameClient?.respawnPlayer()}>
                 Respawn
             </Button>
 

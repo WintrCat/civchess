@@ -52,14 +52,14 @@ class ExtendedRedis extends Redis {
 
         get: async <Val extends ObjectValue>(
             key: string, path: string
-        ): Promise<Val | null> => {
+        ) => {
             try {
                 const response = await this.call("json.get", key, path);
 
                 const matches = JSON.parse(String(response));
                 if (!Array.isArray(matches)) return null;
 
-                return matches.at(0) || null;
+                return matches.at(0) as Val || null;
             } catch {
                 return null;
             }
@@ -94,7 +94,7 @@ class ExtendedRedis extends Redis {
         }
     };
 
-    createPipeline() {
+    createTransaction() {
         const multi = this.multi();
 
         const boundJson = mapValues(

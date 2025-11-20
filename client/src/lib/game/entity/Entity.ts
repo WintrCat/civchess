@@ -70,6 +70,10 @@ export class Entity extends TypedEmitter<EntityEvents> {
             eventMode: "dynamic"
         });
 
+        this.sprite.on("click", () => {
+            console.log(this.client.world.getLocalSquare(this.x, this.y));
+        });
+
         this.setControllable(opts.controllable || false);
     }
 
@@ -142,6 +146,10 @@ export class Entity extends TypedEmitter<EntityEvents> {
     setControllable(controllable: boolean) {
         if (!controllable) {
             this.sprite.removeAllListeners();
+
+            this.sprite.on("click", () => {
+                console.log(this.client.world.getLocalSquare(this.x, this.y));
+            });
 
             if (this.dragListener) this.client.viewport.off(
                 "pointermove", this.dragListener

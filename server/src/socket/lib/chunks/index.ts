@@ -1,41 +1,28 @@
 import { RuntimeChunk } from "shared/types/world/OnlineWorld";
 import { Chunk } from "shared/types/world/Chunk";
-import {
-    coordinateIndex,
-    getChunkCoordinates,
-    getSurroundingBounds
-} from "shared/lib/world-chunks";
+import { getSurroundingPoints } from "shared/lib/surrounding-positions";
+import { coordinateIndex } from "shared/lib/world-chunks";
 import { getRedisClient } from "@/database/redis";
 import { worldChunkSizeKey } from "@/lib/worlds/server";
+
+const worldChunkSizeCache: Record<string, number> = {};
 
 export function getRenderDistance() {
     return Number(process.env.PUBLIC_RENDER_DISTANCE) || 2;
 }
 
-async function getSurroundingChunkBounds(
-    squareX: number,
-    squareY: number,
-    worldCode?: string
-) {
-    const { chunkX, chunkY } = getChunkCoordinates(squareX, squareY);
-
-    return getSurroundingBounds(chunkX, chunkY, {
-        radius: getRenderDistance(),
-        max: worldCode ? await getWorldChunkSize(worldCode) : Infinity
-    });
-}
-
 export async function getWorldChunkSize(worldCode: string) {
     const cacheKey = worldChunkSizeKey(worldCode);
 
-    const cachedSize = await getRedisClient().json
-        .get<number>(cacheKey, "$");
+    const cachedSize = worldChunkSizeCache[worldCode]
+        || await getRedisClient().json.get<number>(cacheKey, "$");
 
     if (!cachedSize) {
         const fetchedSize = await getRedisClient().json
             .length(worldCode, "$.chunks");
 
         await getRedisClient().json.set(cacheKey, "$", fetchedSize);
+        worldChunkSizeCache[worldCode] = fetchedSize;
 
         return fetchedSize;
     }
@@ -63,37 +50,48 @@ export async function getRuntimeChunk(
     ) || {};
 }
 
-export async function* getSurroundingChunks(
-    worldCode: string,
-    squareX: number,
-    squareY: number,
-    diff?: {
-        previousSquareX: number,
-        previousSquareY: number
-    }
+interface SurroundingChunksOptions {
+    worldCode: string;
+    chunkX: number;
+    chunkY: number;
+    worldChunkSize: number;
+    differenceFrom?: {
+        prevChunkX: number;
+        prevChunkY: number;
+    };
+}
+
+export function getSurroundingChunkPoints(
+    opts: SurroundingChunksOptions
 ) {
-    const previousBounds = diff && await getSurroundingChunkBounds(
-        diff.previousSquareX, diff.previousSquareY
-    );
+    return getSurroundingPoints({
+        originX: opts.chunkX,
+        originY: opts.chunkY,
+        differenceFrom: opts.differenceFrom && {
+            originX: opts.differenceFrom.prevChunkX,
+            originY: opts.differenceFrom.prevChunkY
+        },
+        includeCenter: true,
+        max: opts.worldChunkSize,
+        radius: getRenderDistance()
+    });
+}
 
-    const bounds = await getSurroundingChunkBounds(
-        squareX, squareY, worldCode
-    );
+export async function* getSurroundingChunks(
+    opts: SurroundingChunksOptions
+) {
+    const chunkPoints = getSurroundingChunkPoints(opts);
 
-    for (let y = bounds.startY; y <= bounds.endY; y++) {
-        for (let x = bounds.startX; x <= bounds.endX; x++) {
-            if (
-                previousBounds
-                && x >= previousBounds.startX && x <= previousBounds.endX
-                && y >= previousBounds.startY && y <= previousBounds.endY
-            ) continue;
+    for (const point of chunkPoints) {
+        const chunk = await getChunk(
+            opts.worldCode, point.x, point.y
+        );
+        if (!chunk) continue;
 
-            const chunk = await getChunk(worldCode, x, y);
-            if (!chunk) continue;
+        const runtimeChunk = await getRuntimeChunk(
+            opts.worldCode, point.x, point.y
+        );
 
-            const runtimeChunk = await getRuntimeChunk(worldCode, x, y);
-
-            yield { x, y, chunk, runtimeChunk };
-        }
+        yield { ...point, chunk, runtimeChunk };
     }
 }

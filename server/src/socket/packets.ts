@@ -48,12 +48,12 @@ export function attachPacketHandlers(
                     packet, socket, acknowledge
                 );
             } catch (err) {
+                if (!(err instanceof Error)) return;
+
                 console.log("Failed to handle packet:");
                 console.log(err);
 
-                kickPlayer(socket, err instanceof Error
-                    ? err.message : "Illegal packet."
-                );
+                kickPlayer(socket, err.message || "Illegal packet.");
             }
         });
     }

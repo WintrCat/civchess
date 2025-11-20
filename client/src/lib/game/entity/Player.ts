@@ -1,26 +1,18 @@
-import { Point, ColorSource, Texture, Graphics } from "pixi.js";
+import { Point, Texture, Graphics } from "pixi.js";
 import { difference } from "es-toolkit";
 
-import {
-    coordinateIndex,
-    getChunkCoordinates,
-    getSurroundingPositions
-} from "shared/lib/world-chunks";
+import { getSurroundingPoints } from "shared/lib/surrounding-positions";
+import { coordinateIndex, getChunkCoordinates } from "shared/lib/world-chunks";
 import { getLegalKingMoves } from "shared/lib/legal-moves";
 import { pieceImages } from "@/constants/utils";
 import { renderDistance, squareSize } from "../constants/squares";
 import { Layer } from "../constants/Layer";
 import { MoveHints } from "../utils/move-hints";
 import { clampViewportAroundSquare } from "../utils/viewport";
-import { InitialisedGameClient } from "../Client";
 import { Entity, EntityEvents, SubEntityOptions } from "./Entity";
 
 interface PlayerOptions extends SubEntityOptions {
-    client: InitialisedGameClient;
     userId: string;
-    position: Point;
-    colour?: ColorSource;
-    controllable?: boolean;
 }
 
 interface MoveCooldown {
@@ -54,11 +46,11 @@ export class Player extends Entity {
 
         this.on("move", this.onEntityMove);
 
+        // Add move cooldown graphics
         const mc = this.moveCooldown;
         this.client.viewport.addChild(mc.graphics);
 
         this.ticker = () => {
-            // Draw cooldown bar if bounds are set
             mc.graphics.clear();
 
             if (!mc.beginsAt || !mc.expiresAt) return;
@@ -111,13 +103,13 @@ export class Player extends Entity {
             // Unload chunks that are no longer in render distance
             const { chunkX, chunkY } = getChunkCoordinates(to.x, to.y);
 
-            const requiredChunks = getSurroundingPositions(
-                chunkX, chunkY, {
-                    radius: renderDistance,
-                    max: this.client.world.chunkSize,
-                    includeCenter: true
-                }
-            ).map(pos => coordinateIndex(pos.x, pos.y)).toArray();
+            const requiredChunks = getSurroundingPoints({
+                originX: chunkX,
+                originY: chunkY,
+                radius: renderDistance,
+                max: this.client.world.chunkSize,
+                includeCenter: true
+            }).map(pos => coordinateIndex(pos.x, pos.y)).toArray();
 
             const unneededChunks = difference(
                 Object.keys(this.client.world.localChunks),

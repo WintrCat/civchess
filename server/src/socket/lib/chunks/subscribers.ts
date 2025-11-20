@@ -10,7 +10,7 @@ export function chunkSubscriptionRoom(
     return `${worldCode}:chunk-${x}-${y}`;
 }
 
-export async function setChunkSubscription(
+export function setChunkSubscription(
     socket: Socket,
     x: number,
     y: number,
@@ -20,10 +20,18 @@ export async function setChunkSubscription(
     const subRoom = chunkSubscriptionRoom(id.worldCode, x, y);
 
     if (subscribed) {
-        await socket.join(subRoom);
+        socket.join(subRoom);
     } else {
-        await socket.leave(subRoom);
+        socket.leave(subRoom);
     }
+}
+
+export function clearChunkSubscriptions(socket: Socket) {
+    const id = socket.data as SocketIdentity;
+
+    socket.rooms.values()
+        .filter(room => room.startsWith(`${id.worldCode}:chunk`))
+        .forEach(room => socket.leave(room));
 }
 
 export function getChunkBroadcaster(
@@ -34,8 +42,7 @@ export function getChunkBroadcaster(
 ) {
     const subRoom = chunkSubscriptionRoom(worldCode, x, y);
 
-    if (socket instanceof SocketServer)
-        return socket.to(subRoom);
-
-    return socket.broadcast.to(subRoom);
+    return socket instanceof SocketServer
+        ? socket.to(subRoom)
+        : socket.broadcast.to(subRoom);
 }
