@@ -38,6 +38,18 @@
     left: 0;
 }
 
+.kickModal {
+    display: flex;
+    flex-direction: column;
+    align-items: start;
+    gap: 10px;
+}
+
+.kickModalButtons {
+    display: flex;
+    gap: 10px;
+}
+
 .deathModal {
     display: flex;
     flex-direction: column;

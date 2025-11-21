@@ -164,10 +164,11 @@ export const playerMoveHandler = createPacketHandler({
                 }
             });
 
-            for (const discardedChunk of discardedChunks)
+            for (const discardedChunk of discardedChunks) {
                 setChunkSubscription(socket,
                     discardedChunk.x, discardedChunk.y, false
                 );
+            }
 
             const newChunks = getSurroundingChunks({
                 chunkX, chunkY, worldChunkSize,

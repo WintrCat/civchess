@@ -99,8 +99,9 @@ export class MoveHints {
     }
 
     hide() {
-        for (const container of this.hintContainers)
+        for (const container of this.hintContainers) {
             container.destroy();
+        }
 
         this.entity.client.viewport.off("click",
             this.viewportClickListener

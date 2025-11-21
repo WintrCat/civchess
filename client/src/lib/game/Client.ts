@@ -91,8 +91,9 @@ export class GameClient {
             );
         });
 
-        for (const pieceImage of Object.values(pieceImages))
+        for (const pieceImage of Object.values(pieceImages)) {
             await Assets.load(pieceImage);
+        }
 
         return initialisedClient;
     }
@@ -102,10 +103,15 @@ export class GameClient {
     }
 
     joinWorld(worldCode: string) {
+        this.world.clearLocalChunks();
+
+        this.socket.reconnect();
         this.socket.sendPacket("playerJoin", {
             worldCode: worldCode,
             sessionToken: this.account.session.token
         });
+
+        this.ui.setKickDialog(undefined);
     }
 
     respawnPlayer() {

@@ -9,6 +9,7 @@ import { GameClient } from "@/lib/game/Client";
 import handlers from "@/lib/game/handlers";
 
 import styles from "./index.module.css";
+import { KickDialog } from "@/lib/game/InterfaceClient";
 
 function Play() {
     const { worldCode } = useParams();
@@ -18,6 +19,7 @@ function Play() {
     
     const [ gameClient, setGameClient ] = useState<GameClient>();
 
+    const [ kickDialog, setKickDialog ] = useState<KickDialog>();
     const [ playerlist, setPlayerlist ] = useState<PublicProfile[]>([]);
     const [ health, setHealth ] = useState<number>();
 
@@ -28,10 +30,15 @@ function Play() {
         const gameClient = await new GameClient({
             container: wrapperRef.current,
             account: ticket,
-            uiHooks: { setPlayerlist, setHealth }
+            uiHooks: { setPlayerlist, setHealth, setKickDialog }
         }).init();
 
         setGameClient(gameClient);
+
+        gameClient.socket.onDisconnect(() => {
+            if (!gameClient.ui.kickDialog)
+                gameClient.ui.setKickDialog({});
+        });
 
         gameClient.socket.attachPacketHandlers(handlers);
         gameClient.joinWorld(worldCode);
@@ -83,6 +90,31 @@ function Play() {
                     Leave world
                 </Button>
             </a>
+        </Modal>
+
+        <Modal
+            classNames={{ body: styles.kickModal }}
+            opened={!!kickDialog}
+            onClose={() => {}}
+            withCloseButton={false}
+            title={kickDialog?.title}
+            centered
+        >
+            {kickDialog?.message}
+
+            <div className={styles.kickModalButtons}>
+                <Button onClick={() => {
+                    if (worldCode) gameClient?.joinWorld(worldCode);
+                }}>
+                    Rejoin world
+                </Button>
+
+                <a href="/lobby" style={{ textDecoration: "none" }}>
+                    <Button color="red">
+                        Back to lobby
+                    </Button>
+                </a>
+            </div>
         </Modal>
     </>;
 }

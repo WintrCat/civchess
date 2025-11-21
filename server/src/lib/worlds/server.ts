@@ -2,9 +2,11 @@ import { World } from "shared/types/world/World";
 import { OnlineWorld } from "shared/types/world/OnlineWorld";
 import { getRedisClient } from "@/database/redis";
 import { UserWorld } from "@/database/models/UserWorld";
-import { fetchWorld, toBaseWorld } from "./fetch";
 import { getSocketServer } from "@/socket";
-import { kickPlayer } from "@/socket/lib/players";
+import { SocketIdentity } from "@/types/SocketIdentity";
+import { fetchWorld, toBaseWorld } from "./fetch";
+
+export const worldShutdownEvent = "worldShutdown";
 
 export function playerCountKey(worldCode: string) {
     return `${worldCode}:socket-count`;
@@ -16,7 +18,6 @@ export function worldChunkSizeKey(worldCode: string) {
 
 export async function isWorldOnline(worldCode: string) {
     const matchCount = await getRedisClient().exists(worldCode);
-
     return matchCount > 0;
 }
 
@@ -42,6 +43,20 @@ export async function hostWorld(world: World | string) {
 }
 
 /**
+ * @description Queues local sockets for shutdown and kicks them,
+ * preventing unnecessary despawning of pieces upon disconnection.
+ */
+export async function shutdownLocalSockets(worldCode: string) {
+    const sockets = await getSocketServer().local
+        .in(worldCode).fetchSockets();
+
+    for (const socket of sockets) {
+        (socket.data as SocketIdentity).shutdownQueued = true;
+        socket.disconnect();
+    }
+}
+
+/**
  * @description Returns `false` if a world with the given code couldn't
  * be found.
  */
@@ -49,23 +64,38 @@ export async function shutdownWorld(worldCode: string) {
     if (!await getRedisClient().json.exists(worldCode, "$"))
         return false;
 
-    // Kick all connected players
-    kickPlayer(getSocketServer().in(worldCode),
-        "The world has been shut down."
-    );
+    // Delete world's Redis keys
+    const deletion = getRedisClient().createTransaction();
+
+    deletion.del(worldCode);
+    deletion.del(playerCountKey(worldCode));
+    deletion.del(worldChunkSizeKey(worldCode));
+
+    await deletion.exec();
+
+    // Queue local sockets for shutdown, dispatch shutdown event
+    await shutdownLocalSockets(worldCode);
+    getSocketServer().serverSideEmit(worldShutdownEvent, worldCode);
 
     // Save world to database
+    await saveWorld(worldCode);
+
+    return true;
+}
+
+/**
+ * @returns Whether the world was online and saved successfully.
+ */
+export async function saveWorld(worldCode: string) {
     const world = await getRedisClient().json
         .get<OnlineWorld>(worldCode, "$");
         
     if (!world) return false;
 
-    await UserWorld.updateOne({ code: world.code }, toBaseWorld(world));
-
-    // Delete world's Redis keys
-    await getRedisClient().del(worldCode);
-    await getRedisClient().del(playerCountKey(worldCode));
-    await getRedisClient().del(worldChunkSizeKey(worldCode));
+    await UserWorld.updateOne(
+        { code: world.code },
+        toBaseWorld(world)
+    );
 
     return true;
 }

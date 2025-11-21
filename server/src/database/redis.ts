@@ -1,17 +1,14 @@
 import { readFileSync } from "fs";
-import { Redis, RedisValue } from "ioredis";
-import { mapValues } from "es-toolkit";
+import { ChainableCommander, Redis, RedisValue } from "ioredis";
 
 export type ObjectValue = string | number | boolean | object;
 
-class ExtendedRedis extends Redis {
-    private moveScript?: string;
-
-    private async getNumericalResponse(
+function buildJsonExtension(commander: ExtendedRedis | ChainableCommander) {
+    const getNumericalResponse = async (
         command: string,
         ...args: RedisValue[]
-    ) {
-        let response = await this.call(command, ...args);
+    ) => {
+        let response = await commander.call(command, ...args);
 
         if (typeof response == "string") try {
             response = JSON.parse(String(response));
@@ -20,19 +17,9 @@ class ExtendedRedis extends Redis {
         if (!Array.isArray(response)) return NaN;
 
         return Number(response.at(0));
-    }
+    };
 
-    async loadScripts() {
-        const scriptsFolder = "server/src/database/scripts";
-
-        this.moveScript = String(
-            await this.script("LOAD", readFileSync(
-                `${scriptsFolder}/move.lua`, "utf-8"
-            ))
-        );
-    }
-
-    json = {
+    return {
         set: async (
             key: string,
             path: string,
@@ -44,9 +31,9 @@ class ExtendedRedis extends Redis {
             ] as const;
 
             if (modifier) {
-                await this.call(...args, modifier);
+                await commander.call(...args, modifier);
             } else {
-                await this.call(...args);
+                await commander.call(...args);
             }
         },
 
@@ -54,7 +41,7 @@ class ExtendedRedis extends Redis {
             key: string, path: string
         ) => {
             try {
-                const response = await this.call("json.get", key, path);
+                const response = await commander.call("json.get", key, path);
 
                 const matches = JSON.parse(String(response));
                 if (!Array.isArray(matches)) return null;
@@ -66,43 +53,58 @@ class ExtendedRedis extends Redis {
         },
 
         incr: async (key: string, path: string, amount: number) => {
-            return await this.getNumericalResponse(
+            return await getNumericalResponse(
                 "json.numincrby", key, path, amount
             );
         },
 
         delete: async (key: string, path: string) => {
-            return await this.getNumericalResponse("json.del", key, path);
+            return await getNumericalResponse("json.del", key, path);
         },
 
         exists: async (key: string, path: string) => {
-            const response = await this.call("json.type", key, path);
+            const response = await commander.call("json.type", key, path);
             
             return Array.isArray(response) && response.length > 0;
         },
 
         length: async (key: string, path: string) => {
-            return await this.getNumericalResponse("json.arrlen", key, path);
+            return await getNumericalResponse("json.arrlen", key, path);
         },
 
         move: async (key: string, path: string, newPath: string) => {
-            if (!this.moveScript) return;
+            if (!("moveScript" in commander)) return;
+            if (!commander.moveScript) return;
 
-            await this.evalsha(this.moveScript,
+            await commander.evalsha(commander.moveScript,
                 1, key, path, newPath
             );
         }
     };
+}
+
+class ExtendedRedis extends Redis {
+    moveScript?: string;
+
+    json = buildJsonExtension(this);
+
+    async loadScripts() {
+        const scriptsFolder = "server/src/database/scripts";
+
+        this.moveScript = String(
+            await this.script("LOAD", readFileSync(
+                `${scriptsFolder}/move.lua`, "utf-8"
+            ))
+        );
+    }
 
     createTransaction() {
         const multi = this.multi();
 
-        const boundJson = mapValues(
-            this.json,
-            val => val.bind(multi)
-        ) as typeof this.json;
-
-        return { ...multi, json: boundJson };
+        return Object.assign(multi,
+            this,
+            { json: buildJsonExtension(multi) }
+        );
     }
 }
 

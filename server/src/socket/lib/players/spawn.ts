@@ -23,7 +23,11 @@ import {
  * Load and send to them their new surrounding chunks.
  * @returns The final spawn location.
  */
-export async function spawnPlayer(socket: Socket, playerData: Player) {
+export async function spawnPlayer(
+    socket: Socket,
+    playerData: Player,
+    worldChunkSizeCache?: number
+) {
     const id = socket.data as SocketIdentity;
 
     if (playerData.health > 0) {
@@ -64,7 +68,8 @@ export async function spawnPlayer(socket: Socket, playerData: Player) {
 
         const surroundingChunks = getSurroundingChunks({
             worldCode: id.worldCode,
-            worldChunkSize: await getWorldChunkSize(id.worldCode),
+            worldChunkSize: worldChunkSizeCache
+                || await getWorldChunkSize(id.worldCode),
             chunkX: chunkX,
             chunkY: chunkY
         });

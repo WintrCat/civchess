@@ -8,6 +8,7 @@ export interface SocketIdentity {
     worldCode: string;
     profile: PublicProfile;
     dead: boolean;
+    shutdownQueued?: boolean;
 }
 
 export function isIdentified(

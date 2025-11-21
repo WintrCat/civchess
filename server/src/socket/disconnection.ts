@@ -14,22 +14,24 @@ export async function handleDisconnect(
     socket: Socket
 ) {
     if (!isIdentified(socket.data)) return;
-    const identity = socket.data;
+    const id = socket.data;
+
+    if (id.shutdownQueued) return;
 
     // Decrement player count and notify others of leave
-    await decrementPlayerCount(identity.worldCode);
+    await decrementPlayerCount(id.worldCode);
 
     sendPacket("playerLeave", {
-        userId: identity.profile.userId
-    }, server.to(identity.worldCode));
+        userId: id.profile.userId
+    }, server.to(id.worldCode));
 
     // Remove player piece from runtime chunks
     const player = await getPlayer(
-        identity.worldCode, identity.profile.userId
+        id.worldCode, id.profile.userId
     );
     if (!player) return;
 
-    await setSquarePiece(identity.worldCode,
+    await setSquarePiece(id.worldCode,
         player.x, player.y, undefined, "runtime"
     );
 
@@ -45,6 +47,6 @@ export async function handleDisconnect(
             [coordinateIndex(relativeX, relativeY)]: null
         }
     }, getChunkBroadcaster(
-        server, identity.worldCode, chunkX, chunkY
+        server, id.worldCode, chunkX, chunkY
     ));
 }

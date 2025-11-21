@@ -3,6 +3,7 @@ import { serverInformationHandler } from "./serverInformation";
 import { worldChunkLoadHandler } from "./worldChunkLoad";
 import { worldChunkUpdateHandler } from "./worldChunkUpdate";
 
+import { playerKickHandler } from "./playerKick";
 import { playerInformationHandler } from "./playerInformation";
 import { playerJoinHandler } from "./playerJoin";
 import { playerLeaveHandler } from "./playerLeave";
@@ -14,6 +15,8 @@ export default [
     serverInformationHandler,
     worldChunkLoadHandler,
     worldChunkUpdateHandler,
+
+    playerKickHandler,
     playerInformationHandler,
     playerJoinHandler,
     playerLeaveHandler,

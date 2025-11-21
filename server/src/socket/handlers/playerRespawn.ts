@@ -27,6 +27,6 @@ export const playerRespawnHandler = createPacketHandler({
         playerData.x = randomInt(0, worldChunkSize * chunkSquareCount);
         playerData.y = randomInt(0, worldChunkSize * chunkSquareCount);
 
-        await spawnPlayer(socket, playerData);
+        await spawnPlayer(socket, playerData, worldChunkSize);
     }
 });

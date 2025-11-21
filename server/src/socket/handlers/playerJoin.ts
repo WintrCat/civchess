@@ -111,6 +111,6 @@ export const playerJoinHandler = createPacketHandler({
         );
 
         // Spawn player piece into the world
-        await spawnPlayer(socket, playerData);
+        await spawnPlayer(socket, playerData, worldChunkSize);
     }
 });

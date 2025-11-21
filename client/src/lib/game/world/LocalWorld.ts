@@ -41,8 +41,9 @@ export class LocalWorld {
     }
 
     clearLocalChunks() {
-        for (const coordIndex in this.localChunks)
+        for (const coordIndex in this.localChunks) {
             this.localChunks[coordIndex]?.unload();
+        }
 
         this.localChunks = {};
     }

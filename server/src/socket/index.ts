@@ -4,6 +4,7 @@ import { createAdapter } from "@socket.io/redis-adapter";
 
 import { getRedisClient } from "@/database/redis";
 import { SocketIdentity } from "@/types/SocketIdentity";
+import { shutdownLocalSockets, worldShutdownEvent } from "@/lib/worlds/server";
 import { getPlayerSocket, playerDeathEvent } from "./lib/players";
 import { packetMiddleware } from "./middleware";
 import { attachPacketHandlers } from "./packets";
@@ -33,6 +34,10 @@ export async function createSocketServer(httpServer: HTTPServer) {
 
         socket.on("disconnect", () => handleDisconnect(server, socket));
     });
+
+    server.on(worldShutdownEvent, async (worldCode: string) => (
+        await shutdownLocalSockets(worldCode)
+    ));
 
     server.on(playerDeathEvent, async (userId: string) => {
         const socket = await getPlayerSocket(userId, true);

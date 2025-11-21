@@ -34,6 +34,15 @@ export class SocketClient {
         this.rawSocket = io(uri, options);
     }
 
+    reconnect() {
+        if (this.rawSocket.disconnected)
+            this.rawSocket.connect();
+    }
+
+    disconnect() {
+        this.rawSocket.disconnect();
+    }
+
     sendPacket<Type extends ServerboundPacketType>(
         type: Type,
         packet: ServerboundPacketTypeMap[Type],
@@ -63,10 +72,6 @@ export class SocketClient {
         this.rawSocket.on("disconnect", reason => listener(reason));
     }
 
-    disconnect() {
-        this.rawSocket.disconnect();
-    }
-
     attachPacketHandler(handler: AnyPacketHandler) {
         if (!this.gameClient.isInitialised()) throw new Error(
             "cannot handle packets before client is initialised."
@@ -92,8 +97,9 @@ export class SocketClient {
     }
 
     attachPacketHandlers(handlers: AnyPacketHandler[]) {
-        for (const handler of handlers)
+        for (const handler of handlers) {
             this.attachPacketHandler(handler);
+        }
     }
 }
 

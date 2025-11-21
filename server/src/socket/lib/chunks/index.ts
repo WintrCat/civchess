@@ -5,8 +5,6 @@ import { coordinateIndex } from "shared/lib/world-chunks";
 import { getRedisClient } from "@/database/redis";
 import { worldChunkSizeKey } from "@/lib/worlds/server";
 
-const worldChunkSizeCache: Record<string, number> = {};
-
 export function getRenderDistance() {
     return Number(process.env.PUBLIC_RENDER_DISTANCE) || 2;
 }
@@ -14,15 +12,14 @@ export function getRenderDistance() {
 export async function getWorldChunkSize(worldCode: string) {
     const cacheKey = worldChunkSizeKey(worldCode);
 
-    const cachedSize = worldChunkSizeCache[worldCode]
-        || await getRedisClient().json.get<number>(cacheKey, "$");
+    const cachedSize = await getRedisClient().json
+        .get<number>(cacheKey, "$");
 
     if (!cachedSize) {
         const fetchedSize = await getRedisClient().json
             .length(worldCode, "$.chunks");
 
         await getRedisClient().json.set(cacheKey, "$", fetchedSize);
-        worldChunkSizeCache[worldCode] = fetchedSize;
 
         return fetchedSize;
     }
