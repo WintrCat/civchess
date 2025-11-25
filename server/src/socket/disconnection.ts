@@ -26,6 +26,8 @@ export async function handleDisconnect(
     }, server.to(id.worldCode));
 
     // Remove player piece from runtime chunks
+    if (id.dead) return;
+
     const player = await getPlayer(
         id.worldCode, id.profile.userId
     );
@@ -48,5 +50,5 @@ export async function handleDisconnect(
         }
     }, getChunkBroadcaster(
         server, id.worldCode, chunkX, chunkY
-    ));
+    )); 
 }
