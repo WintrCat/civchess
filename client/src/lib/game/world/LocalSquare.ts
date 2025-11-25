@@ -16,10 +16,6 @@ export class LocalSquare {
 
     entity?: Entity;
 
-    set type(type: SquareType) {
-        this.graphics.fill(squareColours[type][this.shade]);
-    }
-
     constructor(
         client: InitialisedGameClient,
         x: number,
@@ -44,7 +40,11 @@ export class LocalSquare {
         client.viewport.addChild(graphics);
 
         this.graphics = graphics;
-        this.type = type;
+        this.setType(type);
+    }
+
+    setType(type: SquareType) {
+        this.graphics.fill(squareColours[type][this.shade]);
     }
 
     setEntity(entity: Entity | undefined) {

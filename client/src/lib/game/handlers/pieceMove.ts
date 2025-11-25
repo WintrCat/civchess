@@ -8,28 +8,22 @@ export const pieceMoveHandler = createPacketHandler({
         const fromSquare = client.world.getLocalSquare(
             packet.fromX, packet.fromY
         );
-        if (!fromSquare) return;
+        if (!fromSquare?.entity) return;
 
         const toSquare = client.world.getLocalSquare(
             packet.toX, packet.toY
         );
         if (!toSquare) return fromSquare.setEntity(undefined);
 
-        if (packet.attack) {
-            await fromSquare.entity?.setPosition(
-                new Point(packet.toX, packet.toY),
-                { animate: true, visualOnly: true, animationDuration: 0.1 }
-            );
+        if (packet.attack) return fromSquare.entity
+            .attackSquare(packet.toX, packet.toY, true);
 
-            await fromSquare.entity?.setPosition(
-                new Point(packet.fromX, packet.fromY),
-                { animate: true, visualOnly: true, animationDuration: 0.1 }
-            );
+        new Audio(toSquare.entity
+            ? "/audio/capture.mp3"
+            : "/audio/move.mp3"
+        ).play();
 
-            return;
-        }
-
-        fromSquare.entity?.setPosition(
+        fromSquare.entity.setPosition(
             new Point(packet.toX, packet.toY),
             { animate: true }
         );

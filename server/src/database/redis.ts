@@ -128,7 +128,7 @@ export async function connectRedisClient() {
 
     await client.loadScripts();
 
-    return instance = client;
+    instance = client;
 }
 
 export function getRedisClient() {

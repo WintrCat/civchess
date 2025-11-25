@@ -3,9 +3,10 @@ import {
     ColorSource,
     Point,
     Sprite,
-    Texture
+    Texture,
+    Color
 } from "pixi.js";
-import { Actions, Interpolations } from "pixi-actions";
+import { Action, Actions, Interpolations } from "pixi-actions";
 
 import { InitialisedGameClient } from "../Client";
 import { TypedEmitter } from "../utils/event-emitter";
@@ -13,6 +14,7 @@ import {
     squareToWorldPosition,
     worldToSquarePosition
 } from "../utils/world-position";
+import { animateAsync } from "../utils/animations";
 import { squareSize } from "../constants/squares";
 import { Layer } from "../constants/Layer";
 
@@ -70,10 +72,6 @@ export class Entity extends TypedEmitter<EntityEvents> {
             eventMode: "dynamic"
         });
 
-        this.sprite.on("click", () => {
-            console.log(this.client.world.getLocalSquare(this.x, this.y));
-        });
-
         this.setControllable(opts.controllable || false);
     }
 
@@ -90,9 +88,9 @@ export class Entity extends TypedEmitter<EntityEvents> {
     }
 
     async setPosition(point: Point, opts?: EntityMoveOptions) {
-        if (!opts?.visualOnly) this.position = point;
-
         Actions.clear(this.sprite);
+
+        if (!opts?.visualOnly) this.position = point;
 
         if (opts?.cancellation) {
             // PLAY A CANCELLATION SOUND OR SOMETHING
@@ -102,27 +100,62 @@ export class Entity extends TypedEmitter<EntityEvents> {
         const worldPos = squareToWorldPosition(point.x, point.y);
 
         if (opts?.animate) {
-            return new Promise<void>(res => {
-                const animation = Actions.moveTo(
-                    this.sprite,
-                    worldPos.x,
-                    worldPos.y,
-                    opts.animationDuration || 0.06,
-                    Interpolations.linear
-                ).play();
-
-                const animationTicker = () => {
-                    if (!animation.done) return;
-
-                    this.client.app.ticker.remove(animationTicker);
-                    res();
-                };
-
-                this.client.app.ticker.add(animationTicker);
-            });
+            await animateAsync(this.client, Actions.moveTo(
+                this.sprite,
+                worldPos.x,
+                worldPos.y,
+                opts.animationDuration || 0.06,
+                Interpolations.linear
+            ));
         } else {
             this.sprite.position = worldPos;
         }
+    }
+
+    async attackSquare(
+        squareX: number,
+        squareY: number,
+        flashEffect = false
+    ) {
+        const origin = this.position.clone();
+        const destination = new Point(squareX, squareY);
+
+        const moveOptions: EntityMoveOptions = {
+            animate: true,
+            visualOnly: true,
+            animationDuration: 0.1
+        };
+
+        if (flashEffect) {
+            const destinationSprite = this.client.world
+                .getLocalSquare(squareX, squareY)?.entity?.sprite;
+            if (!destinationSprite) return;
+
+            const entityColour = new Color(destinationSprite.tint);
+
+            const flashOpacity = 0.4;
+            const damagedColour = new Color([
+                entityColour.red * flashOpacity + flashOpacity,
+                entityColour.green * flashOpacity,
+                entityColour.blue * flashOpacity
+            ]).toNumber();
+
+            destinationSprite.tint = damagedColour;
+
+            new Audio("/audio/attack.mp3").play();
+            
+            setTimeout(() => (
+                animateAsync(this.client, Actions.tintTo(
+                    destinationSprite,
+                    entityColour.toNumber(),
+                    0.5,
+                    Interpolations.pow2out
+                ))
+            ), 150);
+        }
+
+        await this.setPosition(destination, moveOptions);
+        await this.setPosition(origin, moveOptions);
     }
 
     setColour(newColour: ColorSource) {
@@ -146,10 +179,6 @@ export class Entity extends TypedEmitter<EntityEvents> {
     setControllable(controllable: boolean) {
         if (!controllable) {
             this.sprite.removeAllListeners();
-
-            this.sprite.on("click", () => {
-                console.log(this.client.world.getLocalSquare(this.x, this.y));
-            });
 
             if (this.dragListener) this.client.viewport.off(
                 "pointermove", this.dragListener

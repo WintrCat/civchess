@@ -45,7 +45,6 @@ async function main() {
     });
 
     const server = new Server(app);
-
     await createSocketServer(server);
 
     const port = new URL(process.env.PUBLIC_ORIGIN).port || 8080;

@@ -93,7 +93,7 @@ export const playerMoveHandler = createPacketHandler({
         );
 
         if (toRuntimeSquare?.id == PieceType.PLAYER) {
-            const newHealth = await playerUpdate.json.incr(
+            const newHealth = await getRedisClient().json.incr(
                 id.worldCode,
                 `${getPlayerPath(toRuntimeSquare.userId)}.health`,
                 -1

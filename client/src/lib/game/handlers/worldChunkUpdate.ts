@@ -22,7 +22,7 @@ export const worldChunkUpdateHandler = createPacketHandler({
 
             const update = packet.changes[relPosIndex]!;
 
-            if (update.type) localSquare.type = update.type;
+            if (update.type) localSquare.setType(update.type);
             if (update.piece) localSquare.setPiece(update.piece);
         }
 
