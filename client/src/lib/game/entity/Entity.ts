@@ -6,7 +6,7 @@ import {
     Texture,
     Color
 } from "pixi.js";
-import { Action, Actions, Interpolations } from "pixi-actions";
+import { Actions, Interpolations } from "pixi-actions";
 
 import { InitialisedGameClient } from "../Client";
 import { TypedEmitter } from "../utils/event-emitter";
@@ -75,7 +75,7 @@ export class Entity extends TypedEmitter<EntityEvents> {
         this.setControllable(opts.controllable || false);
     }
 
-    private setSize(size: number) {
+    private set size(size: number) {
         this.sprite.width = this.sprite.height = size;
     }
 
@@ -100,13 +100,15 @@ export class Entity extends TypedEmitter<EntityEvents> {
         const worldPos = squareToWorldPosition(point.x, point.y);
 
         if (opts?.animate) {
-            await animateAsync(this.client, Actions.moveTo(
+            this.sprite.zIndex = Layer.ENTITIES_OVERLAY;
+
+            return animateAsync(this.client, Actions.moveTo(
                 this.sprite,
                 worldPos.x,
                 worldPos.y,
                 opts.animationDuration || 0.06,
                 Interpolations.linear
-            ));
+            )).then(() => this.sprite.zIndex = Layer.ENTITIES);
         } else {
             this.sprite.position = worldPos;
         }
@@ -198,7 +200,8 @@ export class Entity extends TypedEmitter<EntityEvents> {
             this.held = true;
 
             this.sprite.position = viewport.toWorld(event.global);
-            this.setSize(this.originalSize * 1.1);
+            this.size = this.originalSize * 1.1;
+            this.sprite.zIndex = Infinity;
             this.sprite.cursor = "grabbing";
 
             viewport.plugins.pause("drag");
@@ -223,7 +226,8 @@ export class Entity extends TypedEmitter<EntityEvents> {
             if (!this.held) return;
 
             this.held = false;
-            this.setSize(this.originalSize);
+            this.size = this.originalSize;
+            this.sprite.zIndex = Layer.ENTITIES;
             this.sprite.cursor = "grab";
 
             this.emit("drop", new Point(this.sprite.x, this.sprite.y));
