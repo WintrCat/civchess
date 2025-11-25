@@ -4,6 +4,7 @@ export interface PlayerMovePacket {
 }
 
 export interface PlayerMoveAck {
-    success: boolean;
+    cancelled: boolean;
     cooldownExpiresAt?: number;
+    attack?: boolean;
 }

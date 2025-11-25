@@ -15,8 +15,8 @@ import {
     worldToSquarePosition
 } from "../utils/world-position";
 import { animateAsync } from "../utils/animations";
-import { squareSize } from "../constants/squares";
 import { Layer } from "../constants/Layer";
+import { squareSize } from "../constants/squares";
 
 export type EntityEvents = {
     hold: () => void;
@@ -49,6 +49,14 @@ export class Entity extends TypedEmitter<EntityEvents> {
 
     position: Point;
 
+    get x() {
+        return this.position.x;
+    }
+
+    get y() {
+        return this.position.y;
+    }
+
     private readonly originalSize: number;
     private held = false;
 
@@ -79,12 +87,22 @@ export class Entity extends TypedEmitter<EntityEvents> {
         this.sprite.width = this.sprite.height = size;
     }
 
-    get x() {
-        return this.position.x;
+    spawn() {
+        this.client.viewport.addChild(this.sprite);
+        
+        return this;
     }
 
-    get y() {
-        return this.position.y;
+    despawn() {
+        if (this.dragListener) this.client.viewport.off(
+            "pointermove", this.dragListener
+        );
+
+        this.sprite.destroy();
+    }
+
+    setColour(newColour: ColorSource) {
+        this.sprite.tint = newColour;
     }
 
     async setPosition(point: Point, opts?: EntityMoveOptions) {
@@ -128,54 +146,34 @@ export class Entity extends TypedEmitter<EntityEvents> {
             animationDuration: 0.1
         };
 
-        if (flashEffect) {
-            const destinationSprite = this.client.world
-                .getLocalSquare(squareX, squareY)?.entity?.sprite;
-            if (!destinationSprite) return;
-
-            const entityColour = new Color(destinationSprite.tint);
-
-            const flashOpacity = 0.4;
-            const damagedColour = new Color([
-                entityColour.red * flashOpacity + flashOpacity,
-                entityColour.green * flashOpacity,
-                entityColour.blue * flashOpacity
-            ]).toNumber();
-
-            destinationSprite.tint = damagedColour;
-
-            new Audio("/audio/attack.mp3").play();
-            
-            setTimeout(() => (
-                animateAsync(this.client, Actions.tintTo(
-                    destinationSprite,
-                    entityColour.toNumber(),
-                    0.5,
-                    Interpolations.pow2out
-                ))
-            ), 150);
-        }
+        if (flashEffect) this.client.world
+            .getLocalSquare(squareX, squareY)
+            ?.entity?.damageFlash();
 
         await this.setPosition(destination, moveOptions);
         await this.setPosition(origin, moveOptions);
     }
 
-    setColour(newColour: ColorSource) {
-        this.sprite.tint = newColour;
-    }
+    async damageFlash() {
+        const entityColour = new Color(this.sprite.tint);
 
-    spawn() {
-        this.client.viewport.addChild(this.sprite);
+        const flashOpacity = 0.4;
+        const damagedColour = new Color([
+            entityColour.red * flashOpacity + flashOpacity,
+            entityColour.green * flashOpacity,
+            entityColour.blue * flashOpacity
+        ]).toNumber();
+
+        this.sprite.tint = damagedColour;
         
-        return this;
-    }
-
-    despawn() {
-        if (this.dragListener) this.client.viewport.off(
-            "pointermove", this.dragListener
-        );
-
-        this.sprite.destroy();
+        setTimeout(() => (
+            animateAsync(this.client, Actions.tintTo(
+                this.sprite,
+                entityColour.toNumber(),
+                0.5,
+                Interpolations.pow2out
+            ))
+        ), 150);
     }
 
     setControllable(controllable: boolean) {

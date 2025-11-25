@@ -10,6 +10,7 @@ import { Layer } from "../constants/Layer";
 import { MoveHints } from "../utils/move-hints";
 import { clampViewportAroundSquare } from "../utils/viewport";
 import { Entity, EntityEvents, SubEntityOptions } from "./Entity";
+import { attackSound, playMoveSound } from "../constants/move-sounds";
 
 interface PlayerOptions extends SubEntityOptions {
     userId: string;
@@ -83,22 +84,30 @@ export class Player extends Entity {
             x: to.x,
             y: to.y
         }, response => {
+            const fromSquare = this.client.world
+                .getLocalSquare(from.x, from.y);
+            if (!fromSquare) return;
+
+            const toSquare = this.client.world
+                .getLocalSquare(to.x, to.y);
+            if (!toSquare) return;
+
             if (response.cooldownExpiresAt) {
                 this.moveCooldown.beginsAt = Date.now();
                 this.moveCooldown.expiresAt = response.cooldownExpiresAt;
             }
 
-            if (!response.success) return cancel();
+            if (response.attack) {
+                attackSound.play();
+                toSquare.entity?.damageFlash();
+            }
+
+            if (response.cancelled) return cancel();
 
             clampViewportAroundSquare(this.client, to.x, to.y);
+            playMoveSound(toSquare);
 
-            // Move entity to new local square
-            const fromSquare = this.client.world
-                .getLocalSquare(from.x, from.y);
-
-            const toSquare = this.client.world.getLocalSquare(to.x, to.y);
-
-            if (toSquare) fromSquare?.moveEntity(toSquare);
+            fromSquare.moveEntity(toSquare);
 
             // Unload chunks that are no longer in render distance
             const { chunkX, chunkY } = getChunkCoordinates(to.x, to.y);

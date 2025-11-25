@@ -1,6 +1,7 @@
 import { Point } from "pixi.js";
 
 import { createPacketHandler } from "../SocketClient";
+import { attackSound, playMoveSound } from "../constants/move-sounds";
 
 export const pieceMoveHandler = createPacketHandler({
     type: "pieceMove",
@@ -15,13 +16,15 @@ export const pieceMoveHandler = createPacketHandler({
         );
         if (!toSquare) return fromSquare.setEntity(undefined);
 
-        if (packet.attack) return fromSquare.entity
-            .attackSquare(packet.toX, packet.toY, true);
+        if (packet.attack) {
+            attackSound.play();
 
-        new Audio(toSquare.entity
-            ? "/audio/capture.mp3"
-            : "/audio/move.mp3"
-        ).play();
+            return fromSquare.entity.attackSquare(
+                packet.toX, packet.toY, true
+            );
+        }
+
+        playMoveSound(toSquare);
 
         fromSquare.entity.setPosition(
             new Point(packet.toX, packet.toY),

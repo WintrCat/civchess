@@ -51,14 +51,14 @@ export const playerMoveHandler = createPacketHandler({
 
         // Validate move cooldown
         if (Date.now() < (player.moveCooldownExpiresAt || 0))
-            return acknowledge({ success: false });
+            return acknowledge({ cancelled: true });
 
         const playerUpdate = getRedisClient().createTransaction();
         const playerPath = getPlayerPath(player.userId);
 
         // Refresh move cooldown based on player's biome
         const toSquare = await getSquare(id.worldCode, packet.x, packet.y);
-        if (!toSquare) return acknowledge({ success: false });
+        if (!toSquare) return acknowledge({ cancelled: true });
         
         const cooldownExpiresAt = Date.now() + moveCooldowns[toSquare.type];
 
@@ -100,7 +100,7 @@ export const playerMoveHandler = createPacketHandler({
             );
 
             const victimSocket = await getPlayerSocket(toRuntimeSquare.userId);
-            if (!victimSocket) return acknowledge({ success: false });
+            if (!victimSocket) return acknowledge({ cancelled: true });
 
             sendPacket("playerHealth", { newHealth }, victimSocket);
 
@@ -111,7 +111,11 @@ export const playerMoveHandler = createPacketHandler({
                     socket.broadcast.to(fromChunkRoom)
                 );
 
-                return acknowledge({ success: false, cooldownExpiresAt });
+                return acknowledge({
+                    cancelled: true,
+                    attack: true,
+                    cooldownExpiresAt
+                });
             } else {
                 emitPlayerDeath(toRuntimeSquare.userId);
             }
@@ -185,6 +189,6 @@ export const playerMoveHandler = createPacketHandler({
             }
         }
 
-        acknowledge({ success: true, cooldownExpiresAt });
+        acknowledge({ cancelled: false, cooldownExpiresAt });
     }
 });
