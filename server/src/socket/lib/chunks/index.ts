@@ -3,11 +3,8 @@ import { Chunk } from "shared/types/world/Chunk";
 import { getSurroundingPoints } from "shared/lib/surrounding-positions";
 import { coordinateIndex } from "shared/lib/world-chunks";
 import { getRedisClient } from "@/database/redis";
+import { config } from "@/lib/config";
 import { worldChunkSizeKey } from "@/lib/worlds/server";
-
-export function getRenderDistance() {
-    return Number(process.env.PUBLIC_RENDER_DISTANCE) || 2;
-}
 
 export async function getWorldChunkSize(worldCode: string) {
     const cacheKey = worldChunkSizeKey(worldCode);
@@ -70,7 +67,7 @@ export function getSurroundingChunkPoints(
         },
         includeCenter: true,
         max: opts.worldChunkSize,
-        radius: getRenderDistance()
+        radius: config.renderDistance
     });
 }
 

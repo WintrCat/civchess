@@ -7,9 +7,10 @@ import { resolve } from "path";
 import dotenv from "dotenv";
 import chalk from "chalk";
 
-import { connectDatabase } from "@/database/connect";
+import { connectDatabase } from "./database/connect";
 import { connectRedisClient } from "./database/redis";
-import { getAuth } from "@/lib/auth";
+import { getAuth } from "./lib/auth";
+import { validateConfig } from "./lib/config";
 import { apiRouter } from "./routes";
 import { createSocketServer } from "./socket";
 
@@ -20,6 +21,8 @@ const coreCount = Number(process.env.THREAD_COUNT) || cpus().length;
 async function main() {
     if (!process.env.PUBLIC_ORIGIN)
         throw new Error("origin not specified.");
+
+    validateConfig();
 
     if (cluster.isPrimary) {
         console.log("starting server...");

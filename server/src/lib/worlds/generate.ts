@@ -5,14 +5,15 @@ import { World, WorldOptions } from "shared/types/world/World";
 import { Chunk } from "shared/types/world/Chunk";
 import { Square } from "shared/types/world/Square";
 import { chunkSquareCount } from "shared/lib/world-chunks";
+import { config } from "../config";
 
 export function generateWorld(options: WorldOptions): World {
     const chunks: Chunk[][] = [];
 
-    for (let y = 0; y < 3; y++) {
+    for (let y = 0; y < config.worldChunkSize; y++) {
         const row: Chunk[] = [];
 
-        for (let x = 0; x < 3; x++) {
+        for (let x = 0; x < config.worldChunkSize; x++) {
             row.push(generateChunk(options, x, y));
         }
         

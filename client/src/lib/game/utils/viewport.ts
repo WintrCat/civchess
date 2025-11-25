@@ -1,14 +1,13 @@
-import { chunkSize, renderDistance } from "../constants/squares";
+import { chunkSize } from "../constants/squares";
 import { InitialisedGameClient } from "../Client";
 import { squareChunkWorldPosition, squareToWorldPosition } from "./world-position";
-
-const renderDistancePx = chunkSize * renderDistance;
 
 export function clampViewportAroundSquare(
     client: InitialisedGameClient,
     squareX: number,
     squareY: number
 ) {
+    const renderDistancePx = chunkSize * client.renderDistance;
     const chunkPosition = squareChunkWorldPosition(squareX, squareY);
 
     const minCoord = (coord: number) => Math.max(0, coord - renderDistancePx);

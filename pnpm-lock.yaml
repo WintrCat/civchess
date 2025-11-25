@@ -74,13 +74,13 @@ importers:
         version: 19.1.7(@types/react@19.1.10)
       '@vitejs/plugin-react':
         specifier: ^5.0.0
-        version: 5.0.0(vite@7.1.1(@types/node@24.2.1))
+        version: 5.0.0(vite@7.1.1(@types/node@24.2.1)(yaml@2.8.1))
       dotenv:
         specifier: ^17.2.1
         version: 17.2.1
       vite:
         specifier: ^7.1.1
-        version: 7.1.1(@types/node@24.2.1)
+        version: 7.1.1(@types/node@24.2.1)(yaml@2.8.1)
 
   server:
     dependencies:
@@ -126,6 +126,9 @@ importers:
       unique-username-generator:
         specifier: ^1.5.1
         version: 1.5.1
+      yaml:
+        specifier: ^2.8.1
+        version: 2.8.1
       zod:
         specifier: ^4.0.17
         version: 4.0.17
@@ -1705,6 +1708,11 @@ packages:
   yallist@3.1.1:
     resolution: {integrity: sha512-a4UGQaWPH59mOXUYnAG2ewncQS4i4F43Tv3JoAM+s2VDAmS9NsK8GpDMLrCHPksFT7h3K6TOoUNn2pb7RoXx4g==}
 
+  yaml@2.8.1:
+    resolution: {integrity: sha512-lcYcMxX2PO9XMGvAJkJ3OsNMw+/7FKes7/hgerGUYWIoWu5j/+YQqcZr5JnPZWzOsEBgMbSbiSTn/dv/69Mkpw==}
+    engines: {node: '>= 14.6'}
+    hasBin: true
+
   zod@4.0.17:
     resolution: {integrity: sha512-1PHjlYRevNxxdy2JZ8JcNAw7rX8V9P1AKkP+x/xZfxB0K5FYfuV+Ug6P/6NVSR2jHQ+FzDDoDHS04nYUsOIyLQ==}
 
@@ -2220,7 +2228,7 @@ snapshots:
     dependencies:
       '@types/webidl-conversions': 7.0.3
 
-  '@vitejs/plugin-react@5.0.0(vite@7.1.1(@types/node@24.2.1))':
+  '@vitejs/plugin-react@5.0.0(vite@7.1.1(@types/node@24.2.1)(yaml@2.8.1))':
     dependencies:
       '@babel/core': 7.28.0
       '@babel/plugin-transform-react-jsx-self': 7.27.1(@babel/core@7.28.0)
@@ -2228,7 +2236,7 @@ snapshots:
       '@rolldown/pluginutils': 1.0.0-beta.30
       '@types/babel__core': 7.20.5
       react-refresh: 0.17.0
-      vite: 7.1.1(@types/node@24.2.1)
+      vite: 7.1.1(@types/node@24.2.1)(yaml@2.8.1)
     transitivePeerDependencies:
       - supports-color
 
@@ -3177,7 +3185,7 @@ snapshots:
 
   vary@1.1.2: {}
 
-  vite@7.1.1(@types/node@24.2.1):
+  vite@7.1.1(@types/node@24.2.1)(yaml@2.8.1):
     dependencies:
       esbuild: 0.25.8
       fdir: 6.4.6(picomatch@4.0.3)
@@ -3188,6 +3196,7 @@ snapshots:
     optionalDependencies:
       '@types/node': 24.2.1
       fsevents: 2.3.3
+      yaml: 2.8.1
 
   webidl-conversions@7.0.0: {}
 
@@ -3203,5 +3212,7 @@ snapshots:
   xmlhttprequest-ssl@2.1.2: {}
 
   yallist@3.1.1: {}
+
+  yaml@2.8.1: {}
 
   zod@4.0.17: {}

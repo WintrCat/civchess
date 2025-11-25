@@ -6,6 +6,7 @@ import { maxPlayerHealth } from "shared/constants/player-stats";
 import { chunkSquareCount } from "shared/lib/world-chunks";
 import { isIdentified, SocketIdentity } from "@/types/SocketIdentity";
 import { Session } from "@/database/models/account";
+import { config } from "@/lib/config";
 import { isWorldOnline } from "@/lib/worlds/server";
 import { worldExists } from "@/lib/worlds/fetch";
 import { getPublicProfile } from "@/lib/public-profile";
@@ -102,7 +103,8 @@ export const playerJoinHandler = createPacketHandler({
                 .filter(socket => isIdentified(socket.data))
                 .map(socket => (socket.data as SocketIdentity).profile)
                 .toArray(),
-            worldChunkSize: worldChunkSize
+            worldChunkSize: worldChunkSize,
+            renderDistance: config.renderDistance
         }, socket);
 
         // Broadcast join to others

@@ -19,6 +19,7 @@
         "shared": "workspace:*",
         "socket.io": "^4.8.1",
         "unique-username-generator": "^1.5.1",
+        "yaml": "^2.8.1",
         "zod": "^4.0.17"
     },
     "devDependencies": {

@@ -4,6 +4,7 @@ export const serverInformationHandler = createPacketHandler({
     type: "serverInformation",
     handle: (packet, client) => {
         client.world.chunkSize = packet.worldChunkSize;
+        client.renderDistance = packet.renderDistance;
 
         // Load connected players list
         client.world.playerlist = Object.fromEntries(

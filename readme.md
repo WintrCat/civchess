@@ -4,9 +4,6 @@
 
 A civilisations / MMO game that takes place on a vast Chess board. Players are Kings and will be able to capture other players to deal damage. You will also be able claim territory, build structures, and invade others.
 
-> [!NOTE]
-> My code is public, though I am working on this privately at the moment; I may not respond to PRs.
-
 ## Local Deployment
 
 ### Prerequisites
@@ -55,7 +52,4 @@ GOOGLE_OAUTH_CLIENT_ID=hellohello.apps.googleusercontent.com
 GOOGLE_OAUTH_CLIENT_SECRET=HELLOHE-HELLOHELLOCIVCHESS
 DISCORD_OAUTH_CLIENT_ID=12345678901234567890
 DISCORD_OAUTH_CLIENT_SECRET=hellohellohellocivchess
-
-# Render distance (in chunks) that players can see in any direction
-PUBLIC_RENDER_DISTANCE=2
 ```

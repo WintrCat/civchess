@@ -5,12 +5,12 @@ import { getSurroundingPoints } from "shared/lib/surrounding-positions";
 import { coordinateIndex, getChunkCoordinates } from "shared/lib/world-chunks";
 import { getLegalKingMoves } from "shared/lib/legal-moves";
 import { pieceImages } from "@/constants/utils";
-import { renderDistance, squareSize } from "../constants/squares";
+import { squareSize } from "../constants/squares";
 import { Layer } from "../constants/Layer";
+import { attackSound, playMoveSound } from "../constants/move-sounds";
 import { MoveHints } from "../utils/move-hints";
 import { clampViewportAroundSquare } from "../utils/viewport";
 import { Entity, EntityEvents, SubEntityOptions } from "./Entity";
-import { attackSound, playMoveSound } from "../constants/move-sounds";
 
 interface PlayerOptions extends SubEntityOptions {
     userId: string;
@@ -115,7 +115,7 @@ export class Player extends Entity {
             const requiredChunks = getSurroundingPoints({
                 originX: chunkX,
                 originY: chunkY,
-                radius: renderDistance,
+                radius: this.client.renderDistance,
                 max: this.client.world.chunkSize,
                 includeCenter: true
             }).map(pos => coordinateIndex(pos.x, pos.y)).toArray();

@@ -1,0 +1,10 @@
+# Diameter of new worlds in chunks (8x8 areas)
+worldChunkSize: 3
+
+# Number of chunks in any direction that players can see
+renderDistance: 2
+
+# Which user roles are allowed to create worlds
+worldCreatorRoles:
+  - admin
+  - staff

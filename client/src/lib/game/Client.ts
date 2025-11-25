@@ -18,14 +18,14 @@ interface GameClientOptions {
 export class GameClient {
     container: HTMLElement;
     app: Application;
+    account: AuthInfer;
 
     viewport?: Viewport;
     socket: SocketClient;
     ui: InterfaceClient;
 
-    account: AuthInfer;
-
     world = new LocalWorld(this);
+    renderDistance = Infinity;
 
     health?: number;
     inventory: string[] = [];
