@@ -108,6 +108,7 @@ function UpsertWorldModal({
         opened={open}
         onClose={close}
         title={editWorld ? "Update world" : "Create a world"}
+        closeOnClickOutside={false}
     >
         <form
             className={styles.wrapper}
