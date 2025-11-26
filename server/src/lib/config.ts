@@ -7,7 +7,7 @@ import { UserRole } from "shared/constants/UserRole";
 const configSchema = z.object({
     worldChunkSize: z.int().min(1),
     renderDistance: z.int().min(1),
-    worldCreatorRoles: z.enum(UserRole).array(),
+    worldCreatorRoles: z.enum(UserRole).or(z.literal("all")).array(),
 });
 
 export const config: z.infer<typeof configSchema> = (

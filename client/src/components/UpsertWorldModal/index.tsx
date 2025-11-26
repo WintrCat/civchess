@@ -57,6 +57,8 @@ function UpsertWorldModal({
 
     function close() {
         form.reset();
+        setError(undefined);
+
         onClose();
     }
 

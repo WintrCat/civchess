@@ -58,11 +58,12 @@ upsertWorldRouter.post(path, async (req, res) => {
     }
 
     // Check user permissions
-    const hasCreatorPermission = config.worldCreatorRoles
-        .some(role => req.user?.roles.includes(role));
-
-    if (!hasCreatorPermission)
-        return res.status(StatusCodes.FORBIDDEN).end();
+    if (
+        !config.worldCreatorRoles.includes("all")
+        && !config.worldCreatorRoles.some(role => (
+            req.user?.roles.includes(role)
+        ))
+    ) return res.status(StatusCodes.FORBIDDEN).end();
 
     const userWorldCount = await UserWorld.countDocuments({
         userId: new Types.ObjectId(req.user.id)
