@@ -23,7 +23,7 @@ export function generateWorld(options: WorldOptions): World {
     return {
         name: options.name,
         code: options.code,
-        pinned: options.pinned || false,
+        pinned: options.pinned,
         chunks: chunks,
         players: {},
         createdAt: new Date().toISOString(),
@@ -44,7 +44,10 @@ export function generateChunk(
 
         for (let x = 0; x < chunkSquareCount; x++) {
             row.push({
-                type: sample(options.squareTypes || Object.values(SquareType))
+                type: sample(options.squareTypes.length > 0
+                    ? options.squareTypes
+                    : Object.values(SquareType)
+                )
             });
         }
         

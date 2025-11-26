@@ -1,20 +1,5 @@
 .wrapper {
     display: flex;
     flex-direction: column;
-    align-items: center;
     gap: 10px;
-}
-
-.wrapper > div:not(.switch) {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-    width: 100%;
-}
-
-.switch {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    width: 100%;
 }

@@ -35,7 +35,7 @@ upsertWorldRouter.post(path, async (req, res) => {
     if (!req.user.roles.includes(UserRole.ADMIN))
         options.pinned = false;
 
-    // Update an existing world with provided world code
+    // Update an existing world if query parameter is provided
     const worldCode = req.query.code?.toString();
 
     if (worldCode) {
@@ -57,15 +57,12 @@ upsertWorldRouter.post(path, async (req, res) => {
         return res.end();
     }
 
-    // Create a new world
+    // Check user permissions
     const hasCreatorPermission = config.worldCreatorRoles
         .some(role => req.user?.roles.includes(role));
 
     if (!hasCreatorPermission)
         return res.status(StatusCodes.FORBIDDEN).end();
-
-    if (await worldExists({ code: options.code }))
-        return res.status(StatusCodes.CONFLICT).end();
 
     const userWorldCount = await UserWorld.countDocuments({
         userId: new Types.ObjectId(req.user.id)
@@ -75,6 +72,10 @@ upsertWorldRouter.post(path, async (req, res) => {
     if (userWorldCount >= maxWorldCount) return res
         .status(StatusCodes.INSUFFICIENT_STORAGE)
         .json(maxWorldCount);
+
+    // Create world if it doesn't already exist
+    if (await worldExists({ code: options.code }))
+        return res.status(StatusCodes.CONFLICT).end();
 
     const world = generateWorld(options);
 
