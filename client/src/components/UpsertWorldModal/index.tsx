@@ -43,7 +43,7 @@ function UpsertWorldModal({
 
     const isUserAdmin = useMemo(() => (
         session?.user.roles.includes(UserRole.ADMIN)
-    ), [session?.user.id]);
+    ), [session?.user]);
 
     const [
         worldOptions,
@@ -88,6 +88,9 @@ function UpsertWorldModal({
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(options)
         });
+
+        if (response.status == StatusCodes.FORBIDDEN)
+            return setError("You do not have permission to create worlds.");
 
         if (response.status == StatusCodes.CONFLICT)
             return setError("A world with this world code already exists.");

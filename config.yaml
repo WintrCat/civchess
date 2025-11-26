@@ -7,4 +7,3 @@ renderDistance: 2
 # Which user roles are allowed to create worlds
 worldCreatorRoles:
   - admin
-  - staff

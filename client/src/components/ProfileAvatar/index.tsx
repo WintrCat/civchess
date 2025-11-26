@@ -14,13 +14,8 @@ interface ProfileAvatarProps {
     editable?: boolean;
 }
 
-const defaultAvatar: ProfileAvatarType = {
-    colour: "var(--ui-shade-5)",
-    piece: "wK"
-};
-
 function ProfileAvatar({
-    avatar = defaultAvatar,
+    avatar = { colour: "var(--ui-shade-5)", piece: "wK" },
     size,
     editable
 }: ProfileAvatarProps) {
@@ -43,10 +38,10 @@ function ProfileAvatar({
             onClick={() => setAvatarEditorOpen(true)}
         />}
 
-        <AvatarEditor
+        {editable && <AvatarEditor
             opened={avatarEditorOpen}
             onClose={() => setAvatarEditorOpen(false)}
-        />
+        />}
     </div>;
 }
 

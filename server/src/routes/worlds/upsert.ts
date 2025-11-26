@@ -6,6 +6,7 @@ import { omit } from "es-toolkit";
 import { UserRole } from "shared/constants/UserRole";
 import { worldOptionsSchema } from "shared/types/world/World";
 import { UserWorld } from "@/database/models/UserWorld";
+import { config } from "@/lib/config";
 import { sessionAuthenticator } from "@/lib/auth/middleware";
 import { generateWorld } from "@/lib/worlds/generate";
 import { isWorldOnline } from "@/lib/worlds/server";
@@ -24,8 +25,9 @@ upsertWorldRouter.use(path,
 upsertWorldRouter.post(path, async (req, res) => {
     if (!req.user) return res.status(StatusCodes.UNAUTHORIZED).end();
 
-    const { data: options, success } = worldOptionsSchema
-        .safeParse(req.body);
+    const { data: options, success } = (
+        worldOptionsSchema.safeParse(req.body)
+    );
 
     if (!success) return res.status(StatusCodes.BAD_REQUEST).end();
 
@@ -56,6 +58,12 @@ upsertWorldRouter.post(path, async (req, res) => {
     }
 
     // Create a new world
+    const hasCreatorPermission = config.worldCreatorRoles
+        .some(role => req.user?.roles.includes(role));
+
+    if (!hasCreatorPermission)
+        return res.status(StatusCodes.FORBIDDEN).end();
+
     if (await worldExists({ code: options.code }))
         return res.status(StatusCodes.CONFLICT).end();
 
