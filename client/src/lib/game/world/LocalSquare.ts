@@ -52,7 +52,9 @@ export class LocalSquare {
         this.entity = entity;
     }
 
-    setPiece(piece: Piece) {
+    setPiece(piece: Piece | undefined) {
+        if (!piece) return this.setEntity(undefined);
+
         this.setEntity(this.client.world
             .pieceToEntity(this.x, this.y, piece)
             .spawn()

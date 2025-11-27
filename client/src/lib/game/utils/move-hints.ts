@@ -6,7 +6,7 @@ import {
     Rectangle
 } from "pixi.js";
 
-import { squareSize } from "../constants/squares";
+import { halfSquare, squareSize } from "../constants/squares";
 import { Layer } from "../constants/Layer";
 import { Entity, EntityEvents } from "../entity/Entity";
 
@@ -132,7 +132,7 @@ export class MoveHints {
             });
 
             container.addChild(new Graphics()
-                .circle(squareSize / 2, squareSize / 2, 0.15 * squareSize)
+                .circle(halfSquare, halfSquare, 0.15 * squareSize)
                 .fill("#ffffff25")
             );
 

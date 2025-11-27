@@ -4,6 +4,8 @@ import { SquareType } from "shared/constants/SquareType";
 import { chunkSquareCount } from "shared/lib/world-chunks";
 
 export const squareSize = 80;
+export const halfSquare = squareSize / 2;
+
 export const chunkSize = squareSize * chunkSquareCount;
 
 export const biomeNames = {

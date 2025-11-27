@@ -1,11 +1,17 @@
-import { Point, Texture, Graphics } from "pixi.js";
+import {
+    Point,
+    Texture,
+    Graphics,
+    GraphicsOptions,
+    TickerCallback
+} from "pixi.js";
 import { difference } from "es-toolkit";
 
 import { getSurroundingPoints } from "shared/lib/surrounding-positions";
 import { coordinateIndex, getChunkCoordinates } from "shared/lib/world-chunks";
 import { getLegalKingMoves } from "shared/lib/legal-moves";
 import { pieceImages } from "@/constants/utils";
-import { squareSize } from "../constants/squares";
+import { halfSquare, squareSize } from "../constants/squares";
 import { Layer } from "../constants/Layer";
 import { attackSound, playMoveSound } from "../constants/move-sounds";
 import { MoveHints } from "../utils/move-hints";
@@ -19,22 +25,22 @@ interface PlayerOptions extends SubEntityOptions {
 interface MoveCooldown {
     beginsAt?: number;
     expiresAt?: number;
-    graphics: Graphics;
+    graphics?: Graphics;
 }
+
+const hologramOptions: GraphicsOptions = {
+    zIndex: Layer.HOLOGRAMS,
+    eventMode: "none"
+};
 
 export class Player extends Entity {
     userId: string;
 
     moveHints: MoveHints;
+    moveCooldown: MoveCooldown = {};
+    private marker?: Graphics;
 
-    moveCooldown: MoveCooldown = {
-        graphics: new Graphics({
-            zIndex: Layer.HOLOGRAMS,
-            eventMode: "none"
-        })
-    };
-
-    private ticker: () => void;
+    private ticker?: TickerCallback<any>;
 
     constructor(opts: PlayerOptions) {
         super({ ...opts, texture: Texture.from(pieceImages.wK) });
@@ -47,12 +53,47 @@ export class Player extends Entity {
 
         this.on("move", this.onEntityMove);
 
-        // Add move cooldown graphics
-        const mc = this.moveCooldown;
-        this.client.viewport.addChild(mc.graphics);
+        if (this.userId != this.client.account.user.id) return;
 
-        this.ticker = () => {
-            mc.graphics.clear();
+        // Add move cooldown graphics
+        this.moveCooldown = { graphics: new Graphics(hologramOptions) };
+
+        const mc = this.moveCooldown;
+        this.client.viewport.addChild(mc.graphics!);
+
+        // Add marker
+        this.marker = new Graphics(hologramOptions);
+        this.client.viewport.addChild(this.marker);
+
+        this.ticker = tick => {
+            // Redraw marker
+            const yOffset = Math.sin(tick.lastTime / 1000 * 2)
+                * (squareSize / 16);
+
+            this.marker?.clear()
+                .poly([
+                    {
+                        x: this.sprite.x - (squareSize / 6),
+                        y: this.sprite.y + yOffset - (0.75 * squareSize)
+                    },
+                    {
+                        x: this.sprite.x + (squareSize / 6),
+                        y: this.sprite.y + yOffset - (0.75 * squareSize)
+                    },
+                    {
+                        x: this.sprite.x,
+                        y: this.sprite.y + yOffset - halfSquare
+                    }
+                ])
+                .fill("#ff2d2d")
+                .stroke({
+                    width: 2,
+                    color: "#c52222",
+                    join: "round"
+                });
+
+            // Redraw move cooldown bar
+            mc.graphics?.clear();
 
             if (!mc.beginsAt || !mc.expiresAt) return;
             if (Date.now() >= mc.expiresAt) return;
@@ -60,9 +101,9 @@ export class Player extends Entity {
             const remainingPercent = Math.abs(mc.expiresAt - Date.now())
                 / Math.abs(mc.expiresAt - mc.beginsAt);
 
-            mc.graphics.rect(
-                (this.sprite.x - (squareSize / 2)) - (squareSize / 16),
-                this.sprite.y - (squareSize / 2) - (squareSize / 4),
+            mc.graphics?.rect(
+                (this.sprite.x - halfSquare) - (squareSize / 16),
+                this.sprite.y - halfSquare - (squareSize / 4),
                 remainingPercent * (squareSize + squareSize / 8),
                 squareSize / 10
             ).fill("#ff2d2d8f");
@@ -135,8 +176,10 @@ export class Player extends Entity {
     despawn() {
         super.despawn();
 
-        this.moveCooldown.graphics.destroy();
-        this.client.app.ticker.remove(this.ticker);
+        this.moveCooldown.graphics?.destroy();
+        
+        if (this.ticker)
+            this.client.app.ticker.remove(this.ticker);
     }
 
     getLegalMoves() {

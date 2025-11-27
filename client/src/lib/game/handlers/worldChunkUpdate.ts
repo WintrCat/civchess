@@ -30,7 +30,7 @@ export const worldChunkUpdateHandler = createPacketHandler({
             const { x, y } = toGlobalPos(relPosIndex);
 
             client.world.getLocalSquare(x, y)?.setPiece(
-                packet.runtimeChanges[relPosIndex]!
+                packet.runtimeChanges[relPosIndex] || undefined
             );
         }
     }

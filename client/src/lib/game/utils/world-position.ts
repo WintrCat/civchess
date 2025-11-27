@@ -1,7 +1,7 @@
 import { Point } from "pixi.js";
 
 import { getChunkCoordinates } from "shared/lib/world-chunks";
-import { squareSize, chunkSize } from "../constants/squares";
+import { squareSize, chunkSize, halfSquare } from "../constants/squares";
 
 /**
  * @description Coordinates are for center of given square
@@ -15,13 +15,13 @@ export function squareToWorldPosition(
 ) {
     if (squareXOrPoint instanceof Point)
         return new Point(
-            (squareXOrPoint.x * squareSize) + (squareSize / 2),
-            (squareXOrPoint.y * squareSize) + (squareSize / 2)
+            squareXOrPoint.x * squareSize + halfSquare,
+            squareXOrPoint.y * squareSize + halfSquare
         );
 
     return new Point(
-        (squareXOrPoint * squareSize) + (squareSize / 2),
-        (squareY! * squareSize) + (squareSize / 2)
+        squareXOrPoint * squareSize + halfSquare,
+        squareY! * squareSize + halfSquare
     );
 }
 
