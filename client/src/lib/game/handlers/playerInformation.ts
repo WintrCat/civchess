@@ -31,7 +31,7 @@ export const playerInformationHandler = createPacketHandler({
             const square = client.world.getLocalSquare(
                 playerData.x, playerData.y
             );
-            if (square) square.entity = localPlayerEntity;
+            if (square) square.setEntity(localPlayerEntity);
 
             localPlayerEntity.spawn();
         }

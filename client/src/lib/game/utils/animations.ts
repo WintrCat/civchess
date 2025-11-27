@@ -1,6 +1,7 @@
 import { Action } from "pixi-actions";
 
 import { GameClient } from "../Client";
+import { ColorMatrixFilter, EffectsMixin } from "pixi.js";
 
 export async function animateAsync(
     client: GameClient,
@@ -20,4 +21,17 @@ export async function animateAsync(
 
         client.app.ticker.add(animationTicker);
     });
+}
+
+export function setBrightness(
+    graphics: EffectsMixin,
+    brightnessMultiplier: number | null
+) {
+    if (brightnessMultiplier == null)
+        return graphics.filters = null;
+
+    const filter = new ColorMatrixFilter();
+    filter.brightness(brightnessMultiplier, true);
+
+    graphics.filters = [filter];
 }

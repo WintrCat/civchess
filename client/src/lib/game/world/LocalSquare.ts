@@ -1,10 +1,11 @@
-import { Graphics } from "pixi.js";
+import { Graphics, TickerCallback } from "pixi.js";
 
 import { Piece } from "shared/types/world/Piece";
 import { SquareType } from "shared/constants/SquareType";
 import { squareColours, squareSize } from "../constants/squares";
 import { InitialisedGameClient } from "../Client";
 import { Entity } from "../entity/Entity";
+import { setBrightness } from "../utils/animations";
 
 export class LocalSquare {
     client: InitialisedGameClient;
@@ -15,6 +16,8 @@ export class LocalSquare {
     readonly shade: "light" | "dark";
 
     entity?: Entity;
+
+    private highlightTicker?: TickerCallback<any>;
 
     constructor(
         client: InitialisedGameClient,
@@ -28,19 +31,19 @@ export class LocalSquare {
         this.x = x;
         this.y = y;
         this.shade = (x + y) % 2 == 0 ? "light" : "dark";
-
-        this.entity = entity;
     
         const graphics = new Graphics().rect(
             x * squareSize, y * squareSize,
             squareSize, squareSize
-        )
+        );
         graphics.cullable = true;
     
         client.viewport.addChild(graphics);
 
         this.graphics = graphics;
         this.setType(type);
+
+        this.setEntity(entity);
     }
 
     setType(type: SquareType) {
@@ -50,6 +53,11 @@ export class LocalSquare {
     setEntity(entity: Entity | undefined) {
         this.entity?.despawn();
         this.entity = entity;
+
+        this.setHighlighted(
+            !!entity
+            && this.client.world.isLocalPlayer(entity)
+        );
     }
 
     setPiece(piece: Piece | undefined) {
@@ -66,5 +74,24 @@ export class LocalSquare {
 
         toSquare.setEntity(this.entity);
         this.entity = undefined;
+        this.setHighlighted(false);
+    }
+
+    setHighlighted(highlighted: boolean) {
+        if (highlighted) {
+            this.highlightTicker = tick => setBrightness(
+                this.graphics,
+                Math.sin(tick.lastTime / 1000 * 2) / 16 + (17 / 16)
+            );
+
+            this.client.app.ticker.add(this.highlightTicker);
+
+            return;
+        }
+
+        setBrightness(this.graphics, null);
+
+        if (!this.highlightTicker) return;
+        this.client.app.ticker.remove(this.highlightTicker);
     }
 }

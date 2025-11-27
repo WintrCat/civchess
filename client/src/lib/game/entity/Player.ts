@@ -53,7 +53,7 @@ export class Player extends Entity {
 
         this.on("move", this.onEntityMove);
 
-        if (this.userId != this.client.account.user.id) return;
+        if (!this.client.world.isLocalPlayer(this)) return;
 
         // Add move cooldown graphics
         this.moveCooldown = { graphics: new Graphics(hologramOptions) };
