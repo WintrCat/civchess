@@ -66,7 +66,7 @@ export class GameClient {
             .decelerate({ friction: 0.85 })
             .pinch()
             .wheel()
-            .clampZoom({ maxScale: 3, minScale: 1 });
+            .clampZoom({ maxScale: 2.5, minScale: 1.5 });
 
         viewport.eventMode = "static";
         viewport.sortableChildren = true;

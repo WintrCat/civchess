@@ -118,7 +118,7 @@ export class Entity extends TypedEmitter<EntityEvents> {
         const worldPos = squareToWorldPosition(point.x, point.y);
 
         if (opts?.animate) {
-            this.sprite.zIndex = Layer.ENTITIES_OVERLAY;
+            this.sprite.zIndex = Layer.MOVING_ENTITIES;
 
             return animateAsync(this.client, Actions.moveTo(
                 this.sprite,

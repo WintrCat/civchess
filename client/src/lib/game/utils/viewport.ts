@@ -1,6 +1,33 @@
+import { Container } from "pixi.js";
+import { Viewport } from "pixi-viewport";
+
 import { chunkSize } from "../constants/squares";
 import { InitialisedGameClient } from "../Client";
-import { squareChunkWorldPosition, squareToWorldPosition } from "./world-position";
+import {
+    squareChunkWorldPosition,
+    squareToWorldPosition
+} from "./world-position";
+
+export function isVisibleInViewport(
+    viewport: Viewport,
+    container: Container
+) {
+    const vpBounds = viewport.getVisibleBounds();
+    const containerBounds = container.getBounds();
+
+    const minCoord = viewport.toWorld(
+        containerBounds.minX, containerBounds.minY
+    );
+
+    const maxCoord = viewport.toWorld(
+        containerBounds.maxX, containerBounds.maxY
+    );
+
+    return maxCoord.x > vpBounds.left
+        && minCoord.x < vpBounds.right
+        && maxCoord.y > vpBounds.top
+        && minCoord.y < vpBounds.bottom;
+}
 
 export function clampViewportAroundSquare(
     client: InitialisedGameClient,
@@ -10,7 +37,9 @@ export function clampViewportAroundSquare(
     const renderDistancePx = chunkSize * client.renderDistance;
     const chunkPosition = squareChunkWorldPosition(squareX, squareY);
 
-    const minCoord = (coord: number) => Math.max(0, coord - renderDistancePx);
+    const minCoord = (coord: number) => Math.max(
+        0, coord - renderDistancePx
+    );
 
     const maxCoord = (coord: number) => Math.min(
         (client.world.chunkSize || Infinity) * chunkSize,
@@ -30,11 +59,9 @@ export function clampViewportAroundSquare(
 }
 
 export function moveViewportToSquare(
-    client: InitialisedGameClient,
+    viewport: Viewport,
     squareX: number,
     squareY: number
 ) {
-    client.viewport.moveCenter(
-        squareToWorldPosition(squareX, squareY)
-    );
+    viewport.moveCenter(squareToWorldPosition(squareX, squareY));
 }

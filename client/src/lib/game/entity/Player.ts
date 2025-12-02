@@ -5,7 +5,7 @@ import {
     GraphicsOptions,
     TickerCallback
 } from "pixi.js";
-import { difference } from "es-toolkit";
+import { clamp, difference } from "es-toolkit";
 
 import { getSurroundingPoints } from "shared/lib/surrounding-positions";
 import { coordinateIndex, getChunkCoordinates } from "shared/lib/world-chunks";
@@ -15,7 +15,7 @@ import { halfSquare, squareSize } from "../constants/squares";
 import { Layer } from "../constants/Layer";
 import { attackSound, playMoveSound } from "../constants/move-sounds";
 import { MoveHints } from "../utils/move-hints";
-import { clampViewportAroundSquare } from "../utils/viewport";
+import { clampViewportAroundSquare, isVisibleInViewport } from "../utils/viewport";
 import { Entity, EntityEvents, SubEntityOptions } from "./Entity";
 
 interface PlayerOptions extends SubEntityOptions {
@@ -66,31 +66,7 @@ export class Player extends Entity {
         this.client.viewport.addChild(this.marker);
 
         this.ticker = tick => {
-            // Redraw marker
-            const yOffset = Math.sin(tick.lastTime / 1000 * 2)
-                * (squareSize / 16);
-
-            this.marker?.clear()
-                .poly([
-                    {
-                        x: this.sprite.x - (squareSize / 6),
-                        y: this.sprite.y + yOffset - (0.75 * squareSize)
-                    },
-                    {
-                        x: this.sprite.x + (squareSize / 6),
-                        y: this.sprite.y + yOffset - (0.75 * squareSize)
-                    },
-                    {
-                        x: this.sprite.x,
-                        y: this.sprite.y + yOffset - halfSquare
-                    }
-                ])
-                .fill("#ff2d2d")
-                .stroke({
-                    width: 2,
-                    color: "#c52222",
-                    join: "round"
-                });
+            this.renderMarker(tick.lastTime);
 
             // Redraw move cooldown bar
             mc.graphics?.clear();
@@ -110,6 +86,73 @@ export class Player extends Entity {
         };
 
         this.client.app.ticker.add(this.ticker);
+    }
+
+    despawn() {
+        super.despawn();
+
+        this.moveCooldown.graphics?.destroy();
+        this.marker?.destroy();
+        
+        if (this.ticker)
+            this.client.app.ticker.remove(this.ticker);
+    }
+
+    renderMarker(currentTick: number, padding = 10) {
+        if (!this.marker) return;
+
+        const vp = this.client.viewport;
+        const spriteVisible = isVisibleInViewport(vp, this.sprite);
+
+        const yOffset = spriteVisible
+            ? Math.sin(currentTick / 1000 * 2) * (squareSize / 16)
+            : 0;
+
+        const size = squareSize / 3;
+
+        this.marker.clear()
+            .poly([
+                { x: -(size / 3), y: -size },
+                { x: size / 3, y: -size },
+                { x: 0, y: 0 }
+            ])
+            .fill("#ff2d2d")
+            .stroke({
+                width: 2,
+                color: "#c52222",
+                join: "round"
+            });
+
+        const x = clamp(
+            this.sprite.x,
+            vp.left + padding,
+            vp.right - padding
+        );
+
+        const topMarkerSpace = this.sprite.getBounds().minY >= halfSquare;
+
+        const y = clamp(
+            this.sprite.y + yOffset + (spriteVisible
+                ? (topMarkerSpace ? -halfSquare : halfSquare) : 0
+            ),
+            vp.top + padding,
+            vp.bottom - padding
+        );
+
+        this.marker.position.set(x, y);
+
+        this.marker.rotation = Math.atan2(
+            this.sprite.y - y,
+            this.sprite.x - x
+        ) - (90 * (Math.PI / 180));
+    }
+
+    getLegalMoves() {
+        const { x, y } = this.position;
+
+        return getLegalKingMoves(x, y, this.client.world.chunkSize)
+            .values()
+            .map(({ x, y }) => new Point(x, y));
     }
 
     private onEntityMove: EntityEvents["move"] = (from, to, cancel) => {
@@ -171,22 +214,5 @@ export class Player extends Entity {
                 this.client.world.setLocalChunk(x, y, undefined);
             }
         });
-    }
-
-    despawn() {
-        super.despawn();
-
-        this.moveCooldown.graphics?.destroy();
-        
-        if (this.ticker)
-            this.client.app.ticker.remove(this.ticker);
-    }
-
-    getLegalMoves() {
-        const { x, y } = this.position;
-
-        return getLegalKingMoves(x, y, this.client.world.chunkSize)
-            .values()
-            .map(({ x, y }) => new Point(x, y));
     }
 }

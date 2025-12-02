@@ -41,7 +41,7 @@ export const playerInformationHandler = createPacketHandler({
             playerData.x, playerData.y
         );
 
-        moveViewportToSquare(client,
+        moveViewportToSquare(client.viewport,
             playerData.x, playerData.y
         );
     }
