@@ -1,4 +1,4 @@
-import React, { CSSProperties, ReactNode, useState } from "react";
+import { CSSProperties, ReactNode, useState } from "react";
 import { Alert, Button, Modal, ModalProps, TextInput } from "@mantine/core";
 
 import styles from "./index.module.css";

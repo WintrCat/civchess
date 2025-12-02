@@ -1,5 +1,4 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router";
+import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button, ButtonProps, Tooltip } from "@mantine/core";
 import { IconTrash, IconEdit, IconLogin2 } from "@tabler/icons-react";
@@ -28,8 +27,6 @@ function WorldListing({
     showDates,
     manageable
 }: WorldListingProps) {
-    const navigate = useNavigate();
-
     const queryClient = useQueryClient();
 
     const [ deleteModalOpen, setDeleteModalOpen ] = useState(false);
@@ -178,7 +175,7 @@ function WorldListing({
         <UpsertWorldModal
             open={updateModalOpen}
             onClose={() => setUpdateModalOpen(false)}
-            editWorld={worldMetadata}
+            editWorld={{ ...worldMetadata, squareTypes: [] }}
         />
     </Container>;
 }

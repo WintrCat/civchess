@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { IconPlus } from "@tabler/icons-react";
 import { Divider, TextInput, Button } from "@mantine/core";
 

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { QueryStatus, useQueryClient } from "@tanstack/react-query";
 import { IconPalette, IconChessKing } from "@tabler/icons-react";
 import {
