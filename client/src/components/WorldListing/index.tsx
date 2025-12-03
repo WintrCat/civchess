@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button, ButtonProps, Tooltip } from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
 import { IconTrash, IconEdit, IconLogin2 } from "@tabler/icons-react";
 
 import { WorldMetadata } from "shared/types/world/World";
@@ -29,8 +30,8 @@ function WorldListing({
 }: WorldListingProps) {
     const queryClient = useQueryClient();
 
-    const [ deleteModalOpen, setDeleteModalOpen ] = useState(false);
-    const [ updateModalOpen, setUpdateModalOpen ] = useState(false);
+    const [ deleteModalOpen, deleteModal ] = useDisclosure();
+    const [ updateModalOpen, updateModal ] = useDisclosure();
 
     const [ hostPending, setHostPending ] = useState(false);
     const [ hostError, setHostError ] = useState<string>();
@@ -47,7 +48,7 @@ function WorldListing({
 
         await queryClient.refetchQueries({ queryKey: ["worlds"] });
 
-        setDeleteModalOpen(false);
+        deleteModal.close();
     }
 
     async function hostWorld() {
@@ -134,7 +135,7 @@ function WorldListing({
                 <Tooltip label="Delete World" withArrow>
                     <Button
                         {...toolbarButtonOptions}
-                        onClick={() => setDeleteModalOpen(true)}
+                        onClick={() => deleteModal.open()}
                     >
                         <IconTrash/>
                     </Button>
@@ -143,7 +144,7 @@ function WorldListing({
                 <Tooltip label="Edit World" withArrow>
                     <Button
                         {...toolbarButtonOptions}
-                        onClick={() => setUpdateModalOpen(true)}
+                        onClick={() => updateModal.open()}
                     >
                         <IconEdit/>
                     </Button>
@@ -162,7 +163,7 @@ function WorldListing({
 
         <ConfirmModal
             opened={deleteModalOpen}
-            onClose={() => setDeleteModalOpen(false)}
+            onClose={() => deleteModal.close()}
             onConfirm={deleteWorld}
             title="Delete World"
             confirmColour="red"
@@ -174,7 +175,7 @@ function WorldListing({
 
         <UpsertWorldModal
             open={updateModalOpen}
-            onClose={() => setUpdateModalOpen(false)}
+            onClose={() => updateModal.close()}
             editWorld={{ ...worldMetadata, squareTypes: [] }}
         />
     </Container>;

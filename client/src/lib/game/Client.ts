@@ -12,7 +12,6 @@ import { AuthInfer } from "../auth";
 interface GameClientOptions {
     container: HTMLElement;
     account: AuthInfer;
-    uiHooks?: UIHooks;
 }
 
 export class GameClient {
@@ -42,7 +41,7 @@ export class GameClient {
             { path: "/api/socket", transports: ["websocket"] }
         );
 
-        this.ui = new InterfaceClient(this, opts.uiHooks);
+        this.ui = new InterfaceClient(this);
 
         this.account = opts.account;
     }

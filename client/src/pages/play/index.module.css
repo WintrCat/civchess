@@ -27,6 +27,16 @@
     left: 0;
 }
 
+.recenterButton {
+    display: flex;
+    justify-content: center;
+    position: absolute;
+    bottom: 20px;
+    left: 0;
+
+    width: 100%;
+}
+
 .deathModal {
     display: flex;
     flex-direction: column;

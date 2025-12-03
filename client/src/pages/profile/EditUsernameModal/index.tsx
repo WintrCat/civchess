@@ -1,44 +1,48 @@
 import { useEffect, useState } from "react";
-import { Modal, ModalProps, TextInput, Button, Alert } from "@mantine/core";
 import { StatusCodes } from "http-status-codes";
+import {
+    Modal,
+    ModalProps,
+    TextInput,
+    Button,
+    Alert,
+    Group
+} from "@mantine/core";
+import { useForm } from "@mantine/form";
 
 import { authClient } from "@/lib/auth";
 
 import styles from "./index.module.css";
 
-const minUsernameLength = 3;
-const maxUsernameLength = 20;
+const minLength = 3;
+const maxLength = 20;
 
 function EditUsernameModal(props: ModalProps) {
     const { data: session } = authClient.useSession();
 
-    const [ username, setUsername ] = useState("");
+    const form = useForm<{ username: string }>({
+        mode: "uncontrolled",
+        validate: { username: val => {
+            if (val.length > maxLength)
+                return `Username must be ${maxLength} characters or less`;
 
-    const [ pending, setPending ] = useState(false);
+            if (val.length < minLength)
+                return `Username must be at least ${minLength} characters.`;
+
+            if (!/^[a-z0-9_]+$/i.test(val))
+                return "Username can include A-Z, 0-9, and _";
+        } }
+    });
+
     const [ error, setError ] = useState<string>();
 
     useEffect(() => {
         if (!session) return;
-        setUsername(session.user.name);
+        form.setFieldValue("username", session.user.name);
     }, [session]);
 
-    useEffect(() => {
-        if (error) setPending(false);
-    }, [error]);
-
     async function editUsername() {
-        if (username.length > maxUsernameLength)
-            return setError("Username must be 20 characters or less.");
-
-        if (username.length < minUsernameLength)
-            return setError("Username must be at least 3 characters.");
-
-        if (!/^[a-z0-9_]+$/i.test(username))
-            return setError(
-                "Username must be alphanumeric including underscores."
-            );
-
-        setPending(true);
+        const username = form.getValues().username;
 
         const response = await fetch("/api/account/edit-username", {
             method: "POST", body: username
@@ -57,7 +61,7 @@ function EditUsernameModal(props: ModalProps) {
     }
 
     function close() {
-        setPending(false);
+        form.reset();
         setError(undefined);
 
         props.onClose();
@@ -65,25 +69,28 @@ function EditUsernameModal(props: ModalProps) {
 
     return <Modal
         {...props}
-        classNames={{ body: styles.wrapper }}
         title="Change Username"
         onClose={close}
     >
-        <TextInput
-            placeholder="New username..."
-            value={username}
-            onChange={event => setUsername(event.target.value)}
-        />
+        <form
+            className={styles.wrapper}
+            onSubmit={form.onSubmit(editUsername)}
+        >
+            <TextInput
+                placeholder="New username..."
+                {...form.getInputProps("username")}
+            />
 
-        {error && <Alert variant="light" color="red">
-            {error}
-        </Alert>}
+            {error && <Alert variant="light" color="red">
+                {error}
+            </Alert>}
 
-        <div className={styles.bottomSection}>
-            <Button onClick={editUsername} loading={pending}>
-                Save
-            </Button>
-        </div>
+            <Group justify="end" gap="10px">
+                <Button type="submit" loading={form.submitting}>
+                    Save
+                </Button>
+            </Group>
+        </form>
     </Modal>;
 }
 

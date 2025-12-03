@@ -1,9 +1,12 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useNavigate, useParams } from "react-router";
-import { Button, Code, Divider } from "@mantine/core";
+import { Button, Code, Divider, Group, Stack } from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
+import { IconEdit } from "@tabler/icons-react";
 
 import { PublicProfile } from "shared/types/PublicProfile";
 import Container from "@/components/Container";
+import ConfirmModal from "@/components/ConfirmModal";
 import ProfileAvatar from "@/components/ProfileAvatar";
 import EditUsernameModal from "./EditUsernameModal";
 import { useServerState } from "@/hooks/useServerState";
@@ -12,8 +15,6 @@ import { formatDate } from "@/lib/utils";
 import { authClient } from "@/lib/auth";
 
 import styles from "./index.module.css";
-import { IconEdit } from "@tabler/icons-react";
-import ConfirmModal from "@/components/ConfirmModal";
 
 function Profile() {
     const navigate = useNavigate();
@@ -28,8 +29,8 @@ function Profile() {
         { queryKey: ["profile", username], retry: false }
     );
 
-    const [ editUsernameOpen, setEditUsernameOpen ] = useState(false);
-    const [ deleteAccountOpen, setDeleteAccountOpen ] = useState(false);
+    const [ editUsernameOpen, editUsernameModal ] = useDisclosure();
+    const [ deleteAccountOpen, deleteAccountModal ] = useDisclosure();
 
     useEffect(() => {
         if (profileStatus == "error") navigate("/404");
@@ -37,7 +38,6 @@ function Profile() {
 
     async function deleteAccount() {
         const result = await authClient.deleteUser();
-
         if (result.error) throw new Error("Unknown error occurred.");
 
         navigate("/sign-in");
@@ -47,23 +47,23 @@ function Profile() {
 
     return <div className={styles.wrapper}>
         <Container className={styles.container} gradient>
-            <div className={styles.profile}>
+            <Group gap="10px" align="start">
                 <ProfileAvatar
                     avatar={profile?.avatar}
                     size={100}
                     editable={editable}
                 />
 
-                <div className={styles.profileData}>
-                    <span className={styles.username}>
+                <Stack gap="5px" align="start">
+                    <Group fz="1.4rem" gap="5px">
                         {profile?.name || "Loading..."}
 
                         {editable && <IconEdit
                             className={styles.usernameEdit}
                             size={26}
-                            onClick={() => setEditUsernameOpen(true)}
+                            onClick={() => editUsernameModal.open()}
                         />}
-                    </span>
+                    </Group>
 
                     {profile?.roles.map(role => <span
                         className={styles.role}
@@ -82,17 +82,15 @@ function Profile() {
                             : "Loading..."
                         }
                     </span>
-                </div>
-            </div>
+                </Stack>
+            </Group>
 
             {session?.user.name == username && <>
                 <Divider label="MANAGE ACCOUNT"/>
 
-                <Button
-                    color="red"
-                    style={{ width: "min-content" }}
-                    onClick={() => setDeleteAccountOpen(true)}
-                >
+                <Button color="red" w="min-content" onClick={
+                    () => deleteAccountModal.open()
+                }>
                     Delete Account
                 </Button>
             </>}
@@ -100,12 +98,12 @@ function Profile() {
 
         <EditUsernameModal
             opened={editUsernameOpen}
-            onClose={() => setEditUsernameOpen(false)}
+            onClose={() => editUsernameModal.close()}
         />
 
         <ConfirmModal
             opened={deleteAccountOpen}
-            onClose={() => setDeleteAccountOpen(false)}
+            onClose={() => deleteAccountModal.close()}
             onConfirm={deleteAccount}
             title="Delete Account"
             confirmationCode={session?.user.name}

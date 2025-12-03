@@ -1,6 +1,6 @@
-import { useState } from "react";
-import { IconPlus } from "@tabler/icons-react";
 import { Divider, TextInput, Button } from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
+import { IconPlus } from "@tabler/icons-react";
 
 import { WorldMetadata } from "shared/types/world/World";
 import Typography from "@/components/Typography";
@@ -27,7 +27,7 @@ function Lobby() {
         data: worlds, status: worldsStatus
     } = useServerState<WorldMetadata[]>("/api/worlds/get", "worlds");
 
-    const [ createWorldOpen, setCreateWorldOpen ] = useState(false);
+    const [ createWorldOpen, createWorldModal ] = useDisclosure();
 
     return <div className={styles.wrapper}>
         <Typography/>
@@ -73,7 +73,7 @@ function Lobby() {
                 size="md"
                 color="var(--ui-shade-5)"
                 leftSection={<IconPlus size={26} />}
-                onClick={() => setCreateWorldOpen(true)}
+                onClick={() => createWorldModal.open()}
             >
                 Create World
             </Button>
@@ -98,7 +98,7 @@ function Lobby() {
 
         <UpsertWorldModal
             open={createWorldOpen}
-            onClose={() => setCreateWorldOpen(false)}
+            onClose={() => createWorldModal.close()}
         />
 
         <Footer className={styles.credit} />

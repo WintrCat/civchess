@@ -30,7 +30,7 @@ const mantineTheme: MantineThemeComponents = {
     Button: {
         styles: {
             root: {
-                transition: "background-color 0.3s"
+                transition: "background-color 0.2s"
             }
         }
     },

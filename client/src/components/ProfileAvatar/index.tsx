@@ -1,6 +1,7 @@
-import { CSSProperties, useState } from "react";
-import { IconEdit } from "@tabler/icons-react";
+import { CSSProperties } from "react";
 import { LoadingOverlay } from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
+import { IconEdit } from "@tabler/icons-react";
 
 import { ProfileAvatar as ProfileAvatarType } from "shared/types/PublicProfile";
 import { pieceImages } from "@/constants/utils";
@@ -19,7 +20,7 @@ function ProfileAvatar({
     size,
     editable
 }: ProfileAvatarProps) {
-    const [ avatarEditorOpen, setAvatarEditorOpen ] = useState(false);
+    const [ avatarEditorOpen, avatarEditor ] = useDisclosure();
 
     return <div className={styles.profileImage} style={{
         backgroundColor: avatar.colour
@@ -35,12 +36,12 @@ function ProfileAvatar({
         {editable && <IconEdit
             className={styles.profileImageEdit}
             size={30}
-            onClick={() => setAvatarEditorOpen(true)}
+            onClick={() => avatarEditor.open()}
         />}
 
         {editable && <AvatarEditor
             opened={avatarEditorOpen}
-            onClose={() => setAvatarEditorOpen(false)}
+            onClose={() => avatarEditor.close()}
         />}
     </div>;
 }

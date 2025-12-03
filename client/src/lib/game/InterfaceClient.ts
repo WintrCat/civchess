@@ -1,24 +1,21 @@
-import { Dispatch, SetStateAction } from "react";
+import { Dispatch } from "react";
 
+import { PlayerKickPacket } from "shared/types/packets/clientbound/PlayerKickPacket";
 import { PublicProfile } from "shared/types/PublicProfile";
 import { GameClient } from "./Client";
 
-export interface KickDialog {
-    title: string;
-    message: string;
-}
-
 export interface UIHooks {
-    setPlayerlist?: Dispatch<SetStateAction<PublicProfile[]>>;
-    setHealth?: Dispatch<SetStateAction<number | undefined>>;
-    setKickDialog?: Dispatch<SetStateAction<KickDialog | undefined>>;
+    setPlayerlist?: Dispatch<PublicProfile[]>;
+    setHealth?: Dispatch<number | undefined>;
+    setKickDialog?: Dispatch<PlayerKickPacket | undefined>;
+    setPlayerVisible?: Dispatch<boolean>;
 }
 
 export class InterfaceClient {
     gameClient: GameClient;
     hooks: UIHooks;
 
-    kickDialog?: KickDialog;
+    kickDialog?: PlayerKickPacket;
 
     constructor(client: GameClient, hooks?: UIHooks) {
         this.gameClient = client;
@@ -37,11 +34,11 @@ export class InterfaceClient {
         this.hooks.setHealth?.(this.gameClient.health);
     }
 
-    setKickDialog(dialog: Partial<KickDialog> | undefined) {
+    setKickDialog(dialog: Partial<PlayerKickPacket> | undefined) {
         this.kickDialog = dialog && {
             title: dialog?.title
                 || "Kicked from the world",
-            message: dialog?.message
+            reason: dialog?.reason
                 || "You lost connection to the world."
         };
 

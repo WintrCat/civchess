@@ -63,8 +63,6 @@ function UpsertWorldModal({
     }
 
     async function upsertWorld(options: WorldOptions) {
-        console.log("attempting upsert...");
-
         const upsertURL = editWorld
             ? `/api/worlds/upsert?code=${editWorld.code}`
             : "/api/worlds/upsert";
@@ -177,6 +175,7 @@ function UpsertWorldModal({
                     ? <IconEdit size={26} />
                     : <IconPlus size={26} />
                 }
+                loading={form.submitting}
             >
                 {editWorld ? "Update World" : "Create World"}
             </Button>

@@ -43,7 +43,7 @@ function Play() {
     return <>
         <div className={styles.application} ref={wrapperRef} />
 
-        {gameClient && worldCode
+        {gameClient?.isInitialised() && worldCode
             && <PlayerHud client={gameClient} worldCode={worldCode} />
         }
     </>;
