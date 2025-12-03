@@ -79,7 +79,7 @@ export class Player extends Entity {
 
             mc.graphics?.rect(
                 (this.sprite.x - halfSquare) - (squareSize / 16),
-                this.sprite.y - halfSquare - (squareSize / 4),
+                this.sprite.y + halfSquare,
                 remainingPercent * (squareSize + squareSize / 8),
                 squareSize / 10
             ).fill("#ff2d2d8f");
