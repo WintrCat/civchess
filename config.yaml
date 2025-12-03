@@ -8,3 +8,6 @@ renderDistance: 2
 # Roles: admin, staff, creator, all
 worldCreatorRoles:
   - all
+
+# How much health players spawn with
+maxPlayerHealth: 3

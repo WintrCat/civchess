@@ -199,7 +199,7 @@ export class Player extends Entity {
             const requiredChunks = getSurroundingPoints({
                 originX: chunkX,
                 originY: chunkY,
-                radius: this.client.renderDistance,
+                radius: this.client.world.renderDistance,
                 max: this.client.world.chunkSize,
                 includeCenter: true
             }).map(pos => coordinateIndex(pos.x, pos.y)).toArray();

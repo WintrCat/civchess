@@ -12,6 +12,7 @@ export const playerInformationHandler = createPacketHandler({
     handle: (playerData, client) => {
         // Load local player data
         client.health = playerData.health;
+        client.maxHealth = playerData.maxHealth;
         client.ui.updateHealthbar();
 
         client.inventory = playerData.inventory;

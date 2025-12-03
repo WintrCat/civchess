@@ -1,11 +1,10 @@
 import { Container } from "pixi.js";
 
-import { Chunk } from "shared/types/world/Chunk";
 import { LocalSquare } from "./LocalSquare";
 import { LocalWorld } from "./LocalWorld";
 import { Layer } from "../constants/Layer";
 
-export class LocalChunk implements Chunk {
+export class LocalChunk {
     world: LocalWorld;
     squares: LocalSquare[][];
 

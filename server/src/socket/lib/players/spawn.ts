@@ -3,10 +3,11 @@ import { Socket } from "socket.io";
 import { Player } from "shared/types/world/Player";
 import { toPlayerPiece } from "shared/types/world/pieces/Player";
 import { getChunkCoordinates, coordinateIndex } from "shared/lib/world-chunks";
+import { SocketIdentity } from "@/types/SocketIdentity";
 import { getRedisClient } from "@/database/redis";
+import { config } from "@/lib/config";
 import { sendPacket } from "@/socket/packets";
 import { getPlayerPath } from "@/socket/lib/players";
-import { SocketIdentity } from "@/types/SocketIdentity";
 import { findNearestEmptySquare } from "../empty-square";
 import { getSurroundingChunks, getWorldChunkSize } from "../chunks";
 import { setSquarePiece } from "../chunks/squares";
@@ -86,7 +87,10 @@ export async function spawnPlayer(
     );
 
     // Return player information
-    sendPacket("playerInformation", playerData, socket);
+    sendPacket("playerInformation", {
+        ...playerData,
+        maxHealth: config.maxPlayerHealth
+    }, socket);
 
     return { x: playerData.x, y: playerData.y };
 }

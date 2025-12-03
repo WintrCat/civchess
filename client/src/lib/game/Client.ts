@@ -24,9 +24,9 @@ export class GameClient {
     ui: InterfaceClient;
 
     world = new LocalWorld(this);
-    renderDistance = Infinity;
 
     health?: number;
+    maxHealth?: number;
     inventory: string[] = [];
 
     constructor(opts: GameClientOptions) {

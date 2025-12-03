@@ -2,7 +2,6 @@ import { Socket } from "socket.io";
 import { Types } from "mongoose";
 import { randomInt } from "es-toolkit";
 
-import { maxPlayerHealth } from "shared/constants/player-stats";
 import { chunkSquareCount } from "shared/lib/world-chunks";
 import { isIdentified, SocketIdentity } from "@/types/SocketIdentity";
 import { Session } from "@/database/models/account";
@@ -78,7 +77,7 @@ export const playerJoinHandler = createPacketHandler({
             x: randomInt(0, worldChunkSize * chunkSquareCount),
             y: randomInt(0, worldChunkSize * chunkSquareCount),
             colour: "#" + randomInt(0, 0xffffff).toString(16),
-            health: maxPlayerHealth,
+            health: config.maxPlayerHealth,
             inventory: []
         };
 

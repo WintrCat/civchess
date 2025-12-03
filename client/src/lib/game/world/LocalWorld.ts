@@ -12,6 +12,8 @@ import { Player } from "../entity/Player";
 export class LocalWorld {
     client: GameClient;
 
+    renderDistance = Infinity;
+
     // Coordinate Index -> Local Chunk 
     localChunks: Record<string, LocalChunk> = {};
     chunkSize?: number;

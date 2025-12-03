@@ -8,6 +8,7 @@ const configSchema = z.object({
     worldChunkSize: z.int().min(1),
     renderDistance: z.int().min(1),
     worldCreatorRoles: z.enum(UserRole).or(z.literal("all")).array(),
+    maxPlayerHealth: z.int().min(1) 
 });
 
 export const config: z.infer<typeof configSchema> = (

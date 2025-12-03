@@ -1,14 +1,19 @@
+// Serverbound
 import { PlayerJoinPacket } from "./serverbound/PlayerJoinPacket";
 import { PlayerMoveAck, PlayerMovePacket } from "./serverbound/PlayerMovePacket";
 
+// Clientbound
 import { ServerInformationPacket } from "./clientbound/ServerInformationPacket";
+
 import { WorldChunkLoadPacket } from "./clientbound/WorldChunkLoadPacket";
 import { WorldChunkUpdatePacket } from "./clientbound/WorldChunkUpdatePacket";
-import { Player } from "../world/Player";
+
+import { PlayerInformationPacket } from "./clientbound/PlayerInformationPacket";
 import { PublicProfile } from "../PublicProfile";
 import { PlayerLeavePacket } from "./clientbound/PlayerLeavePacket";
 import { PlayerKickPacket } from "./clientbound/PlayerKickPacket";
 import { PlayerHealthPacket } from "./clientbound/PlayerHealthPacket";
+
 import { PieceMovePacket } from "./clientbound/PieceMovePacket";
 
 export interface ServerboundPacketTypeMap {
@@ -23,7 +28,7 @@ export interface ClientboundPacketTypeMap {
     worldChunkLoad: WorldChunkLoadPacket;
     worldChunkUpdate: WorldChunkUpdatePacket;
 
-    playerInformation: Player;
+    playerInformation: PlayerInformationPacket;
     playerJoin: PublicProfile;
     playerLeave: PlayerLeavePacket;
     playerKick: PlayerKickPacket;

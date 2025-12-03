@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Modal, Button, Group, Kbd } from "@mantine/core";
+import { Modal, Button, Group, Kbd, Progress } from "@mantine/core";
 import { useHotkeys } from "@mantine/hooks";
 import { IconViewfinder } from "@tabler/icons-react";
 
@@ -12,7 +12,7 @@ import {
     moveViewportToSquare
 } from "@/lib/game/utils/viewport";
 
-import styles from "./index.module.css";
+import styles from "./PlayerHud.module.css"
 
 interface PlayerHudProps {
     client: InitialisedGameClient;
@@ -54,7 +54,7 @@ function PlayerHud({ client, worldCode }: PlayerHudProps) {
         setPlayerVisible(true);
     }
 
-    useHotkeys([ ["R", () => recenterCamera()] ]);
+    useHotkeys([["R", recenterCamera]]);
 
     return <>
         <div className={`${styles.panel} ${styles.serverPanel}`}>
@@ -62,11 +62,7 @@ function PlayerHud({ client, worldCode }: PlayerHudProps) {
                 Connected to <b>{worldCode}</b>
             </span>
 
-            {playerlist.map(profile => <Group
-                key={profile.name}
-                gap="10px"
-                w="100%"
-            >
+            {playerlist.map(profile => <Group key={profile.name} gap="10px">
                 <ProfileAvatar size={30} avatar={profile.avatar} />
 
                 <span>{profile.name}</span>
@@ -74,7 +70,12 @@ function PlayerHud({ client, worldCode }: PlayerHudProps) {
         </div>
 
         <div className={`${styles.panel} ${styles.playerStats}`}>
-            Health: {health}
+            Health
+
+            <Progress
+                value={(client.health || 0) / (client.maxHealth || 1) * 100}
+                w="200px" h="30px" color="#2dff5a"
+            />
         </div>
 
         {!playerVisible && <Group className={styles.recenterButton}>
