@@ -91,7 +91,8 @@ export class LocalWorld {
                 client: this.client,
                 position: position,
                 userId: piece.userId,
-                colour: piece.colour
+                colour: piece.colour,
+                nametag: piece.username
             });
         }
     

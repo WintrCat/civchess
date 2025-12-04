@@ -4,7 +4,10 @@ import {
     Point,
     Sprite,
     Texture,
-    Color
+    Color,
+    Text,
+    Graphics,
+    Container
 } from "pixi.js";
 import { Actions, Interpolations } from "pixi-actions";
 
@@ -31,6 +34,7 @@ interface EntityOptions {
     position: Point;
     size?: number;
     colour?: ColorSource;
+    nametag?: string;
     controllable?: boolean;
 }
 
@@ -41,6 +45,11 @@ interface EntityMoveOptions {
     animate?: boolean;
     animationDuration?: number;
     visualOnly?: boolean;
+}
+
+interface EntityNametag {
+    container?: Container;
+    ticker: () => void;
 }
 
 export class Entity extends TypedEmitter<EntityEvents> {
@@ -59,8 +68,13 @@ export class Entity extends TypedEmitter<EntityEvents> {
 
     private readonly originalSize: number;
     private held = false;
-
     private dragListener?: (event: FederatedPointerEvent) => void;
+
+    private nametag: EntityNametag = {
+        ticker: () => this.nametag.container?.position.set(
+            this.sprite.x, this.sprite.y - (squareSize * 0.55)
+        )
+    };
 
     constructor(opts: EntityOptions) {
         super();
@@ -80,6 +94,8 @@ export class Entity extends TypedEmitter<EntityEvents> {
             eventMode: "dynamic"
         });
 
+        if (opts.nametag) this.setNametag(opts.nametag);
+
         this.setControllable(opts.controllable || false);
     }
 
@@ -98,11 +114,56 @@ export class Entity extends TypedEmitter<EntityEvents> {
             "pointermove", this.dragListener
         );
 
+        this.nametag.container?.destroy();
+        this.client.app.ticker.remove(this.nametag.ticker);
+
         this.sprite.destroy();
     }
 
     setColour(newColour: ColorSource) {
         this.sprite.tint = newColour;
+    }
+
+    setNametag(text: string | undefined) {
+        this.nametag.container?.destroy();
+        this.client.app.ticker.remove(this.nametag.ticker);
+        if (!text) return;
+
+        const nametagPadding = { x: 2.5, y: 1 };
+
+        const textGraphics = new Text({
+            text: text,
+            style: {
+                fill: "#ffffff",
+                fontSize: 12,
+                padding: 5
+            },
+            resolution: 2,
+            x: nametagPadding.x,
+            y: -1
+        });
+        
+        const nametagSize = {
+            x: textGraphics.width + nametagPadding.x * 2,
+            y: textGraphics.height + nametagPadding.y * 2
+        }; 
+
+        const container = new Container({
+            zIndex: Layer.HOLOGRAMS,
+            pivot: { x: nametagSize.x / 2, y: nametagSize.y / 2 },
+            x: this.sprite.x,
+            y: this.sprite.y
+        });
+        this.nametag.container = container;
+
+        container.addChild(new Graphics()
+            .rect(0, 0, nametagSize.x, nametagSize.y)
+            .fill("#41414170")
+        );
+        container.addChild(textGraphics);
+
+        this.client.viewport.addChild(container);
+        this.client.app.ticker.add(this.nametag.ticker);
     }
 
     async setPosition(point: Point, opts?: EntityMoveOptions) {
@@ -126,7 +187,7 @@ export class Entity extends TypedEmitter<EntityEvents> {
                 worldPos.y,
                 opts.animationDuration || 0.06,
                 Interpolations.linear
-            )).then(() => this.sprite.zIndex = Layer.ENTITIES);
+            )).finally(() => this.sprite.zIndex = Layer.ENTITIES);
         } else {
             this.sprite.position = worldPos;
         }
