@@ -46,7 +46,7 @@ export async function createSocketServer(httpServer: HTTPServer) {
         (socket.data as SocketIdentity).dead = true;
     });
 
-    return instance = server;
+    instance = server;
 }
 
 export function getSocketServer() {
