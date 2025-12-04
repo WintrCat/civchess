@@ -1,8 +1,18 @@
 import { omit } from "es-toolkit";
 
 import { Chunk } from "shared/types/world/Chunk";
-import { chunkSquareCount, getChunkCoordinates } from "shared/lib/world-chunks";
-import { getChunk } from "./chunks";
+import { RuntimeChunk } from "shared/types/world/OnlineWorld";
+import {
+    chunkSquareCount,
+    coordinateIndex,
+    getChunkCoordinates
+} from "shared/lib/world-chunks";
+import { getChunk, getRuntimeChunk } from "./chunks";
+
+interface ChunkCache {
+    persistent: Chunk;
+    runtime: RuntimeChunk;
+}
 
 interface SearchNode {
     x: number;
@@ -20,32 +30,47 @@ export async function findNearestEmptySquare(
         { x: originX, y: originY, nextDistance: 1 }
     ];
 
-    const chunkCache: Chunk[][] = [];
+    const chunkCache: ChunkCache[][] = [];
 
     while (frontier.length > 0) {
         const node = frontier.pop();
         if (!node) continue;
 
         // Get square of node, using chunk cache if possible
-        const { chunkX, chunkY } = getChunkCoordinates(node.x, node.y);
+        const { chunkX, chunkY, relativeX, relativeY } = (
+            getChunkCoordinates(node.x, node.y)
+        );
 
         let nodeChunk = chunkCache.at(chunkY)?.at(chunkX);
 
         if (!nodeChunk) {
             const fetchedChunk = await getChunk(worldCode, chunkX, chunkY);
-            if (!fetchedChunk) continue;
+            const fetchedRuntimeChunk = await getRuntimeChunk(
+                worldCode, chunkX, chunkY
+            );
+            
+            if (!fetchedChunk || !fetchedRuntimeChunk) continue;
 
             chunkCache[chunkY] ??= [];
-            nodeChunk = chunkCache[chunkY][chunkX] = fetchedChunk;
+            chunkCache[chunkY][chunkX] = {
+                persistent: fetchedChunk,
+                runtime: fetchedRuntimeChunk
+            };
+
+            nodeChunk = chunkCache[chunkY][chunkX];
         }
 
-        const nodeSquare = nodeChunk.squares
+        const nodeSquare = nodeChunk.persistent.squares
             .at(node.y % chunkSquareCount)
             ?.at(node.x % chunkSquareCount);
         if (!nodeSquare) continue;
 
+        const nodeRuntimeSquare = nodeChunk.runtime[
+            coordinateIndex(relativeX, relativeY)
+        ];
+
         // If node square is empty, return it
-        if (!nodeSquare.piece)
+        if (!nodeSquare.piece && !nodeRuntimeSquare)
             return omit({ ...node, square: nodeSquare }, ["nextDistance"]);
 
         // Add adjacent squares to search; increase distance exponentially
