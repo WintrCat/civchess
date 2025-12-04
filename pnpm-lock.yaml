@@ -126,6 +126,9 @@ importers:
       mongoose:
         specifier: ^8.17.1
         version: 8.17.1
+      obscenity:
+        specifier: ^0.4.5
+        version: 0.4.5
       shared:
         specifier: workspace:*
         version: link:../shared
@@ -1280,6 +1283,10 @@ packages:
   object-inspect@1.13.4:
     resolution: {integrity: sha512-W67iLl4J2EXEGTbfeHCffrjDfitvLANg0UlX3wFUUSTx92KXRFegMHUVgSqE+wvhAbi4WqjGg9czysTV2Epbew==}
     engines: {node: '>= 0.4'}
+
+  obscenity@0.4.5:
+    resolution: {integrity: sha512-5NNZIolweauL3pDmSbScAa39LBm70ozdtffnUlPnM+MVNYx8KIchKVa7KY8aYOggWTF+O7Ih18UU5Y9kyIqBPQ==}
+    engines: {node: '>=18.0.0'}
 
   on-finished@2.4.1:
     resolution: {integrity: sha512-oVlzkg3ENAhCk2zdv7IJwd/QUD4z2RxRwpkcGY8psCVcCYZNq4wYnVWALHM+brtuJjePWiYF/ClmuDr8Ch5+kg==}
@@ -2821,6 +2828,8 @@ snapshots:
   object-assign@4.1.1: {}
 
   object-inspect@1.13.4: {}
+
+  obscenity@0.4.5: {}
 
   on-finished@2.4.1:
     dependencies:

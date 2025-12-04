@@ -1,13 +1,17 @@
-# Diameter of new worlds in chunks (8x8 areas)
-worldChunkSize: 3
-
-# Number of chunks in any direction that players can see
-renderDistance: 2
+# ACCOUNT OPTIONS
 
 # Which user roles are allowed to create worlds
 # Roles: admin, staff, creator, all
 worldCreatorRoles:
   - all
+
+# WORLD SERVER OPTIONS
+
+# Diameter of new worlds in chunks (8x8 areas)
+worldChunkSize: 3
+
+# Number of chunks in any direction that players can see
+renderDistance: 2
 
 # How much health players spawn with
 maxPlayerHealth: 3

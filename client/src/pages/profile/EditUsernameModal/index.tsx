@@ -1,11 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { StatusCodes } from "http-status-codes";
 import {
     Modal,
     ModalProps,
     TextInput,
     Button,
-    Alert,
     Group
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
@@ -34,8 +33,6 @@ function EditUsernameModal(props: ModalProps) {
         } }
     });
 
-    const [ error, setError ] = useState<string>();
-
     useEffect(() => {
         if (!session) return;
         form.setFieldValue("username", session.user.name);
@@ -49,28 +46,30 @@ function EditUsernameModal(props: ModalProps) {
         });
 
         if (response.status == StatusCodes.NOT_MODIFIED)
-            return setError("This is already your username.");
+            return form.setFieldError("username",
+                "This is already your username."
+            );
         
         if (response.status == StatusCodes.CONFLICT)
-            return setError("This username is already taken.");
+            return form.setFieldError("username",
+                "This username is already taken."
+            );
         
         if (!response.ok)
-            return setError("Unknown error occurred.");
+            return form.setFieldError("username",
+                await response.text() || "Unknown error occurred."
+            );
 
         location.href = `/profile/${username}`;
-    }
-
-    function close() {
-        form.reset();
-        setError(undefined);
-
-        props.onClose();
     }
 
     return <Modal
         {...props}
         title="Change Username"
-        onClose={close}
+        onClose={() => {
+            form.reset();
+            props.onClose();
+        }}
     >
         <form
             className={styles.wrapper}
@@ -80,10 +79,6 @@ function EditUsernameModal(props: ModalProps) {
                 placeholder="New username..."
                 {...form.getInputProps("username")}
             />
-
-            {error && <Alert variant="light" color="red">
-                {error}
-            </Alert>}
 
             <Group justify="end" gap="10px">
                 <Button type="submit" loading={form.submitting}>
