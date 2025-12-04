@@ -25,7 +25,7 @@ interface PlayerOptions extends SubEntityOptions {
 interface MoveCooldown {
     beginsAt?: number;
     expiresAt?: number;
-    graphics?: Graphics;
+    graphics: Graphics;
 }
 
 const hologramOptions: GraphicsOptions = {
@@ -37,7 +37,7 @@ export class Player extends Entity {
     userId: string;
 
     moveHints: MoveHints;
-    moveCooldown: MoveCooldown = {};
+    moveCooldown: Partial<MoveCooldown> = {};
     private marker?: Graphics;
 
     private ticker?: TickerCallback<any>;
@@ -58,7 +58,7 @@ export class Player extends Entity {
         // Add move cooldown graphics
         this.moveCooldown = { graphics: new Graphics(hologramOptions) };
 
-        const mc = this.moveCooldown;
+        const mc = this.moveCooldown as MoveCooldown;
         this.client.viewport.addChild(mc.graphics!);
 
         // Add marker
@@ -69,7 +69,12 @@ export class Player extends Entity {
             this.renderMarker(tick.lastTime);
 
             // Redraw move cooldown bar
-            mc.graphics?.clear();
+            mc.graphics.position.set(
+                this.sprite.x - 0.6 * squareSize,
+                this.sprite.y + halfSquare
+            );
+
+            mc.graphics.clear();
 
             if (!mc.beginsAt || !mc.expiresAt) return;
             if (Date.now() >= mc.expiresAt) return;
@@ -77,9 +82,8 @@ export class Player extends Entity {
             const remainingPercent = Math.abs(mc.expiresAt - Date.now())
                 / Math.abs(mc.expiresAt - mc.beginsAt);
 
-            mc.graphics?.rect(
-                (this.sprite.x - halfSquare) - (squareSize / 16),
-                this.sprite.y + halfSquare,
+            mc.graphics.rect(
+                0, 0,
                 remainingPercent * (squareSize + squareSize / 8),
                 squareSize / 10
             ).fill("#ff2d2d8f");
