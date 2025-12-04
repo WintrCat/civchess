@@ -5,7 +5,7 @@ export const playerKickHandler = createPacketHandler({
     handle: (packet, client) => {
         client.ui.setKickDialog({
             title: packet.title,
-            message: packet.reason
+            reason: packet.reason
         });
     }
 });

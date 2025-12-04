@@ -116,24 +116,35 @@ export class MoveHints {
     show() {
         if (this.visible) this.hide();
 
-        const viewport = this.entity.client.viewport;
+        const client = this.entity.client;
+        const viewport = client.viewport;
 
         this.squares = [];
 
-        for (const square of this.generateSquares()) {
-            this.squares.push(square);
+        for (const point of this.generateSquares()) {
+            this.squares.push(point);
+
+            const square = client.world.getLocalSquare(point.x, point.y);
 
             const container = new Container({
-                x: square.x * squareSize,
-                y: square.y * squareSize,
+                x: point.x * squareSize,
+                y: point.y * squareSize,
                 zIndex: Layer.MOVE_HINTS,
                 hitArea: new Rectangle(0, 0, squareSize, squareSize),
                 eventMode: "static"
             });
 
-            container.addChild(new Graphics()
-                .circle(halfSquare, halfSquare, 0.15 * squareSize)
-                .fill("#ffffff25")
+            container.addChild(square?.entity
+                ? new Graphics()
+                    .circle(halfSquare, halfSquare, halfSquare)
+                    .stroke({
+                        alignment: 1,
+                        width: 0.1 * squareSize,
+                        color: "#ffffff25"
+                    })
+                : new Graphics()
+                    .circle(halfSquare, halfSquare, 0.15 * squareSize)
+                    .fill("#ffffff25")
             );
 
             container.addChild(
@@ -149,15 +160,15 @@ export class MoveHints {
             // When a move hint is clicked
             container.on("pointerdown", () => {
                 this.entity.emit("drop", new Point(
-                    square.x * squareSize,
-                    square.y * squareSize
+                    point.x * squareSize,
+                    point.y * squareSize
                 ));
 
                 const fromPosition = this.entity.position.clone();
 
-                this.entity.setPosition(square, { animate: true });
+                this.entity.setPosition(point, { animate: true });
 
-                this.entity.emit("move", fromPosition, square,
+                this.entity.emit("move", fromPosition, point,
                     () => this.entity.setPosition(fromPosition, {
                         cancellation: true
                     })
