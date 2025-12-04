@@ -3,7 +3,7 @@ import { Viewport } from "pixi-viewport";
 import { Actions } from "pixi-actions";
 
 import { pieceImages } from "@/constants/utils";
-import { InterfaceClient, UIHooks } from "./InterfaceClient";
+import { InterfaceClient } from "./InterfaceClient";
 import { SocketClient } from "./SocketClient";
 import { LocalWorld } from "./world/LocalWorld";
 import { clampViewportAroundSquare } from "./utils/viewport";

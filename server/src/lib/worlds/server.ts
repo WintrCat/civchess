@@ -5,6 +5,7 @@ import { UserWorld } from "@/database/models/UserWorld";
 import { getSocketServer } from "@/socket";
 import { SocketIdentity } from "@/types/SocketIdentity";
 import { fetchWorld, toBaseWorld } from "./fetch";
+import { kickPlayer } from "@/socket/lib/players";
 
 export const worldShutdownEvent = "worldShutdown";
 
@@ -52,7 +53,7 @@ export async function shutdownLocalSockets(worldCode: string) {
 
     for (const socket of sockets) {
         (socket.data as SocketIdentity).shutdownQueued = true;
-        socket.disconnect();
+        kickPlayer(socket, "The world has been shut down.");
     }
 }
 

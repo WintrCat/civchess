@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router";
 
 import { authClient } from "@/lib/auth";
-import { GameClient } from "@/lib/game/Client";
+import { GameClient, InitialisedGameClient } from "@/lib/game/Client";
 import handlers from "@/lib/game/handlers";
 import PlayerHud from "./PlayerHud";
 
@@ -14,7 +14,7 @@ function Play() {
 
     const wrapperRef = useRef<HTMLDivElement>(null);
     
-    const [ gameClient, setGameClient ] = useState<GameClient>();
+    const [ gameClient, setGameClient ] = useState<InitialisedGameClient>();
 
     async function joinWorld() {
         if (!wrapperRef.current) return;
@@ -27,11 +27,6 @@ function Play() {
 
         setGameClient(gameClient);
 
-        gameClient.socket.onDisconnect(() => {
-            if (!gameClient.ui.kickDialog)
-                gameClient.ui.setKickDialog({});
-        });
-
         gameClient.socket.attachPacketHandlers(handlers);
         gameClient.joinWorld(worldCode);
     }
@@ -43,7 +38,7 @@ function Play() {
     return <>
         <div className={styles.application} ref={wrapperRef} />
 
-        {gameClient?.isInitialised() && worldCode
+        {gameClient && worldCode
             && <PlayerHud client={gameClient} worldCode={worldCode} />
         }
     </>;

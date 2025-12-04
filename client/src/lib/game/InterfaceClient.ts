@@ -20,6 +20,10 @@ export class InterfaceClient {
     constructor(client: GameClient, hooks?: UIHooks) {
         this.gameClient = client;
         this.hooks = hooks || {};
+
+        client.socket.onDisconnect(() => {
+            if (!client.ui.kickDialog) client.ui.setKickDialog({});
+        });
     }
 
     updatePlayerlist() {
