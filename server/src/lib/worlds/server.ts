@@ -64,6 +64,8 @@ export async function shutdownWorld(worldCode: string) {
     if (!await getRedisClient().json.exists(worldCode, "$"))
         return false;
 
+    await saveWorld(worldCode);
+
     // Delete world's Redis keys
     const deletion = getRedisClient().createTransaction();
 
@@ -77,9 +79,6 @@ export async function shutdownWorld(worldCode: string) {
     await shutdownLocalSockets(worldCode);
     getSocketServer().serverSideEmit(worldShutdownEvent, worldCode);
 
-    // Save world to database
-    await saveWorld(worldCode);
-
     return true;
 }
 
@@ -89,7 +88,7 @@ export async function shutdownWorld(worldCode: string) {
 export async function saveWorld(worldCode: string) {
     const world = await getRedisClient().json
         .get<OnlineWorld>(worldCode, "$");
-        
+    
     if (!world) return false;
 
     await UserWorld.updateOne(
