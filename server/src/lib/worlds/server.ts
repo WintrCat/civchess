@@ -6,6 +6,7 @@ import { UserWorld } from "@/database/models/UserWorld";
 import { getSocketServer } from "@/socket";
 import { kickPlayer } from "@/socket/lib/players";
 import { fetchWorld, toBaseWorld } from "./fetch";
+import { autosaveLockKey, scheduleAutosaver } from "./autosave";
 
 export const worldShutdownEvent = "worldShutdown";
 
@@ -46,6 +47,7 @@ export async function hostWorld(world: World | string) {
     };
 
     await getRedisClient().json.set(world.code, "$", onlineWorld);
+    scheduleAutosaver(world.code, true);
 
     if (world.pinned) emitWorldStatusUpdate(world.code, true);
 }
@@ -82,12 +84,15 @@ export async function shutdownWorld(worldCode: string) {
     deletion.del(worldCode);
     deletion.del(playerCountKey(worldCode));
     deletion.del(worldChunkSizeKey(worldCode));
+    deletion.del(autosaveLockKey(worldCode));
 
     await deletion.exec();
 
     // Queue local sockets for shutdown, dispatch shutdown event
     await shutdownLocalSockets(worldCode);
     getSocketServer().serverSideEmit(worldShutdownEvent, worldCode);
+
+    scheduleAutosaver(worldCode, false);
 
     // Emit offline world status update to lobby pages
     if (pinned) emitWorldStatusUpdate(worldCode, false);

@@ -2,7 +2,7 @@ import { Server as HTTPServer } from "http";
 import { Server as SocketServer } from "socket.io";
 import { createAdapter } from "@socket.io/redis-adapter";
 
-import { getRedisClient } from "@/database/redis";
+import { getRedisClient, getRedisSubClient } from "@/database/redis";
 import { SocketIdentity } from "@/types/SocketIdentity";
 import { shutdownLocalSockets, worldShutdownEvent } from "@/lib/worlds/server";
 import { getPlayerSocket, playerDeathEvent } from "./lib/players";
@@ -19,7 +19,7 @@ export async function createSocketServer(httpServer: HTTPServer) {
         transports: ["websocket"],
         adapter: createAdapter(
             getRedisClient(),
-            getRedisClient().duplicate()
+            getRedisSubClient()
         ),
         cors: {
             origin: [

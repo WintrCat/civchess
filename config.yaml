@@ -7,8 +7,11 @@ worldCreatorRoles:
 
 # WORLD SERVER OPTIONS
 
+# The interval of time between world autosaves (in seconds)
+autosaveInterval: 300
+
 # Diameter of new worlds in chunks (8x8 areas)
-worldChunkSize: 3
+chunkSize: 3
 
 # Number of chunks in any direction that players can see
 renderDistance: 2

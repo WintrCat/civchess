@@ -10,10 +10,10 @@ import { config } from "../config";
 export function generateWorld(options: WorldOptions): World {
     const chunks: Chunk[][] = [];
 
-    for (let y = 0; y < config.worldChunkSize; y++) {
+    for (let y = 0; y < config.chunkSize; y++) {
         const row: Chunk[] = [];
 
-        for (let x = 0; x < config.worldChunkSize; x++) {
+        for (let x = 0; x < config.chunkSize; x++) {
             row.push(generateChunk(options, x, y));
         }
         

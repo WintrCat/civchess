@@ -8,11 +8,12 @@ import dotenv from "dotenv";
 import chalk from "chalk";
 
 import { connectDatabase } from "./database/connect";
-import { connectRedisClient } from "./database/redis";
+import { connectRedisClient, getRedisClient, getRedisSubClient } from "./database/redis";
 import { getAuth } from "./lib/auth";
 import { validateConfig } from "./lib/config";
 import { apiRouter } from "./routes";
 import { createSocketServer } from "./socket";
+import { attachAutosaveService } from "./lib/worlds/autosave";
 
 dotenv.config({ quiet: true });
 
@@ -34,6 +35,8 @@ async function main() {
     // Connect databases
     await connectDatabase();
     await connectRedisClient();
+
+    attachAutosaveService();
 
     // Create servers
     const app = express();

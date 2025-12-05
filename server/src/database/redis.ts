@@ -109,6 +109,7 @@ class ExtendedRedis extends Redis {
 }
 
 let instance: ExtendedRedis | null = null;
+let subInstance: Redis | null = null;
 
 export async function connectRedisClient() {
     if (!process.env.REDIS_DATABASE_URI)
@@ -136,4 +137,8 @@ export function getRedisClient() {
         throw new Error("redis client referenced before creation.");
 
     return instance;
+}
+
+export function getRedisSubClient() {
+    return subInstance ??= getRedisClient().duplicate();
 }
