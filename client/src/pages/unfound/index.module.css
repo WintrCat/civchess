@@ -1,0 +1,19 @@
+body {
+    background-image: url("/img/darkbackgroundboard.png");
+    background-repeat: repeat;
+}
+
+.wrapper {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    height: calc(100vh - 5rem);
+}
+
+.message {
+    font-family: "Texturina";
+    font-size: 5rem;
+}
