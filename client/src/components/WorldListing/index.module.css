@@ -26,14 +26,6 @@
     gap: 10px;
 }
 
-.worldName {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-
-    font-size: 1.2rem;
-}
-
 .onlineIndicator {
     width: 12px;
     height: 12px;

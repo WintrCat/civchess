@@ -80,6 +80,5 @@ export function useServerState<StateType>(
     });
 
     if (query.status == "success") return query;
-
     return query;
 }

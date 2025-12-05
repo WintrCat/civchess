@@ -1,11 +1,11 @@
 import { World } from "shared/types/world/World";
 import { OnlineWorld } from "shared/types/world/OnlineWorld";
+import { SocketIdentity } from "@/types/SocketIdentity";
 import { getRedisClient } from "@/database/redis";
 import { UserWorld } from "@/database/models/UserWorld";
 import { getSocketServer } from "@/socket";
-import { SocketIdentity } from "@/types/SocketIdentity";
-import { fetchWorld, toBaseWorld } from "./fetch";
 import { kickPlayer } from "@/socket/lib/players";
+import { fetchWorld, toBaseWorld } from "./fetch";
 
 export const worldShutdownEvent = "worldShutdown";
 
@@ -18,8 +18,13 @@ export function worldChunkSizeKey(worldCode: string) {
 }
 
 export async function isWorldOnline(worldCode: string) {
-    const matchCount = await getRedisClient().exists(worldCode);
-    return matchCount > 0;
+    return await getRedisClient().json.exists(worldCode, "$");
+}
+
+function emitWorldStatusUpdate(worldCode: string, online: boolean) {
+    getSocketServer().of("/world-status").emit(
+        "status", worldCode, online
+    );
 }
 
 /**
@@ -41,6 +46,8 @@ export async function hostWorld(world: World | string) {
     };
 
     await getRedisClient().json.set(world.code, "$", onlineWorld);
+
+    if (world.pinned) emitWorldStatusUpdate(world.code, true);
 }
 
 /**
@@ -62,10 +69,12 @@ export async function shutdownLocalSockets(worldCode: string) {
  * be found.
  */
 export async function shutdownWorld(worldCode: string) {
-    if (!await getRedisClient().json.exists(worldCode, "$"))
-        return false;
+    if (!await isWorldOnline(worldCode)) return false;
 
     await saveWorld(worldCode);
+
+    const pinned = await getRedisClient().json
+        .get<boolean>(worldCode, "$.pinned");
 
     // Delete world's Redis keys
     const deletion = getRedisClient().createTransaction();
@@ -79,6 +88,9 @@ export async function shutdownWorld(worldCode: string) {
     // Queue local sockets for shutdown, dispatch shutdown event
     await shutdownLocalSockets(worldCode);
     getSocketServer().serverSideEmit(worldShutdownEvent, worldCode);
+
+    // Emit offline world status update to lobby pages
+    if (pinned) emitWorldStatusUpdate(worldCode, false);
 
     return true;
 }

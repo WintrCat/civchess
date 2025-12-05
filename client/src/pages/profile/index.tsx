@@ -23,7 +23,8 @@ function Profile() {
     const { data: session } = authClient.useSession();
 
     const {
-        data: profile, status: profileStatus
+        data: profile,
+        status: profileStatus
     } = useServerState<PublicProfile>(
         `/api/public-profile?username=${username}`,
         { queryKey: ["profile", username], retry: false }

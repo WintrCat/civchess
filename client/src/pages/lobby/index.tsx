@@ -1,6 +1,17 @@
-import { Divider, TextInput, Button } from "@mantine/core";
-import { useDisclosure } from "@mantine/hooks";
+import { useMemo, useState } from "react";
+import {
+    Divider,
+    TextInput,
+    Button,
+    Group,
+    Stack,
+    Alert,
+    Loader,
+    LoadingOverlay
+} from "@mantine/core";
+import { useDisclosure, useListState } from "@mantine/hooks";
 import { IconPlus } from "@tabler/icons-react";
+import { io } from "socket.io-client";
 
 import { WorldMetadata } from "shared/types/world/World";
 import Typography from "@/components/Typography";
@@ -17,57 +28,90 @@ import styles from "./index.module.css";
 function Lobby() {
     useProtectedRoute();
 
+    const statusSocket = useMemo(() => io(
+        new URL("/world-status", import.meta.env.PUBLIC_ORIGIN).href,
+        { path: "/api/socket", transports: ["websocket"] }
+    ), []);
+
+    const [ worldError, setWorldError ] = useState<string>();
+
     const {
-        data: pinnedWorlds, status: pinnedWorldsStatus
+        data: pinnedWorlds,
+        status: pinnedWorldsStatus
     } = useServerState<WorldMetadata[]>(
         "/api/worlds/get?pinned=1", ["worlds", "pinned"]
     );
 
     const {
-        data: worlds, status: worldsStatus
-    } = useServerState<WorldMetadata[]>("/api/worlds/get", "worlds");
+        data: personalWorlds,
+        status: personalWorldsStatus
+    } = useServerState<WorldMetadata[]>(
+        "/api/worlds/get", "worlds"
+    );
 
     const [ createWorldOpen, createWorldModal ] = useDisclosure();
 
-    return <div className={styles.wrapper}>
+    return <Stack className={styles.wrapper}>
         <Typography/>
 
         <Container className={styles.dialog} gradient>
-            <div className={styles.topSection}>
+            <Group className={styles.topSection}>
                 <span className={styles.joinServer}>
                     Join a server
                 </span>
 
                 <ProfileMenu className={styles.profileMenu} />
-            </div>
+            </Group>
 
-            <Divider
-                label="PINNED WORLDS"
-                style={{ width: "100%" }}
-            />
+            <Divider label="PINNED WORLDS" w="100%"/>
 
-            {pinnedWorldsStatus == "success" && (pinnedWorlds.length > 0
-                ? pinnedWorlds.map(world => (
-                    <WorldListing worldMetadata={world} key={world.code} />
-                ))
+            {worldError && <Alert color="red" w="100%">
+                {worldError}
+            </Alert>}
+
+            {pinnedWorldsStatus == "pending" && <Loader/>}
+
+            {pinnedWorldsStatus == "success" && pinnedWorlds.length > 0
+                ? pinnedWorlds.map(world => <WorldListing
+                    initialWorld={world}
+                    setError={setWorldError}
+                    statusClient={statusSocket}
+                    key={world.code}
+                />)
                 : <i style={{ color: "grey"}}>
                     There aren't any pinned worlds right now.
                 </i>
-            )}
+            }
 
-            <Divider
-                label="YOUR WORLDS"
-                style={{ width: "100%" }}
-            />
+            {pinnedWorldsStatus == "error" &&
+                <Alert color="red" w="100%">
+                    Failed to load pinned worlds.
+                </Alert>
+            }
 
-            {worldsStatus == "success" && worlds.map(world => (
-                <WorldListing
-                    worldMetadata={world}
+            <Divider label="YOUR WORLDS" w="100%"/>
+
+            {personalWorldsStatus == "pending" && <Loader/>}
+
+            {personalWorldsStatus == "success" && personalWorlds.length > 0
+                ? personalWorlds.map(world => <WorldListing
+                    initialWorld={world}
                     showDates
                     manageable
+                    setError={setWorldError}
+                    statusClient={statusSocket}
                     key={world.code}
-                />
-            ))}
+                />)
+                : <i style={{ color: "grey" }}>
+                    You don't have any worlds.
+                </i>
+            }
+
+            {personalWorldsStatus == "error" &&
+                <Alert color="red" w="100%">
+                    Failed to load your worlds.
+                </Alert>
+            }
 
             <Button
                 size="md"
@@ -78,22 +122,15 @@ function Lobby() {
                 Create World
             </Button>
 
-            <Divider
-                label="JOIN WORLD"
-                style={{ width: "100%" }}
-            />
+            <Divider label="JOIN WORLD" w="100%"/>
 
-            <div className={styles.joinCodeContainer}>
-                <TextInput
-                    size="md"
-                    placeholder="World Code..."
-                    styles={{ wrapper: { width: "250px" } }}
-                />
+            <Group w="100%" gap="10px" justify="center">
+                <TextInput size="md" placeholder="World Code..." w="250px"/>
 
                 <Button size="md" color="var(--ui-shade-5)">
                     Join World
                 </Button>
-            </div>
+            </Group>
         </Container>
 
         <UpsertWorldModal
@@ -102,7 +139,7 @@ function Lobby() {
         />
 
         <Footer className={styles.credit} />
-    </div>;
+    </Stack>;
 }
 
 export default Lobby;

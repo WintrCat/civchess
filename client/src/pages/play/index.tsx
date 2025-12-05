@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router";
 
+import { useProtectedRoute } from "@/hooks/useProtectedRoute";
 import { authClient } from "@/lib/auth";
 import { GameClient, InitialisedGameClient } from "@/lib/game/Client";
 import handlers from "@/lib/game/handlers";
@@ -9,6 +10,8 @@ import PlayerHud from "./PlayerHud";
 import styles from "./index.module.css";
 
 function Play() {
+    useProtectedRoute();
+
     const { worldCode } = useParams();
     const { data: ticket } = authClient.useSession();
 

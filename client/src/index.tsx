@@ -50,6 +50,7 @@ const root = createRoot(
 
 root.render(<QueryClientProvider client={queryClient}>
     <MantineProvider defaultColorScheme="dark" theme={{
+        cursorType: "pointer",
         components: mantineTheme
     }}>
         <RouterProvider router={router} />

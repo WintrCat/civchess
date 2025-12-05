@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { Dispatch, SetStateAction, useEffect, useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Button, ButtonProps, Tooltip } from "@mantine/core";
+import { Button, ButtonProps, Group, Tooltip } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconTrash, IconEdit, IconLogin2 } from "@tabler/icons-react";
+import { Socket } from "socket.io-client";
 
 import { WorldMetadata } from "shared/types/world/World";
 import Container from "../Container";
@@ -13,10 +14,14 @@ import { formatDate } from "@/lib/utils";
 import styles from "./index.module.css";
 
 interface WorldListingProps {
-    worldMetadata: WorldMetadata;
+    initialWorld: WorldMetadata;
     showDates?: boolean;
     manageable?: boolean;
+    setError?: Dispatch<SetStateAction<string | undefined>>;
+    statusClient?: Socket;
 }
+
+type WorldActions = Record<"delete" | "host" | "shutdown", string>;
 
 const toolbarButtonOptions: ButtonProps = {
     color: "var(--ui-shade-4)",
@@ -24,100 +29,103 @@ const toolbarButtonOptions: ButtonProps = {
 };
 
 function WorldListing({
-    worldMetadata,
+    initialWorld,
     showDates,
-    manageable
+    manageable,
+    setError,
+    statusClient
 }: WorldListingProps) {
     const queryClient = useQueryClient();
+
+    const [ world, setWorld ] = useState<WorldMetadata>(initialWorld);
+
+    const [ actionPending, setActionPending ] = useState(false);
 
     const [ deleteModalOpen, deleteModal ] = useDisclosure();
     const [ updateModalOpen, updateModal ] = useDisclosure();
 
-    const [ hostPending, setHostPending ] = useState(false);
-    const [ hostError, setHostError ] = useState<string>();
+    const worldActionURLs: WorldActions = useMemo(() => ({
+        host: `/api/worlds/host?code=${world.code}`,
+        shutdown: `/api/worlds/shutdown?code=${world.code}`,
+        delete: `/api/worlds/delete?code=${world.code}`
+    }), [world]);
 
-    const [ shutdownPending, setShutdownPending ] = useState(false);
+    async function manageWorld(action: keyof WorldActions, throws = false) {
+        setActionPending(true);
 
-    async function deleteWorld() {
-        const response = await fetch(
-            `/api/worlds/delete?code=${worldMetadata.code}`
-        );
-        
-        if (!response.ok)
-            throw new Error("An unknown error has occurred.");
+        const response = await fetch(worldActionURLs[action]);
 
-        await queryClient.refetchQueries({ queryKey: ["worlds"] });
+        if (!response.ok) {
+            const errMessage = "An unknown error has occurred.";
+
+            if (throws) throw new Error(errMessage);
+            return setError?.(errMessage);
+        }
+
+        if (action == "delete") {
+            queryClient.refetchQueries({ queryKey: ["worlds"] });
+        } else {
+            setWorld({ ...world, online: action == "host" });
+        }
 
         deleteModal.close();
+        setActionPending(false);
     }
 
-    async function hostWorld() {
-        setHostPending(true);
+    useEffect(() => {
+        if (!statusClient) return;
 
-        const response = await fetch(
-            `/api/worlds/host?code=${worldMetadata.code}`
-        );
+        const statusListener = (worldCode: string, online: boolean) => {
+            if (world.code == worldCode) setWorld({ ...world, online });
+        };
 
-        if (!response.ok)
-            setHostError("An unknown error has occurred.");
+        statusClient.on("status", statusListener);
 
-        await queryClient.refetchQueries({ queryKey: ["worlds"] });
+        return () => void statusClient.off("status", statusListener);
+    }, [statusClient]);
 
-        setHostPending(false);
-    }
-
-    async function shutdownWorld() {
-        setShutdownPending(true);
-
-        await fetch(`/api/worlds/shutdown?code=${worldMetadata.code}`);
-
-        await queryClient.refetchQueries({ queryKey: ["worlds"] });
-
-        setShutdownPending(false);
-    }
-
-    const offlineToolbar = manageable && !worldMetadata.online;
-    const onlineToolbar = manageable && worldMetadata.online;
+    const offlineToolbar = manageable && !world.online;
+    const onlineToolbar = manageable && world.online;
 
     return <Container className={styles.wrapper} noShadow>
         <div>
-            <span className={styles.worldName}>
-                {worldMetadata.name}
+            <Group gap="10px" fz="1.2rem">
+                {world.name}
 
                 <Tooltip
-                    label={worldMetadata.online ? "Online" : "Offline"}
+                    label={world.online ? "Online" : "Offline"}
                     withArrow
                 >
                     <div className={styles.onlineIndicator} style={{
-                        backgroundColor: worldMetadata.online
+                        backgroundColor: world.online
                             ? "#3ee57e" : "#626262",
-                        borderColor: worldMetadata.online
+                        borderColor: world.online
                             ? "#33be68" : "#454545",
-                        animationName: worldMetadata.online
+                        animationName: world.online
                             ? styles.onlinePulse : undefined
                     }}/>
                 </Tooltip>
-            </span>
+            </Group>
 
             <span className={styles.worldCode}>
-                World Code: {worldMetadata.code}
+                World Code: {world.code}
             </span>
 
             {showDates && <span className={styles.worldDates}>
                 Created:{" "}
-                {formatDate(worldMetadata.createdAt)}
+                {formatDate(world.createdAt)}
             </span>}
 
-            {showDates && worldMetadata.lastOnlineAt
+            {showDates && world.lastOnlineAt
                 && <span className={styles.worldDates}>
                     Last Online:{" "}
-                    {formatDate(worldMetadata.lastOnlineAt)}
+                    {formatDate(world.lastOnlineAt)}
                 </span>
             }
         </div>
 
         <div style={{ alignItems: "end" }}>
-            {worldMetadata.online && <a href={`/play/${worldMetadata.code}`}>
+            {world.online && <a href={`/play/${world.code}`}>
                 <Button color="green" leftSection={<IconLogin2/>}>
                     Join World
                 </Button>
@@ -125,8 +133,8 @@ function WorldListing({
 
             {onlineToolbar && <Button
                 color="var(--ui-shade-5)"
-                loading={shutdownPending}
-                onClick={shutdownWorld}
+                loading={actionPending}
+                onClick={() => manageWorld("shutdown")}
             >
                 Shut Down
             </Button>}
@@ -152,31 +160,30 @@ function WorldListing({
             </div>}
 
             {offlineToolbar && <Button
-                loading={hostPending}
-                onClick={hostWorld}
-                color={hostError ? "red" : "blue"}
-                disabled={!!hostError}
+                loading={actionPending}
+                onClick={() => manageWorld("host")}
+                color="blue"
             >
-                {hostError ? "Error" : "Host World"}
+                Host World
             </Button>}
         </div>
 
         <ConfirmModal
             opened={deleteModalOpen}
             onClose={() => deleteModal.close()}
-            onConfirm={deleteWorld}
+            onConfirm={() => manageWorld("delete", true)}
             title="Delete World"
             confirmColour="red"
         >
             Are you sure you want to delete{" "}
-            <b>{worldMetadata.name}</b>
+            <b>{world.name}</b>
             ?
         </ConfirmModal>
 
         <UpsertWorldModal
             open={updateModalOpen}
             onClose={() => updateModal.close()}
-            editWorld={{ ...worldMetadata, squareTypes: [] }}
+            editWorld={{ ...world, squareTypes: [] }}
         />
     </Container>;
 }
