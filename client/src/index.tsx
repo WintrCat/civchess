@@ -11,6 +11,11 @@ const SignIn = lazy(() => import("@/pages/sign-in"));
 const Lobby = lazy(() => import("@/pages/lobby"));
 const Profile = lazy(() => import("@/pages/profile"));
 const Play = lazy(() => import("@/pages/play"));
+
+const Credits = lazy(() => import("@/pages/info/credits"));
+const Privacy = lazy(() => import("@/pages/info/privacy"));
+const Terms = lazy(() => import("@/pages/info/terms"));
+
 const Unfound = lazy(() => import("@/pages/unfound"));
 
 const queryClient = new QueryClient();
@@ -21,6 +26,10 @@ const router = createBrowserRouter([
     { path: "/lobby", element: <Lobby/> },
     { path: "/profile/:username", element: <Profile/> },
     { path: "/play/:worldCode", element: <Play/> },
+
+    { path: "/credits", element: <Credits/> },
+    { path: "/privacy", element: <Privacy/> },
+    { path: "/terms", element: <Terms/> },
 
     { path: "/*", element: <Unfound/> }
 ]);

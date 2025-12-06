@@ -1,0 +1,27 @@
+.wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    width: 100%;
+}
+
+h2 {
+    font-family: "Texturina";
+}
+
+.profileImage {
+    height: 75px;
+    border-radius: 10px;
+}
+
+.assetAttribution {
+    align-items: start;
+    gap: 5px;
+    padding: 10px;
+    margin-bottom: 10px;
+    width: min(100%, 600px);
+
+    border-radius: 10px;
+    background-color: #1d1d1d50;
+}

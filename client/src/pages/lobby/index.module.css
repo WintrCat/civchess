@@ -1,6 +1,5 @@
 body {
-    background-image: url("@assets/img/previewmap.png");
-    background-repeat: repeat;
+    background-image: url("@assets/img/previewmap.png") !important;
 }
 
 .wrapper {

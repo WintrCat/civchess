@@ -17,3 +17,13 @@
 .image {
     height: 5rem;
 }
+
+@media (max-width: 500px) {
+    .image {
+        height: 3.5rem;
+    }
+
+    .text {
+        font-size: 3.5rem;
+    }
+}
