@@ -52,4 +52,7 @@ GOOGLE_OAUTH_CLIENT_ID=hellohello.apps.googleusercontent.com
 GOOGLE_OAUTH_CLIENT_SECRET=HELLOHE-HELLOHELLOCIVCHESS
 DISCORD_OAUTH_CLIENT_ID=12345678901234567890
 DISCORD_OAUTH_CLIENT_SECRET=hellohellohellocivchess
+
+# Contact email address on TOS and Privacy Policy etc.
+PUBLIC_CONTACT_EMAIL=contact@wintrchess.com
 ```

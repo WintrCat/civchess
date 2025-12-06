@@ -8,6 +8,7 @@ import {
     IconHome
 } from "@tabler/icons-react";
 
+import ReturnButton from "@/components/ReturnButton";
 import Typography from "@/components/Typography";
 import CreditProfile from "./CreditProfile";
 import AssetAttribution from "./AssetAttribution";
@@ -16,15 +17,7 @@ import styles from "./index.module.css";
 
 function Credits() {
     return <div className={styles.wrapper}>
-        <a href="/lobby">
-            <Button
-                color="blue"
-                variant="light"
-                leftSection={<IconHome/>}
-            >
-                Return to Lobby
-            </Button>
-        </a>
+        <ReturnButton/>
 
         <Typography/>
 

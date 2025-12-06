@@ -1,6 +1,7 @@
 import { useMemo } from "react";
-import { Button, Group } from "@mantine/core";
-import { IconHome } from "@tabler/icons-react";
+import { Group } from "@mantine/core";
+
+import ReturnButton from "@/components/ReturnButton";
 
 import styles from "./index.module.css";
 
@@ -32,15 +33,9 @@ function Unfound() {
             />
         </Group>
 
-        <a href="/lobby">
-            <Button
-                leftSection={<IconHome/>}
-                color="orange"
-                variant="light"
-            >
-                Take me home
-            </Button>
-        </a>
+        <ReturnButton color="orange">
+            Take me Home
+        </ReturnButton>
     </div>;
 }
 
