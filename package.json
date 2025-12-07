@@ -2,7 +2,7 @@
     "scripts": {
         "start": "node server/dist/index.js",
         "dev": "pnpm -F client run dev",
-        "build": "pnpm -F * run build",
+        "build": "pnpm -r run build",
         "bbuild": "pnpm -F !client run build"
     },
     "devDependencies": {
