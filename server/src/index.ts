@@ -53,7 +53,9 @@ async function main() {
     const server = new Server(app);
     await createSocketServer(server);
 
-    const port = new URL(process.env.PUBLIC_ORIGIN).port || 8080;
+    const port = new URL(process.env.PUBLIC_ORIGIN).port
+        || Number(process.env.PORT)
+        || 8080;
 
     server.listen(port, () => {
         if (cluster.worker?.id != 1) return;

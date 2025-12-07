@@ -31,6 +31,10 @@ You can use the databases' Docker images for convenience.
 # In development mode there is a debug sign in method that works offline.
 NODE_ENV=development
 
+# The port that the backend listens on. Defaults to the port in
+# PUBLIC_ORIGIN if not specified, or 8080 if neither specify a port.
+PORT=8080
+
 # The origins of the backend and Vite Dev server.
 # Used as redirect URLs in OAuth, dev server proxy etc.
 PUBLIC_ORIGIN=http://localhost:8080
