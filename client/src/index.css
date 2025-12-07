@@ -27,7 +27,6 @@ body {
     margin: 0;
 
     background-color: var(--ui-shade-1);
-    background-image: url("/img/darkbackgroundboard.png");
     background-repeat: repeat;
 }
 

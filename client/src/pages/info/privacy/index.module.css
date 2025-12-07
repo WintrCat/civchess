@@ -1,3 +1,7 @@
+body {
+    background-image: url("/img/darkbackgroundboard.png");
+}
+
 .container {
     display: flex;
     flex-direction: column;
