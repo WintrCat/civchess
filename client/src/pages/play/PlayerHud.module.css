@@ -10,16 +10,36 @@
 }
 
 .serverPanel {
-    padding: 10px;
+    gap: 0;
     top: 0;
     right: 0;
+}
+
+.playerlist {
+    padding: 5px;
+    max-height: 175px;
+    background-color: rgba(54, 54, 54, 0.31);
+    overflow-y: auto;
+}
+
+@media (max-height: 750px) {
+    .playerlist {
+        max-height: 100px;
+    }
 }
 
 .playerStats {
     gap: 0;
     padding: 5px;
+    width: 200px;
     top: 0;
     left: 0;
+}
+
+@media (max-width: 425px) {
+    .playerStats {
+        width: 125px;
+    }
 }
 
 /* Buttons */

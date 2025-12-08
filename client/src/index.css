@@ -42,3 +42,18 @@ body {
 .light-up:hover {
     filter: brightness(1.2);
 }
+
+::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+
+    background-color: #424242;
+}
+
+::-webkit-scrollbar-thumb {
+    background-color: white;
+}
+
+::-webkit-scrollbar-corner {
+    background-color: #919191;
+}

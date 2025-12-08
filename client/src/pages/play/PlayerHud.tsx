@@ -1,7 +1,15 @@
 import { useState, useEffect } from "react";
-import { Modal, Button, Group, Kbd, Progress } from "@mantine/core";
-import { useHotkeys } from "@mantine/hooks";
-import { IconViewfinder } from "@tabler/icons-react";
+import {
+    Modal,
+    Button,
+    Group,
+    Kbd,
+    Progress,
+    Stack,
+    Collapse
+} from "@mantine/core";
+import { useDisclosure, useHotkeys } from "@mantine/hooks";
+import { IconChevronDown, IconViewfinder } from "@tabler/icons-react";
 
 import { PlayerKickPacket } from "shared/types/packets/clientbound/PlayerKickPacket";
 import { PublicProfile } from "shared/types/PublicProfile";
@@ -20,10 +28,12 @@ interface PlayerHudProps {
 }
 
 function PlayerHud({ client, worldCode }: PlayerHudProps) {
+    const [ serverPanelExpanded, serverPanel ] = useDisclosure();
     const [ playerlist, setPlayerlist ] = useState<PublicProfile[]>([]);
-    const [ health, setHealth ] = useState<number>();
-    const [ playerVisible, setPlayerVisible ] = useState(true);
 
+    const [ health, setHealth ] = useState<number>();
+
+    const [ playerVisible, setPlayerVisible ] = useState(true);
     const [ kickDialog, setKickDialog ] = useState<PlayerKickPacket>();
 
     useEffect(() => {
@@ -57,16 +67,32 @@ function PlayerHud({ client, worldCode }: PlayerHudProps) {
     useHotkeys([["R", recenterCamera]]);
 
     return <>
-        <div className={`${styles.panel} ${styles.serverPanel}`}>
-            <span>
-                Connected to <b>{worldCode}</b>
-            </span>
+        <div className={`${styles.panel} ${styles.serverPanel}`} style={{
+            paddingBottom: serverPanelExpanded ? "5px" : "0"
+        }}>
+            <Group p="3px 5px" gap="5px">
+                <span>
+                    Connected to <b>{worldCode}</b>
+                </span>
 
-            {playerlist.map(profile => <Group key={profile.name} gap="10px">
-                <ProfileAvatar size={30} avatar={profile.avatar} />
+                <IconChevronDown onClick={() => serverPanel.toggle()} style={{
+                    cursor: "pointer", transform: serverPanelExpanded
+                        ? "rotate(180deg)" : undefined
+                }}/>
+            </Group>
 
-                <span>{profile.name}</span>
-            </Group>)}
+            <Collapse in={serverPanelExpanded}>
+                <Stack className={styles.playerlist} gap="5px">
+                    {playerlist.map(profile => <Group
+                        key={profile.name}
+                        gap="10px"
+                    >
+                        <ProfileAvatar size={30} avatar={profile.avatar} />
+
+                        <span>{profile.name}</span>
+                    </Group>)}
+                </Stack>
+            </Collapse>
         </div>
 
         <div className={`${styles.panel} ${styles.playerStats}`}>
@@ -74,7 +100,7 @@ function PlayerHud({ client, worldCode }: PlayerHudProps) {
 
             <Progress
                 value={(client.health || 0) / (client.maxHealth || 1) * 100}
-                w="200px" h="30px" color="#2dff5a"
+                w="100%" h="30px" color="#2dff5a"
             />
         </div>
 
