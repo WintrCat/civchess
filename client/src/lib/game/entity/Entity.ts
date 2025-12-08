@@ -66,7 +66,9 @@ export class Entity extends TypedEmitter<EntityEvents> {
 
     private nametag: EntityNametag = {
         ticker: () => this.nametag.container?.position.set(
-            this.sprite.x, this.sprite.y - (squareSize * 0.55)
+            this.sprite.x, this.sprite.y + (squareSize * 0.55 * (
+                this.sprite.y < squareSize ? 1 : -1
+            ))
         )
     };
 
@@ -149,9 +151,7 @@ export class Entity extends TypedEmitter<EntityEvents> {
 
         const container = new Container({
             zIndex: Layer.HOLOGRAMS,
-            pivot: { x: nametagSize.x / 2, y: nametagSize.y / 2 },
-            x: this.sprite.x,
-            y: this.sprite.y
+            pivot: { x: nametagSize.x / 2, y: nametagSize.y / 2 }
         });
         this.nametag.container = container;
 
