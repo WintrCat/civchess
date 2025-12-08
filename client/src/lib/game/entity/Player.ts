@@ -95,6 +95,7 @@ export class Player extends Entity {
     despawn() {
         super.despawn();
 
+        this.moveHints.destroy();
         this.moveCooldown.graphics?.destroy();
         this.marker?.destroy();
         

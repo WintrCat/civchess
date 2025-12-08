@@ -89,7 +89,7 @@ export class MoveHints {
         });
     }
 
-    detach() {
+    destroy() {
         this.hide();
 
         for (const event in this.entityListeners) {
