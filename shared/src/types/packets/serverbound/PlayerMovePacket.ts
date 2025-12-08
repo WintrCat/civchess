@@ -1,3 +1,5 @@
+import { Cooldown } from "@/types/Cooldown";
+
 export interface PlayerMovePacket {
     x: number;
     y: number;
@@ -5,6 +7,6 @@ export interface PlayerMovePacket {
 
 export interface PlayerMoveAck {
     cancelled: boolean;
-    cooldownExpiresAt?: number;
+    cooldown?: Cooldown;
     attack?: boolean;
 }

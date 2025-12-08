@@ -7,6 +7,7 @@ import {
 } from "pixi.js";
 import { clamp, difference } from "es-toolkit";
 
+import { Cooldown } from "shared/types/Cooldown";
 import { getSurroundingPoints } from "shared/lib/surrounding-positions";
 import { coordinateIndex, getChunkCoordinates } from "shared/lib/world-chunks";
 import { getLegalKingMoves } from "shared/lib/legal-moves";
@@ -22,9 +23,8 @@ interface PlayerOptions extends SubEntityOptions {
     userId: string;
 }
 
-interface MoveCooldown {
-    beginsAt?: number;
-    expiresAt?: number;
+interface MoveCooldown extends Partial<Cooldown> {
+    localBeginsAt?: number;
     graphics: Graphics;
 }
 
@@ -57,9 +57,7 @@ export class Player extends Entity {
 
         // Add move cooldown graphics
         this.moveCooldown = { graphics: new Graphics(hologramOptions) };
-
-        const mc = this.moveCooldown as MoveCooldown;
-        this.client.viewport.addChild(mc.graphics!);
+        this.client.viewport.addChild(this.moveCooldown.graphics!);
 
         // Add marker
         this.marker = new Graphics(hologramOptions);
@@ -69,6 +67,8 @@ export class Player extends Entity {
             this.renderMarker(tick.lastTime);
 
             // Redraw move cooldown bar
+            const mc = this.moveCooldown as MoveCooldown;
+
             mc.graphics.position.set(
                 this.sprite.x - 0.6 * squareSize,
                 this.sprite.y + halfSquare
@@ -76,15 +76,17 @@ export class Player extends Entity {
 
             mc.graphics.clear();
 
-            if (!mc.beginsAt || !mc.expiresAt) return;
-            if (Date.now() >= mc.expiresAt) return;
+            if (!mc.beginsAt || !mc.expiresAt || !mc.localBeginsAt) return;
 
-            const remainingPercent = Math.abs(mc.expiresAt - Date.now())
-                / Math.abs(mc.expiresAt - mc.beginsAt);
+            const elapsedTime = Date.now() - mc.localBeginsAt;
+            const requiredTime = mc.expiresAt - mc.beginsAt;
+            if (elapsedTime >= requiredTime) return;
+
+            const remainingPercent = 1 - elapsedTime / requiredTime;
 
             mc.graphics.rect(
                 0, 0,
-                remainingPercent * (squareSize + squareSize / 8),
+                remainingPercent * (squareSize + squareSize / 4),
                 squareSize / 10
             ).fill("#ff2d2d8f");
         };
@@ -181,10 +183,11 @@ export class Player extends Entity {
                 .getLocalSquare(to.x, to.y);
             if (!toSquare) return;
 
-            if (response.cooldownExpiresAt) {
-                this.moveCooldown.beginsAt = Date.now();
-                this.moveCooldown.expiresAt = response.cooldownExpiresAt;
-            }
+            this.moveCooldown = {
+                ...this.moveCooldown,
+                ...response.cooldown,
+                localBeginsAt: Date.now()
+            };
 
             if (response.attack) {
                 attackSound.play();

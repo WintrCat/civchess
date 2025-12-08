@@ -47,7 +47,7 @@ export const playerMoveHandler = createPacketHandler({
         );
 
         if (!legalMoves.has(packet.x, packet.y))
-            throw new Error("Illegal player movement.");
+            return acknowledge({ cancelled: true });
 
         // Validate move cooldown
         if (Date.now() < (player.moveCooldownExpiresAt || 0))
@@ -57,14 +57,18 @@ export const playerMoveHandler = createPacketHandler({
         const playerPath = getPlayerPath(player.userId);
 
         // Refresh move cooldown based on player's biome
-        const toSquare = await getSquare(id.worldCode, packet.x, packet.y);
-        if (!toSquare) return acknowledge({ cancelled: true });
-        
-        const cooldownExpiresAt = Date.now() + moveCooldowns[toSquare.type];
+        const fromSquare = await getSquare(id.worldCode, player.x, player.y);
+        if (!fromSquare) return acknowledge({ cancelled: true });
+
+        const cooldownBeginsAt = Date.now();
+        const cooldown = {
+            beginsAt: cooldownBeginsAt,
+            expiresAt: cooldownBeginsAt + moveCooldowns[fromSquare.type]
+        };
 
         await playerUpdate.json.set(id.worldCode,
             `${playerPath}.moveCooldownExpiresAt`,
-            cooldownExpiresAt
+            cooldown.expiresAt
         );
 
         // Prepare to broadcast move and maybe damage packet
@@ -114,7 +118,7 @@ export const playerMoveHandler = createPacketHandler({
                 return acknowledge({
                     cancelled: true,
                     attack: true,
-                    cooldownExpiresAt
+                    cooldown
                 });
             } else {
                 emitPlayerDeath(toRuntimeSquare.userId);
@@ -189,6 +193,6 @@ export const playerMoveHandler = createPacketHandler({
             }
         }
 
-        acknowledge({ cancelled: false, cooldownExpiresAt });
+        acknowledge({ cancelled: false, cooldown });
     }
 });
