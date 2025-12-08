@@ -28,7 +28,7 @@ interface PlayerHudProps {
 }
 
 function PlayerHud({ client, worldCode }: PlayerHudProps) {
-    const [ serverPanelExpanded, serverPanel ] = useDisclosure();
+    const [ serverPanelExpanded, serverPanel ] = useDisclosure(true);
     const [ playerlist, setPlayerlist ] = useState<PublicProfile[]>([]);
 
     const [ health, setHealth ] = useState<number>();
