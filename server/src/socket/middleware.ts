@@ -15,7 +15,10 @@ export const packetMiddleware: PacketMiddleware = async (
     socket, type
 ) => {
     if (!isIdentified(socket.data)) {
-        if (type != "playerJoin") throw new Error();
+        if (type != "playerJoin") throw new Error(
+            "non player join packet sent without socket identity."
+        );
+
         return;
     }
     
@@ -25,7 +28,7 @@ export const packetMiddleware: PacketMiddleware = async (
         identity.dead
         && type != "playerJoin"
         && type != "playerRespawn"
-    ) throw new Error();
+    ) return;
     
     // Check if it is time to inspect session token
     if (Date.now() < identity.sessionExpiresAt) return;

@@ -38,7 +38,7 @@ export const playerMoveHandler = createPacketHandler({
 
         // Validate that coordinates are legal for player
         const player = await getPlayer(id.worldCode, id.profile.userId);
-        if (!player) throw new Error();
+        if (!player) throw new Error("could not find player on player move");
 
         const worldChunkSize = await getWorldChunkSize(id.worldCode);
 
