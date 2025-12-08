@@ -58,13 +58,7 @@ export class Entity extends TypedEmitter<EntityEvents> {
 
     position: Point;
 
-    get x() {
-        return this.position.x;
-    }
-
-    get y() {
-        return this.position.y;
-    }
+    private colour: ColorSource;
 
     private readonly originalSize: number;
     private held = false;
@@ -82,6 +76,7 @@ export class Entity extends TypedEmitter<EntityEvents> {
         this.client = opts.client;
         this.position = opts.position;
         this.originalSize = opts.size || squareSize;
+        this.colour = opts.colour || "#ffffff";
 
         this.sprite = new Sprite({
             texture: opts.texture,
@@ -90,7 +85,7 @@ export class Entity extends TypedEmitter<EntityEvents> {
             position: squareToWorldPosition(this.position),
             width: this.originalSize,
             height: this.originalSize,
-            tint: opts.colour || "#ffffff",
+            tint: this.colour,
             eventMode: "dynamic"
         });
 
@@ -101,6 +96,14 @@ export class Entity extends TypedEmitter<EntityEvents> {
 
     private set size(size: number) {
         this.sprite.width = this.sprite.height = size;
+    }
+
+    get x() {
+        return this.position.x;
+    }
+
+    get y() {
+        return this.position.y;
     }
 
     spawn() {
@@ -118,10 +121,6 @@ export class Entity extends TypedEmitter<EntityEvents> {
         this.client.app.ticker.remove(this.nametag.ticker);
 
         this.sprite.destroy();
-    }
-
-    setColour(newColour: ColorSource) {
-        this.sprite.tint = newColour;
     }
 
     setNametag(text: string | undefined) {
@@ -216,7 +215,7 @@ export class Entity extends TypedEmitter<EntityEvents> {
     }
 
     async damageFlash() {
-        const entityColour = new Color(this.sprite.tint);
+        const entityColour = new Color(this.colour);
 
         const flashOpacity = 0.4;
         const damagedColour = new Color([
