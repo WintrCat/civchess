@@ -59,13 +59,13 @@ function Credits() {
                     {
                         icon: <IconBrandInstagram/>,
                         name: "Instagram",
-                        url: "https://instagram.com/0nlinegirl3",
+                        url: "https://www.instagram.com/simonaaa_cr",
                         colour: "pink"
                     },
                     {
                         icon: <IconBrandPinterest/>,
                         name: "Pinterest",
-                        url: "https://pinterest.co.uk/0nlinegrl3",
+                        url: "https://pin.it/4RIXpLosP",
                         colour: "red"
                     }
                 ]}
