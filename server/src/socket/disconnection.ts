@@ -18,6 +18,11 @@ export async function handleDisconnect(
 
     if (id.shutdownQueued) return;
 
+    // If there are other active sockets for this user, skip cleanup
+    const socketsForUser = await server.in(id.profile.userId).fetchSockets();
+    const otherSockets = socketsForUser.filter(s => s.id != socket.id);
+    if (otherSockets.length > 0) return;
+
     // Decrement player count and notify others of leave
     await decrementPlayerCount(id.worldCode);
 

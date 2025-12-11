@@ -75,10 +75,13 @@ export const playerJoinHandler = createPacketHandler({
             dead: false
         } satisfies SocketIdentity;
 
-        // Terminate any open socket with the same user ID as the joiner
-        kickPlayer(socket.in(profile.userId),
-            "You logged in from another location."
-        );
+        // Terminate any open sockets for the same user ID (except this one)
+        const server = getSocketServer();
+        const userSockets = await server.in(profile.userId).fetchSockets();
+        for (const s of userSockets) {
+            if (s.id === socket.id) continue;
+            kickPlayer(s, "You logged in from another location.");
+        }
 
         // Fetch player data from world or create new player data
         const worldChunkSize = await getWorldChunkSize(worldCode);
