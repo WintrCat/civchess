@@ -61,8 +61,8 @@ export async function findNearestEmptySquare(
         }
 
         const nodeSquare = nodeChunk.persistent.squares
-            .at(node.y % chunkSquareCount)
-            ?.at(node.x % chunkSquareCount);
+            .at(relativeY)
+            ?.at(relativeX);
         if (!nodeSquare) continue;
 
         const nodeRuntimeSquare = nodeChunk.runtime[
