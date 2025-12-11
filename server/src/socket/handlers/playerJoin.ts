@@ -11,7 +11,7 @@ import { worldExists } from "@/lib/worlds/fetch";
 import { getPublicProfile } from "@/lib/public-profile";
 import { getSocketServer } from "@/socket";
 import { getWorldChunkSize, } from "../lib/chunks";
-import { setSquarePiece } from "../lib/chunks/squares";
+import { setSquarePiece, getSquare } from "../lib/chunks/squares";
 import { getChunkBroadcaster } from "../lib/chunks/subscribers";
 import { getPlayer, kickPlayer } from "../lib/players";
 import { isWhitelistActive, isPlayerWhitelisted } from "../lib/players/whitelist";
@@ -92,13 +92,18 @@ export const playerJoinHandler = createPacketHandler({
             userId: profile.userId,
             x: randomInt(0, worldChunkSize * chunkSquareCount),
             y: randomInt(0, worldChunkSize * chunkSquareCount),
-            colour: "#" + randomInt(0, 0xffffff).toString(16),
+            colour: "#" + randomInt(0, 0xffffff).toString(16).padStart(6, '0'), // Random hex color with zero-padding for valid CSS
             health: config.maxPlayerHealth,
             inventory: []
         };
 
         // Clean up any pre-existing runtime piece for the joining user
-        if (playerData) {
+        // This ensures no ghost pieces remain from previous sessions
+        const existingSquare = await getSquare(
+            worldCode, playerData.x, playerData.y, "runtime"
+        );
+
+        if (existingSquare?.id === "player" && existingSquare.userId === profile.userId) {
             await setSquarePiece(worldCode, playerData.x, playerData.y, undefined, "runtime");
 
             const { chunkX, chunkY, relativeX, relativeY } = (

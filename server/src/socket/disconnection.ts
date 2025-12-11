@@ -18,6 +18,34 @@ export async function handleDisconnect(
 
     if (id.shutdownQueued) return;
 
+    // Remove player piece from runtime chunks before checking for other sockets
+    // This prevents ghost pieces when the last socket disconnects
+    if (!id.dead) {
+        const player = await getPlayer(
+            id.worldCode, id.profile.userId
+        );
+        if (player) {
+            await setSquarePiece(id.worldCode,
+                player.x, player.y, undefined, "runtime"
+            );
+
+            // Send chunk subscribers a despawn event
+            const { chunkX, chunkY, relativeX, relativeY } = (
+                getChunkCoordinates(player.x, player.y)
+            );
+
+            sendPacket("worldChunkUpdate", {
+                x: chunkX,
+                y: chunkY,
+                runtimeChanges: {
+                    [coordinateIndex(relativeX, relativeY)]: null
+                }
+            }, getChunkBroadcaster(
+                server, id.worldCode, chunkX, chunkY
+            )); 
+        }
+    }
+
     // If there are other active sockets for this user, skip cleanup
     const socketsForUser = await server.in(id.profile.userId).fetchSockets();
     const otherSockets = socketsForUser.filter(s => s.id != socket.id);
@@ -29,31 +57,4 @@ export async function handleDisconnect(
     sendPacket("playerLeave", {
         userId: id.profile.userId
     }, server.to(id.worldCode));
-
-    // Remove player piece from runtime chunks
-    if (id.dead) return;
-
-    const player = await getPlayer(
-        id.worldCode, id.profile.userId
-    );
-    if (!player) return;
-
-    await setSquarePiece(id.worldCode,
-        player.x, player.y, undefined, "runtime"
-    );
-
-    // Send chunk subscribers a despawn event
-    const { chunkX, chunkY, relativeX, relativeY } = (
-        getChunkCoordinates(player.x, player.y)
-    );
-
-    sendPacket("worldChunkUpdate", {
-        x: chunkX,
-        y: chunkY,
-        runtimeChanges: {
-            [coordinateIndex(relativeX, relativeY)]: null
-        }
-    }, getChunkBroadcaster(
-        server, id.worldCode, chunkX, chunkY
-    )); 
 }
