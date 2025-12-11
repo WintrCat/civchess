@@ -2,7 +2,7 @@ import { Socket } from "socket.io";
 import { Types } from "mongoose";
 import { randomInt } from "es-toolkit";
 
-import { chunkSquareCount } from "shared/lib/world-chunks";
+import { chunkSquareCount, getChunkCoordinates, coordinateIndex } from "shared/lib/world-chunks";
 import { isIdentified, SocketIdentity } from "@/types/SocketIdentity";
 import { Session } from "@/database/models/account";
 import { config } from "@/lib/config";
@@ -11,6 +11,8 @@ import { worldExists } from "@/lib/worlds/fetch";
 import { getPublicProfile } from "@/lib/public-profile";
 import { getSocketServer } from "@/socket";
 import { getWorldChunkSize, } from "../lib/chunks";
+import { setSquarePiece } from "../lib/chunks/squares";
+import { getChunkBroadcaster } from "../lib/chunks/subscribers";
 import { getPlayer, kickPlayer } from "../lib/players";
 import { isWhitelistActive, isPlayerWhitelisted } from "../lib/players/whitelist";
 import { isPlayerBanned } from "../lib/players/banlist";
@@ -62,6 +64,17 @@ export const playerJoinHandler = createPacketHandler({
         if (await getPlayerCount(worldCode) >= await getMaxPlayers(worldCode))
             return rejectJoin(socket, "This world is currently full.");
 
+        // Assign an initial identity before attempting to kick
+        // other sockets so the disconnect handler can perform
+        // the proper cleanup when they are disconnected.
+        socket.data = {
+            sessionToken: sessionToken,
+            sessionExpiresAt: Date.now() + (1000 * 60 * 10), // 10 mins
+            worldCode: worldCode,
+            profile: profile,
+            dead: false
+        } satisfies SocketIdentity;
+
         // Terminate any open socket with the same user ID as the joiner
         kickPlayer(socket.in(profile.userId),
             "You logged in from another location."
@@ -81,17 +94,29 @@ export const playerJoinHandler = createPacketHandler({
             inventory: []
         };
 
-        // Add the socket to the world code room & create its identity
+        // Clean up any pre-existing runtime piece for the joining user
+        if (playerData) {
+            await setSquarePiece(worldCode, playerData.x, playerData.y, undefined, "runtime");
+
+            const { chunkX, chunkY, relativeX, relativeY } = (
+                getChunkCoordinates(playerData.x, playerData.y)
+            );
+
+            sendPacket("worldChunkUpdate", {
+                x: chunkX,
+                y: chunkY,
+                runtimeChanges: {
+                    [coordinateIndex(relativeX, relativeY)]: null
+                }
+            }, getChunkBroadcaster(socket, worldCode, chunkX, chunkY));
+        }
+
+        // Add the socket to the world code room & update identity
         await socket.join([ worldCode, profile.userId ]);
         await incrementPlayerCount(worldCode);
 
-        socket.data = {
-            sessionToken: sessionToken,
-            sessionExpiresAt: Date.now() + (1000 * 60 * 10), // 10 mins
-            worldCode: worldCode,
-            profile: profile,
-            dead: playerData.health <= 0
-        } satisfies SocketIdentity;
+        // Update dead flag based on persisted player data
+        (socket.data as SocketIdentity).dead = playerData.health <= 0;
 
         // Return information about the world server
         const connectedSockets = await getSocketServer()
